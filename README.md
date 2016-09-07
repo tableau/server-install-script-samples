@@ -10,7 +10,11 @@ of Tableau Server, using scripts to prepare the installation and run the install
 
 ## ScriptedInstaller.py
 ----
-This is a reference Python script to install a single-node Tableau Server. This script targets Python version 2.7.2; it's unknown if/how it will work with other versions. No modules outside of the default installation are needed.
+This is a reference Python script to install a single-node Tableau Server. This script targets Python version 2.7.2; it's unknown if/how it will work with other versions. 
+
+Required Python modules:
+1. PyYaml
+
 
 Usage example:
 

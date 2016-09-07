@@ -7,6 +7,12 @@ import subprocess
 import tempfile
 import json
 import shutil
+import yaml
+
+# If one of the entries in KNOWN_GOOD_VERSION matches a prefix if the current version, we're good.
+# That is to say, 2.7 matches 2.7.x where x is anything. 2.8.1 only would match 2.8.1, and so on.
+# A very strange set of good versions could be : [ (2,7,5), (2,8), (3,) ]
+KNOWN_GOOD_VERSIONS = [(2,7) ]
 
 # An executable is missing
 class MissingExecutableError(Exception):
@@ -22,6 +28,10 @@ class OptionsError(Exception):
 class ExistingInstallationError(Exception):
     pass
 
+# Some user input wasn't valid
+class ValidationError(Exception):
+    pass
+
 # An external command exited with a non-success exit code
 class ExitCodeError(Exception):
     def __init__(self, binary, exit_code):
@@ -34,7 +44,8 @@ class Options(object):
         'installDir': r'C:\Program Files\Tableau\Tableau Server',
         'autorun':True,
         'configFile':None,
-        'installerLog':None
+        'installerLog':None,
+        'enablePublicFwRule':False
     }
     required = [
         'secretsFile',
@@ -90,11 +101,85 @@ def make_cmd_line_parser():
     autorun_parser.add_argument('--autorun', dest='autorun', action='store_true', help='Automatically start Tableau service on machine boot', default=True)
     autorun_parser.add_argument('--no-autorun', dest='autorun', action='store_false', help='Do not automatically start Tableau service on machine boot', default=False)
 
+    publicfwrule_parser = parser.add_mutually_exclusive_group(required=False)
+    publicfwrule_parser.add_argument('--enablePublicFwRule', dest='enablePublicFwRule', action='store_true', help='If configured to add firewall rules to connect to gateway, also enable firewall rule to connect "public" Windows profile')
+    publicfwrule_parser.add_argument('--no-enablePublicFwRule', dest='enablePublicFwRule', action='store_false', help='If configured to add firewall rules to connect to gateway, do not enable firewall rule to connect "public" Windows profile')
+
     # Required arguments
     required_arguments = parser.add_argument_group('required arguments')
     required_arguments.add_argument('installer', help='installer path, e.g: Tableau-Server-64bit-9-3-1.exe')
 
     return parser
+
+def validate_python_version():
+    current_version_tuple = (sys.version_info.major, sys.version_info.minor, sys.version_info.micro)
+    for good_version_tuple in KNOWN_GOOD_VERSIONS:
+        if good_version_tuple == current_version_tuple[:len(good_version_tuple)]:
+            return True
+    raise ValidationError('You are using an unsupported version of Python; known good version: ' + good_versions_string(len(current_version_tuple)))
+
+def good_versions_string(min_version_parts):
+    versions_as_string = []
+    for version_tuple in KNOWN_GOOD_VERSIONS:
+        string_tuple = map(str,version_tuple)
+        if len(string_tuple) < min_version_parts:
+            string_tuple.extend('x' * (min_version_parts - len(string_tuple)))
+        versions_as_string.append('.'.join(string_tuple))
+    return ', '.join(versions_as_string)
+
+# Be sure the config file is well-formed (or at least well-formed enough for the parser)
+# and has the config.version line in there.
+# It's okay if there's no config file; all defaults will be used.
+def validate_config_file(options):
+    if options.configFile:
+        try:
+            with open(options.configFile) as yaml_file:
+                yaml_doc = yaml.safe_load(yaml_file)
+                if not 'config.version' in yaml_doc:
+                    raise ValidationError('Config YAML file "%s" must have, at minimum, config.version' % options.configFile)
+        except IOError as ex:
+            raise ValidationError('Could not open or read config yaml YAML "%s"' % options.configFile)
+        except yaml.YAMLError as ex:
+            raise ValidationError('Error parsing config YAML file "%s"' % options.configFile)
+    return True
+
+# Be sure the registration file is present and parseable
+def validate_registration_file(options):
+    try:
+        return read_json_file(options.registrationFile)
+    except IOError as ex:
+        raise ValidationError('Could not open registration json file "%s"' % options.registrationFile)
+    except ValueError as ex:
+        raise ValidationError('The registration json file "%s" contains malformed json' % options.registrationFile)
+
+# Be sure the registration file is present, parseable and contains at least a admin user stuff
+def validate_secrets_file(options):
+    try:
+        secrets = read_json_file(options.secretsFile)
+        # be sure they have at least initial user and password
+        if not 'content_admin_user' in secrets.keys():
+            raise ValidationError('Missing content_admin_user in secrets file "%s"' % options.secretsFile)
+        if not 'content_admin_pass' in secrets.keys():
+            raise ValidationError('Missing content_admin_pass in secrets file "%s"' % options.secretsFile)
+        return secrets
+    except IOError as ex:
+        raise ValidationError('Could not open secrets file "%s"' % options.secretsFile)
+    except ValueError as ex:
+        raise ValidationError('The secrets file "%s" contains malformed json' % options.secretsFile)
+
+
+# Be sure the installer executable actually exist and is an executable.
+def validate_installer_executable(options):
+    if not os.path.isfile(options.installer):
+        raise ValidationError('The executable file %s does not exist' % options.installer)
+    # Let's see if the file is an executable. On Windows, os.access(blah, os.X_OK) doesn't work
+    # so we'll check that the file extension is one of our allowed ones.
+    (base, extension) = os.path.splitext(options.installer)
+    if not extension:
+        raise ValidationError('The installer executable file %s is not executable (no extension)' % options.installer)
+    if not extension.lower() in [ pathext.lower() for pathext in os.environ['PathExt'].split(';')]:
+        raise ValidationError('The installer executable file %s exists but is not executable' % options.installer)
+    return True
 
 # Checks if there is an existing installation of Tableau Server
 def is_server_installed():
@@ -114,13 +199,8 @@ def print_error(*args, **kwargs):
 
 # Read a json file from storage, convert to python object
 def read_json_file(file_path):
-    try:
-        with open(file_path) as json_file:
-            return json.loads(json_file.read())
-    except IOError as ex:
-        raise OptionsError('Could not open json file "%s"' % file_path)
-    except ValueError as ex:
-        raise OptionsError('The json file "%s" contains malformed json' % file_path)
+    with open(file_path) as json_file:
+        return json.loads(json_file.read())
 
 # We allow the user to specify the runas parameters in the secrets file to keep it seperate from the general config file.
 # However, we need to use 'set' to get the server to recognize this.
@@ -226,13 +306,17 @@ def get_config_parameter(tabadmin_path, config_parameter):
     return None
 
 # Open the firewall on a given port.
-def open_firewall_for_gateway(tabadmin_path, gateway_port):
+def open_firewall_for_gateway(tabadmin_path, gateway_port, options):
     try:
+        firewall_profile = 'private,domain'
+        if options.enablePublicFwRule:
+            firewall_profile = firewall_profile + ',public'
+
         netsh_path = get_netsh_path()
-        run_command(netsh_path, ['advfirewall', 'firewall','add', 'rule', 'name=Tableau Server', 'dir=in', 'action=allow', 
-                                 'protocol=TCP', 'profile=private,domain', 'localport=' + gateway_port])
+        run_command(netsh_path, ['advfirewall', 'firewall','add', 'rule', 'name=Tableau Server', 'dir=in', 'action=allow',
+                                 'protocol=TCP', 'profile=' + firewall_profile, 'localport=' + gateway_port])
     except MissingExecutableError as mee:
-        print_error('Cound not find executable: ' + mee.message)
+        print_error('Cound not find executable: ' + mee)
         raise mee
     except ExitCodeError as ex:
         print_error('attempt to modify firewall using advfirewall exited with code %d' % ex.exit_code)
@@ -240,25 +324,24 @@ def open_firewall_for_gateway(tabadmin_path, gateway_port):
 
 # If we need any firewall rules added, add them. If we have any, we'll always have one for the non-SSL port; if
 # we have SSL enabled, open a hole for that, too.
-def handle_firewalls(tabadmin_path, gateway_port):
+def handle_firewalls(tabadmin_path, gateway_port, options):
     open_firewall = get_config_parameter(tabadmin_path, 'install.firewall.gatewayhole') or 'false'
     if open_firewall.lower() == 'true':
         print('Opening firewall for connections to the gateway')
-        open_firewall_for_gateway(tabadmin_path, gateway_port)
+        open_firewall_for_gateway(tabadmin_path, gateway_port, options)
         open_ssl_port = get_config_parameter(tabadmin_path, 'ssl.enabled') or 'false'
         if open_ssl_port.lower() == 'true':
             print('Opening firewall for connections to the gateway')
             ssl_gateway_port = get_config_parameter(tabadmin_path, 'ssl.port') or '443'
-            open_firewall_for_gateway(tabadmin_path, ssl_gateway_port)
+            open_firewall_for_gateway(tabadmin_path, ssl_gateway_port, options)
     else:
         print('Not opening firewall for connections to the gateway')
-
 
 # Run a command. If the exit code isn't zero, it'll throw an exception.
 # If exit code is zero, return the output from running the command.
 def run_command(binary_path, arguments, show_args=True):
     if not os.path.isfile(binary_path):
-        raise OptionsError('The executable file %s does not exist' %binary_path)
+        raise MissingExecutableError('The executable file %s does not exist' %binary_path)
     print("Running: " + str(binary_path) + str(arguments if show_args else ''))
     try:
         output = subprocess.check_output([binary_path] + arguments)
@@ -267,12 +350,8 @@ def run_command(binary_path, arguments, show_args=True):
         print_error("Failed with output %s" % ex.output)
         raise ExitCodeError(binary_path, ex.returncode)
 
-# Retrieves the secrets from the user specified file
-def get_secrets(options):
-    return read_json_file(options.secretsFile)
-
 # Setup the server; run installer, install services, activate, register, open firewall ports, whatever.
-def run_setup(options, secrets):
+def run_setup(options, secrets):    
     # Run the installer. This unpacks the binaries and does initial boostrapping. After this is done, we have
     # a runnable server.
     print('Running installer executable')
@@ -314,26 +393,48 @@ def run_setup(options, secrets):
     print('Initial admin created')
 
     # Open any firewall holes, if desired.
-    handle_firewalls(tabadmin_path, gateway_port)
-    
+    handle_firewalls(tabadmin_path, gateway_port, options)
+
     print('Installation complete')
 
+# Validate user inputs.
+# Since we have to read files in to validate them, return any data that we already read in
+# so we don't have to read them twice later in this script.
+#
+# Currently, we only use the data from secrets, so that's all we return
+def validate_inputs(options):
+    # Try reading the options file (if present) in; validate that it's at least valid yaml before we do a bunch more work.
+    validate_config_file(options)
+    # Is the registration file valid?
+    validate_registration_file(options)
+    # Is the secrets file valid?
+    secrets = validate_secrets_file(options)
+    # Is the installer executable valid?
+    validate_installer_executable(options)
+    return secrets
+
+# Main entry point
 def main():
+    # Make sure they're using a version of Python we're okay with
     try:
-        options = get_options()
+        validate_python_version()
         assert_no_existing_installation()
-        secrets = get_secrets(options)
+        options = get_options()
+        secrets = validate_inputs(options)
         run_setup(options, secrets)
         return 0
     # Uncaught exceptions will result in an exit with 1
     except ExistingInstallationError as ex:
-        print_error(ex.message)
+        print_error(ex)
         return 2
     except OptionsError as ex:
-        print_error(ex.message)
+        print_error(ex)
         return 3
     except ExitCodeError as ex:
         return 4
+    except ValidationError as ve:
+        print_error(ve)
+        return 5
 
 if __name__ == '__main__':
     sys.exit(main())
