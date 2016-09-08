@@ -1,0 +1,500 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Create a Tableau Server instance running on Windows",
+
+  "Parameters" : {
+    "KeyName" : {
+      "Description" : "Name of an existing EC2 KeyPair used to get the Administrator password for the instance",
+      "Type" : "AWS::EC2::KeyPair::KeyName",
+      "ConstraintDescription" : "must be the name of an existing EC2 KeyPair."
+    },
+    "ResourceAvailabilityZone" : {
+        "Description" : "The availability zone in which our server and storage volume reside",
+        "Type": "AWS::EC2::AvailabilityZone::Name"
+    },
+    "SourceCidrForRDP" : {
+      "Description" : "IP Cidr from which you are likely to RDP into the instances. You can add rules later by modifying the created security groups e.g. 54.32.98.160/32",
+      "Type" : "String",
+      "MinLength" : "9",
+      "MaxLength" : "18",
+      "Default": "0.0.0.0/0",
+      "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+      "ConstraintDescription": "Must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+    "SourceCidrForWeb" : {
+      "Description" : "IP Cidr for Web clients. This can be a specific subnet (yours), or open to the world. 0.0.0.0/0",
+      "Type" : "String",
+      "MinLength" : "9",
+      "MaxLength" : "18",
+      "Default": "0.0.0.0/0",
+      "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+      "ConstraintDescription": "Must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+    "EC2CreationUser" : {
+      "Description" : "Tableau-specific tag used to identify who created this instance; name or identifier of person",
+      "Type" : "String",
+      "MinLength" : "1"
+    },
+    "EC2Keepalive" : {
+      "Description" : "Tableau-specific tag used to determine max life length of instance; use MM/DD/YYYY format",
+      "Type" : "String",
+      "Default" : "12/31/2016",
+      "MinLength" : "1"
+    },
+    "InstallationBucket" : {
+      "Description" : "The name of the bucket from which to fetch the server installer",
+      "Type" : "String",
+      "Default" : "tableau-server-installer",
+      "MinLength" : "1"
+    },
+    "InstanceType" : {
+      "Description" : "Amazon EC2 instance type",
+      "Type" : "String",
+      "Default" : "m4.xlarge",
+      "AllowedValues" : [ "m4.xlarge", "m4.2xlarge", "m4.4xlarge", "m4.10xlarge"],
+      "ConstraintDescription" : "must be a valid EC2 instance type."
+    },
+    "TableauServerVolumeSize" : {
+      "Description" : "Size of volume for server in GB; need at least 30 meg free for server installation",
+      "Type" : "Number",
+      "Default" : "100",
+      "MinValue" : "60"
+    },
+    "WindowsVersion" : {
+      "Description" : "The version of Windows to use",
+      "Type" : "String",
+      "Default" : "Windows2008r2",
+      "AllowedValues" : ["Windows2008r2", "Windows2012r2"],
+      "ConstraintDescription" : "must be one of Windows2008r2 , Windows2012r2"
+    },
+    "RunasUser" : {
+      "Description" : "The name of the user which runs the service; blank for default",
+      "Type" : "String",
+      "Default" : "",
+    },
+    "RunasPassword" : {
+      "Description" : "The password of the user which runs the service; blank for default",
+      "Type" : "String",
+      "Default" : "",
+      "NoEcho" : "true"
+    },
+    "ContentAdminUser" : {
+      "Description" : "The name of the initial Admin user for Tableau server",
+      "Type" : "String",
+      "Default" : "admin",
+      "MinLength" : "1"
+    },
+    "ContentAdminPassword" : {
+      "Description" : "The password for the initial Admin user for Tableau server",
+      "Type" : "String",
+      "MinLength" : "1",
+      "NoEcho" : "true"
+    },
+    "TableauServerLicenseKey" : {
+      "Description" : "License Key",
+      "Type" : "String",
+      "MinLength" : "1"
+    },
+    "RegFirstName" : {
+      "Description" : "First Name",
+      "Type" : "String",
+      "MinLength" : "1"
+    },
+    "RegLastName" : {
+      "Description" : "Last Name",
+      "Type" : "String",
+      "MinLength" : "1"
+    },
+    "RegEmail" : {
+      "Description" : "Email",
+      "Type" : "String",
+      "MinLength" : "1"
+    },
+    "RegCompany" : {
+      "Description" : "Company",
+      "Type" : "String"
+    },
+    "RegTitle" : {
+      "Description" : "Title",
+      "Type" : "String"
+    },
+    "RegDepartment" : {
+      "Description" : "Department",
+      "Type" : "String"
+    },
+    "RegIndustry" : {
+      "Description" : "Industry",
+      "Type" : "String"
+    },
+    "RegPhone" : {
+      "Description" : "Phone",
+      "Type" : "String"
+    },
+    "RegCity" : {
+      "Description" : "City",
+      "Type" : "String"
+    },
+    "RegState" : {
+      "Description" : "State",
+      "Type" : "String"
+    },
+    "RegZip" : {
+      "Description" : "ZIP/Postal Code",
+      "Type" : "String"
+    },
+    "RegCountry" : {
+      "Description" : "Country",
+      "Type" : "String"
+    },
+    "TableauServerInstallerVersion" : {
+      "Description" : "Version to install",
+      "Type" : "String",
+      "Default" : "server-dev",
+      "MinLength" : "1"
+    },
+    "ConfigVersion" : {
+      "Description" : "Config Version for generated configuration",
+      "Type" : "Number",
+      "Default" : 15,
+      "MinValue" : "1"
+    },
+    "PublicFirewallProfileHole": {
+      "Description" : "If firewall rules are created allowing access to the server, create rule allowing access via the Public profile (useful for AWS)",
+      "Type" : "String",
+      "Default" : "No",
+      "AllowedValues" : ["Yes", "No"],
+      "ConstraintDescription" : "must be one of Yes , No"
+    },
+    "Worker0GatewayPort" : {
+      "Description" : "Web port for Tableau gateway",
+      "Type" : "Number",
+      "Default" : 80,
+      "MinValue" : 1,
+      "MaxValue" : 65535
+    },
+    "Worker0BackgrounderProcs" : {
+      "Description" : "Number of backgrounder processes",
+      "Type" : "Number",
+      "Default" : 1,
+      "MinValue" : 1
+    },
+    "Worker0CacheserverProcs" : {
+      "Description" : "Number of cache server processes",
+      "Type" : "Number",
+      "Default" : 2,
+      "MinValue" : 1
+    },
+    "Worker0DataengineProcs" : {
+      "Description" : "Number of data engine processes",
+      "Type" : "Number",
+      "Default" : 1,
+      "MinValue" : 1
+    },
+    "Worker0DataserverProcs" : {
+      "Description" : "Number of data server processes",
+      "Type" : "Number",
+      "Default" : 2,
+      "MinValue" : 1
+    },
+    "Worker0VizportalProcs" : {
+      "Description" : "Number of vizportal processes",
+      "Type" : "Number",
+      "Default" : 1,
+      "MinValue" : 1
+    },
+    "Worker0VizqlserverProcs" : {
+      "Description" : "Number of vizqlserver processes",
+      "Type" : "Number",
+      "Default" : 2,
+      "MinValue" : 1
+    }
+  },
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+            "Label" : { "default" : "AWS Environment" },
+            "Parameters" : ["KeyName","ResourceAvailabilityZone","SourceCidrForRDP","SourceCidrForWeb", "EC2CreationUser","EC2Keepalive","InstallationBucket"]
+        },
+        {
+            "Label" : { "default" : "Machine Configuration" },
+            "Parameters" : ["InstanceType", "TableauServerVolumeSize", "WindowsVersion"]
+        },
+        {
+            "Label" : { "default" : "Secrets" },
+            "Parameters" : ["RunasUser","RunasPassword","ContentAdminUser","ContentAdminPassword"]
+        },
+        {
+            "Label" : { "default" : "Registration" },
+            "Parameters" : ["TableauServerLicenseKey",
+                            "RegFirstName","RegLastName","RegEmail",
+                            "RegCompany","RegTitle","RegDepartment","RegIndustry",
+                            "RegPhone","RegCity","RegState","RegZip","RegCountry"]
+        },
+        {
+            "Label" : { "default" : "Server Configuration" },
+            "Parameters" : ["ConfigVersion","PublicFirewallProfileHole","Worker0GatewayPort","Worker0BackgrounderProcs","Worker0CacheserverProcs","Worker0DataengineProcs",
+                            "Worker0DataserverProcs","Worker0VizportalProcs","Worker0VizqlserverProcs"]
+        },
+        {
+            "Label" : { "default" : "Installation Config" },
+            "Parameters" : [ "TableauServerInstallerVersion" ]
+        }
+      ],
+      "ParameterLabels" : {}
+    }
+  },
+  "Mappings" : {
+    "AWSRegion2AMI" : {
+      "us-east-1"        : {"Windows2008r2" : "ami-a2d017cf", "Windows2012r2" : "ami-79dc1b14"},
+      "us-west-2"        : {"Windows2008r2" : "ami-840acfe4", "Windows2012r2" : "ami-8d0acfed"},
+      "us-west-1"        : {"Windows2008r2" : "ami-c5a9eca5", "Windows2012r2" : "ami-cface9af"},
+    },
+    "TableauServerInstallerVersionToInstaller" : {
+        "server-dev" : { "64": "Setup-Server-x64.exe"}
+    }
+  },
+  "Conditions" : {
+    "EnablePublicFirewallRule" : { "Fn::Equals" : [ {"Ref" : "PublicFirewallProfileHole"},"Yes"]}
+  },
+  "Resources" : {
+    "InstanceSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Enable RDP",
+        "SecurityGroupIngress" : [
+          {"IpProtocol" : "tcp", "FromPort" : "3389", "ToPort" : "3389", "CidrIp" : { "Ref" : "SourceCidrForRDP" }},
+          {"IpProtocol" : "tcp", "FromPort" : {"Ref" : "Worker0GatewayPort"}, "ToPort" : {"Ref" : "Worker0GatewayPort"}, "CidrIp" : { "Ref" : "SourceCidrForWeb" }}
+        ]
+      }
+    },
+    "S3ReadOnlyRole" : {
+        "Type" : "AWS::IAM::Role",
+        "Properties": {
+            "AssumeRolePolicyDocument": {
+               "Version" : "2012-10-17",
+               "Statement": [{
+                  "Effect": "Allow",
+                  "Principal": {
+                     "Service": [ "ec2.amazonaws.com" ]
+                  },
+                  "Action": [ "sts:AssumeRole" ]
+               }]
+            },
+            "Policies" : [
+                {
+                    "PolicyName" : "s3readonlyaccess",
+                    "PolicyDocument" : {
+                        "Statement": [
+                            {
+                              "Effect": "Allow",
+                              "Action": ["s3:GetObject"],
+                              "Resource": {"Fn::Join" : ["", ["arn:aws:s3:::", {"Ref" : "InstallationBucket"}, "/*"]]} 
+                            },
+                            {
+                              "Effect": "Allow",
+                              "Action": [ "s3:ListBucket"],
+                              "Resource": {"Fn::Join" : ["", ["arn:aws:s3:::", {"Ref" : "InstallationBucket"}]]} 
+                            }
+                          ] 
+                    }
+                }
+            ]
+        }
+    },
+    "TableauWindowsServerInstanceProfile" : {
+        "Type" : "AWS::IAM::InstanceProfile",
+        "DependsOn" : ["S3ReadOnlyRole"],
+        "Properties": {
+            "Path":"/",
+            "Roles": [ { "Ref" : "S3ReadOnlyRole" } ]
+        }
+    },
+    "TableauWindowsServer": {
+      "Type" : "AWS::EC2::Instance",
+      "DependsOn" : ["TableauWindowsServerInstanceProfile", "InstanceSecurityGroup"],
+      "Metadata" : {
+        "AWS::CloudFormation::Init" : {
+          "config" : {
+            "files" : {
+              "c:\\tabsetup\\secrets.json" : {
+                "content" : {
+                    "runas_user" : {"Ref" : "RunasUser"},
+                    "runas_pass" : {"Ref" : "RunasPassword"},
+                    "content_admin_user" : {"Ref" : "ContentAdminUser"},
+                    "content_admin_pass" : {"Ref" : "ContentAdminPassword"}
+                }
+              },
+              "c:\\tabsetup\\registration.json" : {
+                "content" : {
+                    "first_name" : {"Ref" : "RegFirstName"},
+                    "last_name" : {"Ref" : "RegLastName"},
+                    "email" : {"Ref" : "RegEmail"},
+                    "company" : {"Ref" : "RegCompany"},
+                    "title" : {"Ref" : "RegTitle"},
+                    "department" : {"Ref" : "RegDepartment"},
+                    "industry" : {"Ref" : "RegIndustry"},
+                    "phone" : {"Ref" : "RegPhone"},
+                    "city" : {"Ref" : "RegCity"},
+                    "state" : {"Ref" : "RegState"},
+                    "zip" : {"Ref" : "RegZip"},
+                    "country" : {"Ref" : "RegCountry"}
+                }
+              },
+              "c:\\tabsetup\\config.json" : {
+                "content" : {
+                    "config.version" : {"Fn::Join" : ["", ["INTEGER:", {"Ref" : "ConfigVersion"} ]]},
+                    "worker0.gateway.port" : {"Fn::Join" : ["", ["INTEGER:", {"Ref" : "Worker0GatewayPort"} ]]},
+                    "worker0.backgrounder.procs" : {"Fn::Join" : ["", ["INTEGER:", {"Ref" : "Worker0BackgrounderProcs"} ]]},
+                    "worker0.cacheserver.procs"  : {"Fn::Join" : ["", ["INTEGER:", {"Ref" : "Worker0CacheserverProcs"} ]]},
+                    "worker0.dataengine.procs"   : {"Fn::Join" : ["", ["INTEGER:", {"Ref" : "Worker0DataengineProcs"} ]]},
+                    "worker0.dataserver.procs"   : {"Fn::Join" : ["", ["INTEGER:", {"Ref" : "Worker0DataserverProcs"} ]]},
+                    "worker0.vizportal.procs"    : {"Fn::Join" : ["", ["INTEGER:", {"Ref" : "Worker0VizportalProcs"} ]]},
+                    "worker0.vizqlserver.procs"  : {"Fn::Join" : ["", ["INTEGER:", {"Ref" : "Worker0VizqlserverProcs"} ]]}
+                }
+              },
+              "c:\\tabsetup\\ScriptedInstaller.py" : {
+                "source":  { "Fn::Join" : ["", ["https://", {"Ref" : "InstallationBucket"},
+                    ".s3.amazonaws.com/installers/ScriptedInstaller.py"
+                    ]]}
+              },
+              "c:\\tabsetup\\json2yml.py" : {
+                "source":  { "Fn::Join" : ["", ["https://", {"Ref" : "InstallationBucket"},
+                    ".s3.amazonaws.com/installers/json2yml.py"
+                    ]]}
+              },
+              "c:\\tabsetup\\python-2.7.12.msi" : {
+                "source":  { "Fn::Join" : ["", ["https://", {"Ref" : "InstallationBucket"},
+                    ".s3.amazonaws.com/installers/python-2.7.12.msi"
+                    ]]}
+              },
+              "c:\\tabsetup\\tableau-server-installer.exe" : {
+                "source":  { "Fn::Join" : ["", ["https://", {"Ref" : "InstallationBucket"},".s3.amazonaws.com", "/installers/", 
+                    { "Ref" : "TableauServerInstallerVersion"}, "/",
+                    {"Fn::FindInMap" : [ "TableauServerInstallerVersionToInstaller", { "Ref" : "TableauServerInstallerVersion" }, "64"] } 
+                    ]]}
+              }
+            },
+            "commands" : {
+              "1-install-python" : {
+                "command" : "c:\\tabsetup\\python-2.7.12.msi /quiet /qn",
+                "cwd" : "c:\\tabsetup",
+                "waitAfterCompletion" : "0"
+              },
+              "2-pip-install-yaml" : {
+                "command" : "c:\\Python27\\Scripts\\pip.exe install pyyaml",
+                "cwd" : "c:\\Python27\\Scripts",
+                "waitAfterCompletion" : "0"
+              },
+              "3-convert-config" : {
+                "cwd" : "c:\\tabsetup",
+                "command" : "type config.json | c:\\Python27\\python json2yml.py > config.yml",
+                "waitAfterCompletion" : "0"
+              },
+              "4-run-installer" : {
+                "command" : { "Fn::Join" : [ " ", [
+                  "c:\\Python27\\python.exe",
+                  "ScriptedInstaller.py", "--installerLog", "C:\\tabsetup\\tabinstall.txt",
+                  "--installDir C:\\TableauServer",
+                  "--autorun",
+                  { "Fn::If" : [ "EnablePublicFirewallRule", "--enablePublicFwRule", "--no-enablePublicFwRule"]},
+                  "--secretsFile c:\\tabsetup\\secrets.json",
+                  "--configFile c:\\tabsetup\\config.yml",
+                  "--registrationFile c:\\tabsetup\\registration.json",
+                  "--licenseKey", { "Ref" : "TableauServerLicenseKey"},
+                  "c:\\tabsetup\\tableau-server-installer.exe"
+                  ]]
+                },
+                "cwd" : "c:\\tabsetup",
+                "waitAfterCompletion" : "0"
+              },
+              "4-signal-success" : {
+                "command" : { "Fn::Join" : [ "", [
+                  "cfn-signal.exe -e %ERRORLEVEL% \"",
+                  { "Fn::Base64" : { "Ref" : "WindowsServerWaitHandle" }},
+                  "\""]]
+                }
+              }
+            }
+          }
+        },
+        "AWS::CloudFormation::Authentication": {
+            "S3AccessRole" : {
+                "type": "S3",
+                "buckets": [ { "Ref": "InstallationBucket"} ],
+                "roleName": { "Ref": "S3ReadOnlyRole" }
+            }
+        }
+      },
+      
+      "Properties": {
+        "InstanceType" : { "Ref" : "InstanceType" },
+        "ImageId" : { "Fn::FindInMap" : [ "AWSRegion2AMI", { "Ref" : "AWS::Region" }, { "Ref" : "WindowsVersion" } ]},
+        "AvailabilityZone" : { "Ref" : "ResourceAvailabilityZone" },
+        "BlockDeviceMappings" : [
+           { 
+            "DeviceName" : "/dev/sda1",
+            "Ebs" : { "VolumeSize" : { "Ref" : "TableauServerVolumeSize" } }
+           }
+        ],
+        "SecurityGroups" : [ {"Ref" : "InstanceSecurityGroup"} ],
+        "IamInstanceProfile" : { "Ref" : "TableauWindowsServerInstanceProfile" },
+        "KeyName" : { "Ref" : "KeyName" },
+        "UserData" : { "Fn::Base64" : { "Fn::Join" : ["", [
+            "<script>\n",
+
+            "cfn-init.exe -v -s ", { "Ref" : "AWS::StackId" }, 
+            " -r TableauWindowsServer",
+            " --region ", { "Ref" : "AWS::Region" }, "\n",
+          
+            "</script>"
+        ]]}},
+        "Tags": [
+            {
+                "Key" : "Name",
+                "Value" : {"Fn::Join" : ["", [{ "Ref" : "EC2CreationUser" }, "-cfn-tableau-server"]]}
+            },
+            {
+                "Key" : "keepalive",
+                "Value" :  { "Ref" : "EC2Keepalive" }
+            },
+            {
+                "Key" : "user",
+                "Value" :  { "Ref" : "EC2CreationUser" }
+            }
+        ]
+      }
+    },
+    "WindowsServerWaitHandle" : {
+      "Type" : "AWS::CloudFormation::WaitConditionHandle"
+    },
+
+    "WindowsServerWaitCondition" : {
+      "Type" : "AWS::CloudFormation::WaitCondition",
+      "DependsOn" : ["TableauWindowsServer"],
+      "Properties" : {
+        "Handle" : {"Ref" : "WindowsServerWaitHandle"},
+        "Timeout" : "3600"
+      }
+    },
+  },
+  "Outputs" : {
+    "InstanceID" : {
+        "Description" : "EC2 InstanceID of the instance running Tableau Server",
+        "Value" : { "Ref" : "TableauWindowsServer" }
+    },
+    "PublicIpAddress" : {
+        "Description" : "Public IP Address of instance running Tableau Server",
+        "Value" : { "Fn::GetAtt" : [ "TableauWindowsServer", "PublicIp"]}
+    },
+    "PublicDNSName" : {
+        "Description" : "Public DNS name of instance running Tableau Server",
+        "Value" : { "Fn::GetAtt" : [ "TableauWindowsServer", "PublicDnsName"]}
+    },
+    "PublicGatewayPort" : {
+        "Description" : "The port serving web traffic on the public interface of Tableau Server",
+        "Value" : {"Ref" : "Worker0GatewayPort"}
+    },
+  }    
+}
