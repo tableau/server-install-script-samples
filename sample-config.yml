@@ -1,0 +1,12 @@
+---
+# These are just examples of how to specify config options in this config file. Most defaults are generally just fine.
+config.version: 15
+install.component.samples: true
+wgserver.authenticate: local
+# When mail is sent the server, this info used for that
+svcmonitor.notification.smtp.canonical_url: http://myserver.example.com
+svcmonitor.notification.smtp.from_address: donut-reply@example.com
+svcmonitor.notification.smtp.password: password
+svcmonitor.notification.smtp.send_account: person
+svcmonitor.notification.smtp.server: mail.example.com
+svcmonitor.notification.smtp.target_addresses: iluvdata@example.com
