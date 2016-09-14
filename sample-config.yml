@@ -1,7 +1,9 @@
 ---
 # These are just examples of how to specify config options in this config file. Most defaults are generally just fine.
 config.version: 15
+# Install some samples to look at.
 install.component.samples: true
+# use local authentication and not active directory
 wgserver.authenticate: local
 # When mail is sent the server, this info used for that
 svcmonitor.notification.smtp.canonical_url: http://myserver.example.com

@@ -1,11 +1,19 @@
 --- 
 config.version: 15
+# Install some samples to look at.
 install.component.samples: true
+# use local authentication and not active directory
 wgserver.authenticate: local
 
 # The first in the list will be the primary (aka worker0). Then worker1, then worker2
+# The workers must have the worker installer run and waiting before you use the script to set up the primary.
+# REPLACE THESE IP ADDRESSES WITH THE APPROPRIATE ONES; DON'T FORGET THE workerX.host ENTRIES BELOW
 worker.hosts: 10.0.0.1, 10.0.0.2, 10.0.0.3
-worker.ports: 3730, 3730, 3730
+#
+# Configure the number of processes to for each server component running on each server instance here. 
+# gateway port is the port you'd connect to use the web interface to the server. (defaults to 80, set to 8080 for demo
+# purposes here)
+#
 # worker0
 worker0.backgrounder.procs: 2
 worker0.cacheserver.procs: 2
