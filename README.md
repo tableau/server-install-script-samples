@@ -15,10 +15,8 @@ Getting Started
 ---------------
 This repository has the following samples for performing installs and/or upgrades of Tableau Server:
 
-* **[ScriptedInstaller.py:](#ScriptedInstaller)**: Python script for installing or upgrading Tableau Server.  This script supports both single and multi-node instances of Tableau Server.
-* **[single-server.cfn:](#CloudFormationTemplate)** AWS Cloud Formation template for deploying a single-node instance of Tableau Server to Amazon AWS.
-
-
+* **[ScriptedInstaller.py:](#ScriptedInstaller)** Python script for installing or upgrading Tableau Server.  This script supports both single and multi-node instances of Tableau Server. We have also included several samples of the input files to the installer script.
+* **[public-sample-single-server.cfn:](#CloudFormationTemplate)** AWS Cloud Formation template for deploying a single-node instance of Tableau Server to Amazon AWS.
 
 <a name="ScriptedInstaller"></a> ScriptedInstaller.py
 ----
@@ -43,7 +41,7 @@ For an upgrade:
 
 `python ScriptedInstaller.py upgrade --fastuninstall --installerLog C:\Temp\tabupgrade.txt --installDir C:\TableauServer  Setup-Server-x64.exe`
 
-*The script currently only supports upgrades from version 9.3.x or higher.*
+The script currently only supports upgrades from version 9.3.x or higher.
 
 
 ### Script arguments
@@ -142,11 +140,11 @@ Hint: To install a server with the same configuration as an existing server, you
 * If you use the `--configfile` option to specify a custom configuration file, verify that the .yml file that you provide is valid for your Tableau Server installation.  Pay special attention that hostnames and IP addresses match those of the cluster that you are deploying to.
 * Upgrades using the Python script only work for upgrades from v9.3 and higher.  For previous version of Tableau Server, you will need to first uninstall Tableau Server from the primary machine and all worker machines.  Then, proceed as you would for a multi-node install of Tableau Server.
 
-<a name="CloudFormationTemplate"></a> single-server.cfn
+<a name="CloudFormationTemplate"></a> public-sample-single-server.cfn
 -----------------
-This is a sample for [Cloud Formation Template](https://aws.amazon.com/cloudformation/) for automating the deployment of Tableau Server to Amazon AWS.  This Cloud Formation template will deploy a default single-node instance using local authentication and default configurations.  The template does allow for minimal customization of the Gateway port and process counts on the server.
+This is a sample [Cloud Formation Template](https://aws.amazon.com/cloudformation/) for automating the deployment of Tableau Server to Amazon AWS.  This Cloud Formation template will deploy a default single-node instance using local authentication and default configurations.  The template allows for minimal customization of the Gateway port and process counts on the server.
 
-Time to Deploy: Approximately 45 minutes.
+Time to Deploy: Approximately 30 minutes.
 ### Requirements
 * You must have your own provisioned AWS account.
 * You must have a [Amazon EC2 Key Pair](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html).
@@ -154,16 +152,16 @@ Time to Deploy: Approximately 45 minutes.
 	* A copy of ScriptedInstaller.py
 	* Python 2.7.12.msi installer
 	* A copy of the Tableau Server 10.1 Beta 2 installer 
-	* A copy of single-server.cfn *(Optional)* 
+	* A copy of public-sample-single-server.cfn *(Optional)* 
 
 ### Usage
 
 1. On the AWS Console go to CloudFormation > Create Stack.
-2. Select the template file (single-server.cfn) > Click Next.
+2. Select the template file (public-sample-single-server.cfn) > Click Next.
 3. Provide a "Stack name" and fill out the rest of the parameters including License, Registration, and Admin account information for your Tableau Server installation.
 4. Continue through the rest of the screens and Accept the IAM warning and click Submit.
-5. Once the status has changed to CREATE_COMPLETE. Click on the Output tab and copy the TableauServerPublicHostName.
-6. Verify that you can connect to Tableau Server by navigating to the TableauServerPublicHostName and logging in with the admin account that you specified.
+5. Once the status has changed to CREATE_COMPLETE. Click on the Outputs tab and copy the PublicDNSName and/or PublicIpAddress.
+6. Verify that you can connect to Tableau Server by navigating to the PublicDNSName/PublicIpAddress and logging in with the admin account that you specified.
 
 ### Known Issues/Troubleshooting Steps
 
