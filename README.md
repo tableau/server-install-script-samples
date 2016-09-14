@@ -5,7 +5,9 @@ The Tableau Server installer uses a wizard-like approach to installing and confi
 This approach works well for many users and administrators, but limits the ability to perform automated deployments using tools like Chef or Puppet.
 
 We're providing some reference material here to show users and organizations how they can automate deployment
-of Tableau Server, using scripts to prepare the installation and run the installer executable with appropriate command-line arguments.
+of Tableau Server, using scripts to prepare the installation and run the installer executable with appropriate command-line arguments.  
+
+See also [Automated Unattended Installation of Tableau Server](http://onlinehelp.tableau.com/v10.1/server/en-us/server_install_unattended.htm) for general documentation regarding this feature.  
 
 ***Note: The samples contained in this repository only work with the Tableau Server 10.1 Beta 2 Installer.  For more information or to join the beta, please visit [http://www.tableau.com/tableau-10-beta-program](http://www.tableau.com/tableau-10-beta-program).***
 
