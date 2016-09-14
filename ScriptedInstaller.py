@@ -9,15 +9,38 @@ import json
 import shutil
 import yaml
 
-# If one of the entries in KNOWN_GOOD_VERSION matches a prefix if the current version, we're good.
+# If one of the entries in KNOWN_GOOD_PYTHON_VERSIONS matches a prefix if the current version, we're good.
 # That is to say, 2.7 matches 2.7.x where x is anything. 2.8.1 only would match 2.8.1, and so on.
-# A very strange set of good versions could be : [ (2,7,5), (2,8), (3,) ]
-KNOWN_GOOD_VERSIONS = [(2,7) ]
+# A very strange set of good versions, for example, could be : [ (2,7,5), (2,8), (11,) ]
+KNOWN_GOOD_PYTHON_VERSIONS = [(2,7) ]
+# Default installation dir.
+TABLEAU_DEFAULT_INSTALL_DIR = r'C:\Program Files\Tableau\Tableau Server'
+TABLEAU_DEFAULT_DATA_DIR = r'C:\ProgramData\Tableau\Tableau Server'
+RELATIVE_WORKGROUP_YML_PATH = r'data\tabsvc\config\workgroup.yml'
+# Minimum version that can be upgraded with this.
+MINIMUM_UPGRADEABLE_VERSION = 9.0
+# Minimum version that can be upgraded with this if this is a cluster
+MINIMUM_CLUSTER_UPGRADEABLE_VERSION = 9.3
+
+# Older versions of tabadmin don't have the 'get' command. Try to use it, but if we can't, fallback
+# to a terrible hacky version.
+TABADMIN_HAS_GET_COMMAND = True
+
+INNO_SETUP_EXIT_CODES = {
+    1: 'Inno Setup: Setup failed to initialize.',
+    2: 'Inno Setup: The user clicked Cancel in the wizard before the actual installation started, or chose "No" on the opening "This will install..." message box.',
+    3: 'Inno Setup: A fatal error occurred while preparing to move to the next installation phase (for example, from displaying the pre-installation wizard pages to the actual installation process). This should never happen except under the most unusual of circumstances, such as running out of memory or Windows resources.',
+    4: 'Inno Setup: A fatal error occurred during the actual installation process.',
+    5: 'Inno Setup: The user clicked Cancel during the actual installation process, or chose Abort at an Abort-Retry-Ignore box.',
+    6: 'Inno Setup: The Setup process was forcefully terminated by the debugger',
+    7: 'Inno Setup: The Preparing to Install stage determined that Setup cannot proceed with installation.',
+    8: 'Inno Setup: The Preparing to Install stage determined that Setup cannot proceed with installation, and that the system needs to be restarted in order to correct the problem.'
+}
+
 
 # An executable is missing
 class MissingExecutableError(Exception):
-    def __init__(self, binary, root):
-        super(MissingExecutableError, self).__init__('Could not find executable %s under %s' % (binary, root))
+    pass
 
 # Input errors related to invalid or missing configuration options
 # passed on the command line or in a configuration file
@@ -38,89 +61,85 @@ class ExitCodeError(Exception):
         super(ExitCodeError, self).__init__('%s execution exited with code: %d' % (str(binary), exit_code))
         self.exit_code = exit_code
 
-# Contains the user-configurable options for the installation
-class Options(object):
-    defaults = {
-        'installDir': r'C:\Program Files\Tableau\Tableau Server',
-        'autorun':True,
-        'configFile':None,
-        'installerLog':None,
-        'enablePublicFwRule':False
-    }
-    required = [
-        'secretsFile',
-        'registrationFile',
-        'licenseKey',
-        'installer'
-    ]
-
-    def __init__(self, user_options):
-        # set the optional flags to their default values if not specified by the user
-        for default_option in Options.defaults:
-            if default_option in user_options:
-                setattr(self, default_option, user_options[default_option])
-            else:
-                setattr(self, default_option, Options.defaults[default_option])
-        # set the required options
-        for required_option in Options.required:
-            if required_option not in user_options:
-                raise OptionsError('"%s" not specified' % required_option)
-            setattr(self, required_option, user_options[required_option])
-
-    def __str__(self):
-        attributes = filter( lambda a: not (a.startswith('__') or a == 'defaults'), dir(self))
-        return str({ attr: getattr(self, attr) for attr in attributes })
-
 # Parses the command line arguments and configuration files specified by the user
 def get_options():
     cmd_parser = make_cmd_line_parser()
     cmd_line_args = cmd_parser.parse_args()
-    return Options(vars(cmd_line_args))
+    return cmd_line_args
 
 def make_cmd_line_parser():
     parser = argparse.ArgumentParser(
         description='Tableau Server Cluster silent installation script',
-        add_help=False,
+        add_help=True,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    # Optional flags (have reasonable defaults)
-    optional_flags = parser.add_argument_group('optional flags')
-    optional_flags.add_argument('-h', '--help', action='help', help='display this message and exit')
+    # Required arguments
+    subparsers = parser.add_subparsers(help='Install or Upgrade Tableau Server')
 
-    optional_flags.add_argument('--installDir', help='installation directory', default=Options.defaults['installDir'])
-    optional_flags.add_argument('--configFile', help='Configuration and topology yml file')
-    optional_flags.add_argument('--installerLog',help='Installer logfile; a default will be created if unspecified')
+    ### INSTALL ARGS
+    install_parser = subparsers.add_parser('install')
+    install_parser.set_defaults(installer_action='install')
+    # Optional flags (have reasonable defaults)
+    optional_flags = install_parser.add_argument_group('Optional arguments')
+    optional_flags.add_argument('--installDir', dest='installDir', help='installation directory', default=TABLEAU_DEFAULT_INSTALL_DIR)
+    optional_flags.add_argument('--configFile', dest='configFile', help='Configuration and topology yml file', default=None)
+    optional_flags.add_argument('--installerLog', dest='installerLog', help='Installer logfile; a default will be created if unspecified', default=None)
+    optional_flags.add_argument('--enablePublicFwRule', dest='enablePublicFwRule', action='store_true', help='If configured to add firewall rules to connect to gateway, also enable firewall rule to connect "public" Windows profile')
+    optional_flags.add_argument('--noAutorun', dest='autorun', action='store_false', help='Do not automatically start Tableau service on machine boot')
 
     # Required flags (no reasonable defaults)
-    required_flags = parser.add_argument_group('required flags')
-    required_flags.add_argument('--secretsFile', required=True, help='User credentials json file')
-    required_flags.add_argument('--registrationFile', required=True, help='User registration file, in json format')
-    required_flags.add_argument('--licenseKey', required=True, help='Activation key')
+    required_flags = install_parser.add_argument_group('required flags')
+    required_flags.add_argument('installer', help='installer path, e.g: Tableau-Server-64bit-9-3-1.exe')
+    required_flags.add_argument('--secretsFile', dest='secretsFile', required=True, help='User credentials json file')
+    required_flags.add_argument('--registrationFile', dest='registrationFile', required=True, help='User registration file, in json format')
+    required_flags.add_argument('--licenseKey', dest='licenseKey', required=True, help='Activation key')
 
-    autorun_parser = parser.add_mutually_exclusive_group(required=False)
-    autorun_parser.add_argument('--autorun', dest='autorun', action='store_true', help='Automatically start Tableau service on machine boot', default=True)
-    autorun_parser.add_argument('--no-autorun', dest='autorun', action='store_false', help='Do not automatically start Tableau service on machine boot', default=False)
-
-    publicfwrule_parser = parser.add_mutually_exclusive_group(required=False)
-    publicfwrule_parser.add_argument('--enablePublicFwRule', dest='enablePublicFwRule', action='store_true', help='If configured to add firewall rules to connect to gateway, also enable firewall rule to connect "public" Windows profile')
-    publicfwrule_parser.add_argument('--no-enablePublicFwRule', dest='enablePublicFwRule', action='store_false', help='If configured to add firewall rules to connect to gateway, do not enable firewall rule to connect "public" Windows profile')
-
-    # Required arguments
-    required_arguments = parser.add_argument_group('required arguments')
-    required_arguments.add_argument('installer', help='installer path, e.g: Tableau-Server-64bit-9-3-1.exe')
+    ### UPGRADE ARGS
+    upgrade_parser = subparsers.add_parser('upgrade')
+    upgrade_parser.set_defaults(installer_action='upgrade')
+    # Optional flags (have reasonable defaults)
+    optional_flags = upgrade_parser.add_argument_group('Optional arguments')
+    optional_flags.add_argument('--installDir', dest='installDir', help='installation directory', default=TABLEAU_DEFAULT_INSTALL_DIR)
+    optional_flags.add_argument('--installerLog', dest='installerLog', help='Installer logfile; a default will be created if unspecified', default=None)
+    optional_flags.add_argument('--fastuninstall', dest='fastuninstall', action='store_true', help='Use the optional \'fastuninstall\' functionality of the installer to skip making a backup before upgrading')
+    required_flags = upgrade_parser.add_argument_group('required flags')
+    required_flags.add_argument('installer', help='installer path, e.g: Tableau-Server-64bit-9-3-1.exe')
 
     return parser
 
+##### Validate things
+#####
+
+# Validate user inputs for installing a new server
+# Since we have to read files in to validate them, return any data that we already read in
+# so we don't have to read them twice later in this script.
+#
+# Currently, we only use the data from secrets, so that's all we return
+def validate_install_inputs(options):
+    # Try reading the options file (if present) in; validate that it's at least valid yaml before we do a bunch more work.
+    validate_config_file(options)
+    # Is the registration file valid?
+    validate_registration_file(options)
+    # Is the secrets file valid?
+    secrets = validate_secrets_file(options)
+    # Is the installer executable valid?
+    validate_installer_executable(options)
+    return secrets
+
+def validate_upgrade_inputs(options):
+    # Is the installer executable valid?
+    validate_installer_executable(options)
+
 def validate_python_version():
     current_version_tuple = (sys.version_info.major, sys.version_info.minor, sys.version_info.micro)
-    for good_version_tuple in KNOWN_GOOD_VERSIONS:
+    for good_version_tuple in KNOWN_GOOD_PYTHON_VERSIONS:
         if good_version_tuple == current_version_tuple[:len(good_version_tuple)]:
             return True
-    raise ValidationError('You are using an unsupported version of Python; known good version: ' + good_versions_string(len(current_version_tuple)))
+    raise ValidationError('You are using an unsupported version of Python; known good version: ' + good_python_versions_string(len(current_version_tuple)))
 
-def good_versions_string(min_version_parts):
+def good_python_versions_string(min_version_parts):
     versions_as_string = []
-    for version_tuple in KNOWN_GOOD_VERSIONS:
+    for version_tuple in KNOWN_GOOD_PYTHON_VERSIONS:
         string_tuple = map(str,version_tuple)
         if len(string_tuple) < min_version_parts:
             string_tuple.extend('x' * (min_version_parts - len(string_tuple)))
@@ -167,7 +186,6 @@ def validate_secrets_file(options):
     except ValueError as ex:
         raise ValidationError('The secrets file "%s" contains malformed json' % options.secretsFile)
 
-
 # Be sure the installer executable actually exist and is an executable.
 def validate_installer_executable(options):
     if not os.path.isfile(options.installer):
@@ -181,17 +199,42 @@ def validate_installer_executable(options):
         raise ValidationError('The installer executable file %s exists but is not executable' % options.installer)
     return True
 
-# Checks if there is an existing installation of Tableau Server
-def is_server_installed():
-    out = subprocess.check_output(['sc', 'query', 'type=', 'service', 'state=', 'all'])
-    return ('Tableau Server' in out)
+# Be sure an existing installation is at least a minimum version level.
+def validate_upgrade_version(tabadmin_path, options):
+    string_version = get_config_parameter(options, tabadmin_path, 'version.current')
+    # version may be a string, or a float. handle it.
+    if not string_version:
+        raise ExistingInstallationError("Could not determine version of current installation")
+    try:
+        version = float(string_version)
+        if version < MINIMUM_UPGRADEABLE_VERSION:
+            raise ExistingInstallationError("The current version of the server (%s) cannot be safely upgraded" % str(string_version))
+        return version
+    except ValueError as ex:
+        raise ExistingInstallationError("Could not determine version of existing installation (told us %s)" % str(string_version))
+
+# If we're a multi-node installation, some versions can't be handled by this script
+# because they require special care and feeding.
+def validate_multi_node_upgrade_versions(server_version, tabadmin_path, options):
+    worker_hosts = get_config_parameter(options, tabadmin_path, 'worker.hosts')
+    if not worker_hosts:
+        raise ExistingInstallationError("Could not determine if we are a cluster or not (cannot find worker.hosts)")
+    hosts_parts = str(worker_hosts).split(',')
+    if len(hosts_parts) < 2:
+        print("This is not a cluster; no cluster-specific versioning check required")
+        return True
+    if server_version < MINIMUM_CLUSTER_UPGRADEABLE_VERSION:
+        raise ExistingInstallationError("The current version of the cluster (%s) cannot be safely upgraded" % str(server_version))
 
 # Raises an error if there is an existing installation of Tableau Server
-def assert_no_existing_installation():
+def validate_no_existing_installation():
     if is_server_installed():
         raise ExistingInstallationError('An existing installation of Tableau Server has been found. '
             'Please uninstall it before updating to the new version. '
             'Data currently in Tableau server will be preserved during this process.')
+
+#### Helper methods
+####
 
 # Helper method to write to stderr.
 def print_error(*args, **kwargs):
@@ -201,6 +244,14 @@ def print_error(*args, **kwargs):
 def read_json_file(file_path):
     with open(file_path) as json_file:
         return json.loads(json_file.read())
+
+# Checks if there is an existing installation of Tableau Server
+def is_server_installed():
+    out = subprocess.check_output(['sc', 'query', 'type=', 'service', 'state=', 'all'])
+    return ('Tableau Server' in out)
+
+#### General methods to place configs, run utilities, whatever.
+####
 
 # We allow the user to specify the runas parameters in the secrets file to keep it seperate from the general config file.
 # However, we need to use 'set' to get the server to recognize this.
@@ -230,40 +281,19 @@ def install_service(tabadmin_path, options):
     run_command(tabadmin_path, tabadmin_args)
 
 # Runs the installer.exe, and checks for the exit code
-def run_inno_installer(options):
-    inno_setup_exit_codes = {
-        1: 'Inno Setup: Setup failed to initialize.',
-        2: 'Inno Setup: The user clicked Cancel in the wizard before the actual installation started, or chose "No" on the opening "This will install..." message box.',
-        3: 'Inno Setup: A fatal error occurred while preparing to move to the next installation phase (for example, from displaying the pre-installation wizard pages to the actual installation process). This should never happen except under the most unusual of circumstances, such as running out of memory or Windows resources.',
-        4: 'Inno Setup: A fatal error occurred during the actual installation process.',
-        5: 'Inno Setup: The user clicked Cancel during the actual installation process, or chose Abort at an Abort-Retry-Ignore box.',
-        6: 'Inno Setup: The Setup process was forcefully terminated by the debugger',
-        7: 'Inno Setup: The Preparing to Install stage determined that Setup cannot proceed with installation.',
-        8: 'Inno Setup: The Preparing to Install stage determined that Setup cannot proceed with installation, and that the system needs to be restarted in order to correct the problem.'
-    }
+def run_inno_installer(inno_installer_args, options):
     if not options.installerLog:
         inno_log_file = tempfile.NamedTemporaryFile(prefix='TableauServerInstaller_', suffix='.log', delete=False);
         options.installerLog = inno_log_file.name
         inno_log_file.close()
-
     print('Installer log file at ' + options.installerLog)
-
-    inno_installer_args = [
-        '/VERYSILENT',          # No progress GUI, message boxes still possible
-        '/SUPPRESSMSGBOXES',    # No message boxes. Only has an effect when combined with '/SILENT' or '/VERYSILENT'.
-        '/ACCEPTEULA',
-        '/LOG=' + options.installerLog,
-        '/DIR=' + options.installDir
-    ]
-
-    if options.configFile:
-        inno_installer_args.append('/CUSTOMCONFIG=' + options.configFile)
+    inno_installer_args.append('/LOG=' + options.installerLog)
 
     try:
         run_command(options.installer, inno_installer_args)
     except ExitCodeError as ex:
         if(ex.exit_code >= 1 and ex.exit_code <= 8):
-            print_error(inno_setup_exit_codes[ex.exit_code])
+            print_error(INNO_SETUP_EXIT_CODES[ex.exit_code])
         else:
             print_error('Unknown exit code from the Inno Setup installer: %d' % ex.exit_code)
 
@@ -289,21 +319,46 @@ def get_netsh_path():
     system_root = os.environ['SystemRoot']
     netsh_exe = os.path.join(system_root, "system32", "netsh.exe")
     if not os.path.isfile(netsh_exe):
-        raise MissingExecutableError('netsh.exe', os.path.join(system_root, "system32"))
+        raise MissingExecutableError('The executable file %s does not exist' % netsh_exe)
     return netsh_exe
 
+def get_workgroup_yml(options):
+    print("get_workgroup_yml with installDir set to: %s" % options.installDir)
+    workgroup_yml_base_dir = options.installDir if (options.installDir != TABLEAU_DEFAULT_INSTALL_DIR) else TABLEAU_DEFAULT_DATA_DIR
+    workgroup_yml_path = os.path.join(workgroup_yml_base_dir, RELATIVE_WORKGROUP_YML_PATH)
+    with open(workgroup_yml_path) as yaml_file:
+        return yaml.safe_load(yaml_file)
+
 # Get a configuration parameter using tabadmin get. The output contains some preceding text, so we have
-# to ignore that that to get the actual value. The return value from tabadmin set is 0 whether that config parameter
+# to ignore that that to get the actual value. The return value from tabadmin get is 0 whether that config parameter
 # is actually set or not.
-def get_config_parameter(tabadmin_path, config_parameter):
-    tabadmin_output = run_command(tabadmin_path, ['get', config_parameter])
-    # Filter out extraneous stuff from output; all we want is the value.
-    match = re.search('(?<=is:)[\s\w]+', tabadmin_output)
-    if match:
-        value = match.group(0)
-        if value:
-            return value.strip()
-    return None
+# Some older versions of the server don't have "tabadmin get". In that case, hack our way to it; find the
+# workgroup.yml file, load it, and read the file directly from it.
+# If we detect that "tabadmin get" isn't available, set a global flag so we don't waste time on further calls
+# trying to call it.
+def get_config_parameter(options, tabadmin_path, config_parameter):
+    global TABADMIN_HAS_GET_COMMAND
+    if TABADMIN_HAS_GET_COMMAND:
+        try:
+            tabadmin_output = run_command(tabadmin_path, ['get', config_parameter])
+            # Filter out extraneous stuff from output; all we want is the value.
+            match = re.search('(?<=is:)[\s\w]+', tabadmin_output)
+            if match:
+                value = match.group(0)
+                if value:
+                    return value.strip()
+        except ExitCodeError as ex:
+            pass
+        # If we get here, running the command failed for some reason. fallback to trying to read the value directly.
+        print("\"tabadmin get %s\" failed; falling back to manual parsing." % config_parameter)
+        TABADMIN_HAS_GET_COMMAND = False
+        return get_config_parameter(options, tabadmin_path, config_parameter)
+    else:
+        workgroup_yml = get_workgroup_yml(options)
+        if config_parameter in workgroup_yml:
+            if config_parameter in workgroup_yml:
+                return workgroup_yml[config_parameter]
+        return None
 
 # Open the firewall on a given port.
 def open_firewall_for_gateway(tabadmin_path, gateway_port, options):
@@ -325,14 +380,14 @@ def open_firewall_for_gateway(tabadmin_path, gateway_port, options):
 # If we need any firewall rules added, add them. If we have any, we'll always have one for the non-SSL port; if
 # we have SSL enabled, open a hole for that, too.
 def handle_firewalls(tabadmin_path, gateway_port, options):
-    open_firewall = get_config_parameter(tabadmin_path, 'install.firewall.gatewayhole') or 'false'
+    open_firewall = get_config_parameter(options, tabadmin_path, 'install.firewall.gatewayhole') or 'false'
     if open_firewall.lower() == 'true':
         print('Opening firewall for connections to the gateway')
         open_firewall_for_gateway(tabadmin_path, gateway_port, options)
-        open_ssl_port = get_config_parameter(tabadmin_path, 'ssl.enabled') or 'false'
+        open_ssl_port = get_config_parameter(options, tabadmin_path, 'ssl.enabled') or 'false'
         if open_ssl_port.lower() == 'true':
             print('Opening firewall for connections to the gateway')
-            ssl_gateway_port = get_config_parameter(tabadmin_path, 'ssl.port') or '443'
+            ssl_gateway_port = get_config_parameter(options, tabadmin_path, 'ssl.port') or '443'
             open_firewall_for_gateway(tabadmin_path, ssl_gateway_port, options)
     else:
         print('Not opening firewall for connections to the gateway')
@@ -341,21 +396,31 @@ def handle_firewalls(tabadmin_path, gateway_port, options):
 # If exit code is zero, return the output from running the command.
 def run_command(binary_path, arguments, show_args=True):
     if not os.path.isfile(binary_path):
-        raise MissingExecutableError('The executable file %s does not exist' %binary_path)
+        raise MissingExecutableError('The executable file %s does not exist' % binary_path)
     print("Running: " + str(binary_path) + str(arguments if show_args else ''))
     try:
-        output = subprocess.check_output([binary_path] + arguments)
+        output = subprocess.check_output([binary_path] + arguments, stderr=subprocess.STDOUT)
         return output
     except subprocess.CalledProcessError as ex:
         print_error("Failed with output %s" % ex.output)
         raise ExitCodeError(binary_path, ex.returncode)
 
-# Setup the server; run installer, install services, activate, register, open firewall ports, whatever.
-def run_setup(options, secrets):    
+# Install the server; run installer, install services, activate, register, open firewall ports, whatever.
+def run_install(options, secrets):
     # Run the installer. This unpacks the binaries and does initial boostrapping. After this is done, we have
     # a runnable server.
     print('Running installer executable')
-    run_inno_installer(options)
+
+    inno_installer_args = [
+        '/VERYSILENT',          # No progress GUI, message boxes still possible
+        '/SUPPRESSMSGBOXES',    # No message boxes. Only has an effect when combined with '/SILENT' or '/VERYSILENT'.
+        '/ACCEPTEULA',
+        '/DIR=' + options.installDir
+    ]
+    if options.configFile:
+        inno_installer_args.append('/CUSTOMCONFIG=' + options.configFile)
+
+    run_inno_installer(inno_installer_args, options)
 
     # Get path to relevant binaries
     binaries_path = get_tab_binaries_path(options)
@@ -383,10 +448,10 @@ def run_setup(options, secrets):
 
     # Register our initial user
     print('Server is installed and running')
-    gateway_port = get_config_parameter(tabadmin_path, 'worker0.gateway.port') or '80'
+    gateway_port = get_config_parameter(options, tabadmin_path, 'worker0.gateway.port') or '80'
     # Just in case we're using SSL, we'll be redirected, so using the non-ssl port will be fine.
     # However, skip checking the cert in case it's self-signed.
-    run_command(tabcmd_path, ['initialuser', '--server', 'localhost:' + gateway_port, 
+    run_command(tabcmd_path, ['initialuser', '--server', 'localhost:' + gateway_port,
                 '--no-certcheck', '--no-prompt',
                 '--username', secrets['content_admin_user'], '--password', secrets['content_admin_pass']]
                 , False)
@@ -397,31 +462,63 @@ def run_setup(options, secrets):
 
     print('Installation complete')
 
-# Validate user inputs.
-# Since we have to read files in to validate them, return any data that we already read in
-# so we don't have to read them twice later in this script.
-#
-# Currently, we only use the data from secrets, so that's all we return
-def validate_inputs(options):
-    # Try reading the options file (if present) in; validate that it's at least valid yaml before we do a bunch more work.
-    validate_config_file(options)
-    # Is the registration file valid?
-    validate_registration_file(options)
-    # Is the secrets file valid?
-    secrets = validate_secrets_file(options)
-    # Is the installer executable valid?
-    validate_installer_executable(options)
-    return secrets
+def run_upgrade(options):
+    print('Running installer executable to perform update')
+
+    print("Checking that there's a previous installation at /DIR")
+    binaries_path = get_tab_binaries_path(options)
+    if not binaries_path:
+        raise ExistingInstallationError("No existing installation detected at %s; cannot upgrade" % options.installDir)
+    tabadmin_path = os.path.join(binaries_path, 'tabadmin.exe')
+
+    print("Checking that we can safely upgrade the current version; some older versions can't be upgraded with this script.")
+    server_version = validate_upgrade_version(tabadmin_path, options)
+    print("Checking to see if this is a cluster, which would require a minimum version to upgrade from")
+    validate_multi_node_upgrade_versions(server_version, tabadmin_path, options)
+
+    inno_installer_args = [
+        '/VERYSILENT',          # No progress GUI, message boxes still possible
+        '/SUPPRESSMSGBOXES',    # No message boxes. Only has an effect when combined with '/SILENT' or '/VERYSILENT'.
+        '/ACCEPTEULA',
+        '/DIR=' + options.installDir
+    ]
+    if options.fastuninstall:
+        print("Using FASTUNINSTALL option")
+        inno_installer_args.append('/FASTUNINSTALL')
+    else:
+        print("Not using FASTUNINSTALL option")
+
+    run_inno_installer(inno_installer_args, options)
+
+    # So, our paths likely have changed after the upgrade. Find them again.
+    binaries_path = get_tab_binaries_path(options)
+    if not binaries_path:
+        raise ExistingInstallationError("Could not find newly installed binaries")
+    tabadmin_path = os.path.join(binaries_path, 'tabadmin.exe')
+
+    # Get path to relevant binaries
+    # Start it up!
+    print('Server is starting')
+    run_command(tabadmin_path, ['start'])
+    print('Upgrade complete.')
 
 # Main entry point
 def main():
     # Make sure they're using a version of Python we're okay with
     try:
         validate_python_version()
-        assert_no_existing_installation()
         options = get_options()
-        secrets = validate_inputs(options)
-        run_setup(options, secrets)
+        if options.installer_action == 'install':
+            print("Trying to perform install")
+            validate_no_existing_installation()
+            secrets = validate_install_inputs(options)
+            run_install(options, secrets)
+        elif options.installer_action == 'upgrade':
+            print("Trying to perform update")
+            validate_upgrade_inputs(options)
+            run_upgrade(options)
+        else:
+            raise OptionsError("Unknown action %s" % options.installer_action)
         return 0
     # Uncaught exceptions will result in an exit with 1
     except ExistingInstallationError as ex:
