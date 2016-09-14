@@ -1,61 +1,81 @@
-# server-install-script-examples
+# server-install-script-samples
 ----
 
 The Tableau Server installer uses a wizard-like approach to installing and configuring Tableau server. 
-This approach works well for many users and administrators, but limits the ability to perform automated deployments
-using tools like Chef or Puppet.
+This approach works well for many users and administrators, but limits the ability to perform automated deployments using tools like Chef or Puppet.
 
 We're providing some reference material here to show users and organizations how they can automate deployment
 of Tableau Server, using scripts to prepare the installation and run the installer executable with appropriate command-line arguments.
 
-## ScriptedInstaller.py
+***Note: The samples contained in this repository only work with the Tableau Server 10.1 Beta 2 Installer.  For more information or to join the beta, please visit [http://www.tableau.com/tableau-10-beta-program](http://www.tableau.com/tableau-10-beta-program).***
+
+Please use 'Issues' to note any bugs or make suggestions.  You can also e-mail [beta@tableau.com](mailto:beta@tableau.com) during the 10.1 Beta to provide additional feedback or receive support. 
+
+Getting Started
+---------------
+This repository has the following samples for performing installs and/or upgrades of Tableau Server:
+
+* **[ScriptedInstaller.py:](#ScriptedInstaller)**: Python script for installing or upgrading Tableau Server.  This script supports both single and multi-node instances of Tableau Server.
+* **[single-server.cfn:](#CloudFormationTemplate)** AWS Cloud Formation template for deploying a single-node instance of Tableau Server to Amazon AWS.
+
+
+
+<a name="ScriptedInstaller"></a> ScriptedInstaller.py
 ----
-This is a reference Python script to install a single-node Tableau Server. This script targets Python version 2.7.2; it's unknown if/how it will work with other versions. 
+This is a reference Python script to install or upgrade Tableau Server.
 
-Required Python modules:
-1. PyYaml
+### Requirements
+This script targets Python version 2.7.12. It also requires the PyYaml module which can be installed as follows:
 
+`pip install pyyaml`
 
-Usage example:
+### Usage examples
 
-`python ScriptedInstaller.py --installerLog C:\Temp\tabinstall.txt --installDir C:\TableaServer --autorun --secretsFile secrets.json --configFile myconfig.yml --registrationFile registration.json --licenseKey THIS-IS-MYLI-CENS-EKEY Setup-Server-x64.exe`
+The script has two "modes"; _install_ and _upgrade_ ; each mode can have several arguments.
+
+For a new install:
+
+`python ScriptedInstaller.py install --installerLog C:\Temp\tabinstall.txt --installDir C:\TableauServer --secretsFile secrets.json --configFile myconfig.yml --registrationFile registration.json --licenseKey THIS-IS-MYLI-CENS-EKEY Setup-Server-x64.exe`
+
+*Special Note: When doing an installation on a distributed cluster, you will need to first run the Tableau Server Worker Installer on each worker machine and use the /PRIMARYIP switch to specify the IP Address/Hostname of the primary machine. Then run the Python script as shown above on the primary once all the software has been successfully installed on all workers.*
+
+For an upgrade:
+
+`python ScriptedInstaller.py upgrade --fastuninstall --installerLog C:\Temp\tabupgrade.txt --installDir C:\TableauServer  Setup-Server-x64.exe`
+
+*The script currently only supports upgrades from version 9.3.x or higher.*
+
 
 ### Script arguments
-* --installerLog  _**Not required**_
 
-  Path to where the installer executable should write its log file. The directory must already exist. _If omitted, the log will be written under the user's TEMP directory._
+#### _install_ mode
 
-* --installDir  _**Not Required**_
+Option|Argument|Required|Description
+----|----------|---------|-------
+--installDir|[FILE PATH]|Optional|The Tableau installation directory. The software binaries, configuration, and data will all live in a a directory tree rooted here. _If omitted, the default directory C:\Program Files\Tableau\Tableau Server will be used for the binaries, and configuration and data will live under C:\Program Data\Tableau_
+--configFile|[FILE PATH]|Optional|Path to a .yml [Server Configuration File](#ConfigFile) (relative or absolute) describing the Tableau Server configuration. This file's content is the same as the tabsvc.yml file. _If this argument is omitted, all Tableau defaults will be used for configuration._
+--installerLog|[FILE PATH]|Optional|Path to where the installer executable should write its log file. The directory must already exist. _If omitted, the log will be written under the user's TEMP directory._
+--enablePublicFwRule||Optional|Use this to specify that a firewall rule to enable connections to the Gateway process (if configured to be created at all), should also be enabled on the Windows "public" profile. _If omitted, the firewall rule, if created at all, will default to the private and domain profiles only_ 
+--noAutorun| |Optional|Use this to skip setting up Tableau Server as a service to start on system boot. _If omitted, the server will be set up as a service to start on boot_
+--secretsFile|[FILE PATH]|**Required**|Path to a .json file (relative or absolute) that describes both the credentials of the Windows account that Tableau Server will run as, and the username/password of the initial admin user for Tableau Server.  See [Secrets File](#SecretsFile) for more information.
+--registrationFile|[FILE PATH]|**Required**|Path to a .json file (relative or absolute) describing the Tableau Server registration information. See [Server Registration File](#RegFile) for more information.
+--licenseKey|[KEY]|**Required**|Your server license key, acquired through the usual channels.
+(installer executable)|[FILE PATH]|**Required**|The final argument to the script is simply the path, absolute or relative, to the Tableau Server installer executable, acquired through usual channels such as downloaded from the Tableau Website. _This script is only supported for use with Tableau Server v10.1 and higher._ 
 
-  The Tableau installation directory. The software binaries, configuration, and data will all live in a a directory tree rooted here. _If omitted, the default directory C:\Program Files\Tableau\Tableau Server will be used for the binaries, and configuration and data will live under C:\Program Data\Tableau_
+#### _upgrade_ mode
 
-* --autorun | --no-autorun _**Not required**_
+A quick note: the same installer executable used to perform a fresh install is used to perform an upgrade. The word 'install' in this section can be considered synonymous with 'upgrade'
 
-  Whether or not to configure Tableau Server to run automatically on system bootup. _If omitted, this defaults to True._
+Option|Argument|Required|Description
+----|----------|---------|-------
+--installDir|[FILE PATH]|Optional|The current Tableau installation directory. The software binaries, configuration, and data will all live in a a directory tree rooted here. If the script does not find an existing installation at this directory, it will abort. _If omitted, the default directory C:\Program Files\Tableau\Tableau Server will be used for the binaries, and configuration and data will live under C:\Program Data\Tableau_
+--installerLog|[FILE PATH]|Optional|Path to where the installer executable should write its log file. The directory must already exist. _If omitted, the log will be written under the user's TEMP directory._
+--fastuninstall| |Optional|  If specified, this will perform the upgrade using the /FASTUNINSTALL switch, which skips creating a backup before performing the upgrade (which uninstalls the old version and then installs the new version). This greatly speeds up the upgrade process; consider using this if you already have a recent backup or feel particularly lucky today. _If omitted, the upgrade process will not use /FASTUNINSTALL and a backup will be created before the upgrade is performed__
+(installer_executable)|[FILE PATH]|**Required**|The final argument to the script is simply the path, absolute or relative, to the Tableau Server installer executable, acquired through usual channels such as downloaded from the Tableau Website. _This script is only supported for use with Tableau Server v10.1 and higher._ 
 
-* --secretsFile _**Required**_
+### Input File Samples 
 
-  Path to a .json file (relative or absolute) that describes both the credentials of the Windows account that Tableau Server will run as, and the username/password of the initial admin user for Tableau Server.
-
-* --configFile _**Not Required**_
-
-  Path to a .yml file (relative or absolute) describing the Tableau Server configuration. This file's content is the same as the tabsvc.yml file. _If this argument is omitted, all Tableau defaults will be used for configuration._
-
-* --registrationFile _**Required**_
-
-  Path to a .json file (relative or absolute) describing the Tableau Server registration information. 
-
-* --licenseKey _**Required**_
-
-  Your server license key, acquired through the usual channels.
-
-* installer_executable _**Required**_
-
-  The final argument to the script is simply the path, absolute or relative, to the Tableau Server installer executable, acquired through usual channels such as downloaded from the Tableau Website.
-
-### File Structure
-
-#### Secrets file example
+#### <a name="SecretsFile"></a> Secrets file example
 ```
 {
 	"runas_user":"workgroup\serviceuser",
@@ -68,7 +88,7 @@ If _runas_user_ is not set, the system will use the Windows built-in user _NT AU
 
 The admin user is the initial user, who acts as a superuser for the whole Tableau Server in regards to creating users, creating sites, etc.
 
-#### Server Configuration file example
+#### <a name="ConfigFile"></a> Server Configuration file example
 ```
 ---
 config.version: 15
@@ -95,9 +115,11 @@ svcmonitor.notification.smtp.target_addresses: heeeeelp@example.com
 vizqlserver.data_refresh: 6
 service.init.state: start
 ```
-The config options available are beyond the scope of this document. Hint: To install a server with the same configuration as an existing server, you can just copy the contents of the existing server's _\<TopLevelDir>/config/tabsvc.yml_ . You do need the _config.version_ so the server can handle any conversions or updates or configuration options, if required.
 
-#### Server registration file example
+
+Hint: To install a server with the same configuration as an existing server, you can just copy the contents of the existing server's _tabsvc.yml_ file. By default this is located in `C:\ProgramData\Tableau\Tableau Server\config` . If you use an existing file, you need to add the _config.version:_ (15 for 10.1) so the server can handle any conversions, updates, or configuration options.
+
+#### <a name="RegFile"></a> Server registration file example
 ```
 {
     "first_name" : "John",
@@ -115,4 +137,34 @@ The config options available are beyond the scope of this document. Hint: To ins
 }
 ```
 
-	
+### Known Issues/Troubleshooting
+
+* If you use the `--configfile` option to specify a custom configuration file, verify that the .yml file that you provide is valid for your Tableau Server installation.  Pay special attention that hostnames and IP addresses match those of the cluster that you are deploying to.
+* Upgrades using the Python script only work for upgrades from v9.3 and higher.  For previous version of Tableau Server, you will need to first uninstall Tableau Server from the primary machine and all worker machines.  Then, proceed as you would for a multi-node install of Tableau Server.
+
+<a name="CloudFormationTemplate"></a> single-server.cfn
+-----------------
+This is a sample for [Cloud Formation Template](https://aws.amazon.com/cloudformation/) for automating the deployment of Tableau Server to Amazon AWS.  This Cloud Formation template will deploy a default single-node instance using local authentication and default configurations.  The template does allow for minimal customization of the Gateway port and process counts on the server.
+
+Time to Deploy: Approximately 45 minutes.
+### Requirements
+* You must have your own provisioned AWS account.
+* You must have a [Amazon EC2 Key Pair](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html).
+* You must create an named [AWS S3](https://aws.amazon.com/s3/) bucket containing the following items:
+	* A copy of ScriptedInstaller.py
+	* Python 2.7.12.msi installer
+	* A copy of the Tableau Server 10.1 Beta 2 installer 
+	* A copy of single-server.cfn *(Optional)* 
+
+### Usage
+
+1. On the AWS Console go to CloudFormation > Create Stack.
+2. Select the template file (single-server.cfn) > Click Next.
+3. Provide a "Stack name" and fill out the rest of the parameters including License, Registration, and Admin account information for your Tableau Server installation.
+4. Continue through the rest of the screens and Accept the IAM warning and click Submit.
+5. Once the status has changed to CREATE_COMPLETE. Click on the Output tab and copy the TableauServerPublicHostName.
+6. Verify that you can connect to Tableau Server by navigating to the TableauServerPublicHostName and logging in with the admin account that you specified.
+
+### Known Issues/Troubleshooting Steps
+
+None as of this writing.
