@@ -85,7 +85,6 @@ def make_cmd_line_parser():
     optional_flags.add_argument('--configFile', dest='configFile', help='Configuration and topology yml file', default=None)
     optional_flags.add_argument('--installerLog', dest='installerLog', help='Installer logfile; a default will be created if unspecified', default=None)
     optional_flags.add_argument('--enablePublicFwRule', dest='enablePublicFwRule', action='store_true', help='If configured to add firewall rules to connect to gateway, also enable firewall rule to connect "public" Windows profile')
-    optional_flags.add_argument('--noAutorun', dest='autorun', action='store_false', help='Do not automatically start Tableau service on machine boot')
 
     # Required flags (no reasonable defaults)
     required_flags = install_parser.add_argument_group('required flags')
@@ -100,6 +99,7 @@ def make_cmd_line_parser():
     # Optional flags (have reasonable defaults)
     optional_flags = upgrade_parser.add_argument_group('Optional arguments')
     optional_flags.add_argument('--installDir', dest='installDir', help='installation directory', default=TABLEAU_DEFAULT_INSTALL_DIR)
+    optional_flags.add_argument('--secretsFile', dest='secretsFile', help='User credentials json file; required if you use non-default runas username', default=None)
     optional_flags.add_argument('--installerLog', dest='installerLog', help='Installer logfile; a default will be created if unspecified', default=None)
     optional_flags.add_argument('--fastuninstall', dest='fastuninstall', action='store_true', help='Use the optional \'fastuninstall\' functionality of the installer to skip making a backup before upgrading')
     required_flags = upgrade_parser.add_argument_group('required flags')
@@ -126,9 +126,16 @@ def validate_install_inputs(options):
     validate_installer_executable(options)
     return secrets
 
+# Be sure our inputs for upgrade are set. The secrets file may or may not be set.
+# return the secrets contained therein, or an empty dict if no file/not present.
 def validate_upgrade_inputs(options):
     # Is the installer executable valid?
     validate_installer_executable(options)
+    # Is the secrets file valid? If not present, 
+    secrets = {}
+    if options.secretsFile:
+        secrets = validate_secrets_file(options, require_initialuser=False)
+    return secrets
 
 def validate_python_version():
     current_version_tuple = (sys.version_info.major, sys.version_info.minor, sys.version_info.micro)
@@ -140,7 +147,7 @@ def validate_python_version():
 def good_python_versions_string(min_version_parts):
     versions_as_string = []
     for version_tuple in KNOWN_GOOD_PYTHON_VERSIONS:
-        string_tuple = map(str,version_tuple)
+        string_tuple = list(map(str,version_tuple))
         if len(string_tuple) < min_version_parts:
             string_tuple.extend('x' * (min_version_parts - len(string_tuple)))
         versions_as_string.append('.'.join(string_tuple))
@@ -171,14 +178,14 @@ def validate_registration_file(options):
     except ValueError as ex:
         raise ValidationError('The registration json file "%s" contains malformed json' % options.registrationFile)
 
-# Be sure the registration file is present, parseable and contains at least a admin user stuff
-def validate_secrets_file(options):
+# Be sure the secrets file is present, parseable and, optionally, contains admin user info
+def validate_secrets_file(options, require_initialuser=True):
     try:
         secrets = read_json_file(options.secretsFile)
         # be sure they have at least initial user and password
-        if not 'content_admin_user' in secrets.keys():
+        if require_initialuser and not 'content_admin_user' in secrets.keys():
             raise ValidationError('Missing content_admin_user in secrets file "%s"' % options.secretsFile)
-        if not 'content_admin_pass' in secrets.keys():
+        if require_initialuser and not 'content_admin_pass' in secrets.keys():
             raise ValidationError('Missing content_admin_pass in secrets file "%s"' % options.secretsFile)
         return secrets
     except IOError as ex:
@@ -271,13 +278,11 @@ def must_set_value_for_parameter(param_map, parameter):
     return parameter in param_map.keys() and not(not param_map[parameter] or param_map[parameter].isspace())
 
 # Install Tableau as a service
-def install_service(tabadmin_path, options):
-    tabadmin_args = ['install']
-    if options.autorun:
-        tabadmin_args.append('--auto')
-        print("Installing services with autorun on")
-    else:
-        print("Installing services with autorun off")
+def install_service(tabadmin_path, options, secrets):
+    tabadmin_args = ['install', '--auto']
+    if must_set_value_for_parameter(secrets, 'runas_pass'):
+        tabadmin_args.extend(['--password', secrets['runas_pass']])
+        
     run_command(tabadmin_path, tabadmin_args)
 
 # Runs the installer.exe, and checks for the exit code
@@ -433,8 +438,11 @@ def run_install(options, secrets):
     else:
         print('Runas credentials not specified; using defaults')
 
-    # Install the Windows service
-    install_service(tabadmin_path, options)
+    # Run configure to be sure any credential changes are properly distributed. This also works around AWS-related configuration quirks.
+    run_command(tabadmin_path, ['configure'])
+
+        # Install the Windows service
+    install_service(tabadmin_path, options, secrets)
 
     # Let's activate with the key given on the command line.
     print('Activating product')
@@ -462,7 +470,7 @@ def run_install(options, secrets):
 
     print('Installation complete')
 
-def run_upgrade(options):
+def run_upgrade(options, secrets):
     print('Running installer executable to perform update')
 
     print("Checking that there's a previous installation at /DIR")
@@ -496,6 +504,18 @@ def run_upgrade(options):
         raise ExistingInstallationError("Could not find newly installed binaries")
     tabadmin_path = os.path.join(binaries_path, 'tabadmin.exe')
 
+    # If a secrets file was specified (which is required if they're not using the default runas username 
+    # and password), set the values.
+    if configure_runas_secrets(tabadmin_path, secrets):
+        print('Set runas credentials into configuration for performing upgrade')
+        # Run configure to be sure any credential changes are properly distributed.
+        run_command(tabadmin_path, ['configure'])
+    else:
+        print('Runas credentials not specified; username will be unchanged, password assumed to be blank')
+
+    # Re-install the Windows service (just in case the runas user changed)
+    install_service(tabadmin_path, options, secrets)
+    
     # Get path to relevant binaries
     # Start it up!
     print('Server is starting')
@@ -515,8 +535,8 @@ def main():
             run_install(options, secrets)
         elif options.installer_action == 'upgrade':
             print("Trying to perform update")
-            validate_upgrade_inputs(options)
-            run_upgrade(options)
+            secrets = validate_upgrade_inputs(options)
+            run_upgrade(options, secrets)
         else:
             raise OptionsError("Unknown action %s" % options.installer_action)
         return 0
