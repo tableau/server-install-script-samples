@@ -3,7 +3,7 @@
 
 We are providing a set of sample [AWS CloudFormation](https://aws.amazon.com/cloudformation/) templates that can be used as a basis for building your own templates for deploying Tableau Server to Amazon Web Services (AWS).
 
-* **[public-sample-single-server.cfn:](#SimpleSingleNode)** A very basic template used to set up a simple single-node Tableau Server
+* **[public-sample-single-server.cfn:](#SimpleSingleNode)** A very basic template used to set up a simple single-node Tableau Server.
 * **[public-ssl-single-server.cfn:](#SecureSingleNode)** A simple template used to set up a simple single-node Tableau Server that uses SSL for protected communication with clients.
 * **[public-ssl-cluster-server.cfn:](#SecureClusterNode)** A template used to set up a simple three-node Tableau Server cluster that uses SSL for protected communication with clients.
 
@@ -13,7 +13,7 @@ To improve the security of your Tableau Server installation, Tableau recommends 
 * You must have your own provisioned AWS account.
 * You must have an [Amazon Elastic Compute Cloud (Amazon EC2) key pair](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html).
 * You must create a named [Amazon S3](https://aws.amazon.com/s3/) bucket containing the following items:
-	* A copy of [ScriptedInstaller.py](https://github.com/tableau/server-install-script-samples/blob/master/ScriptedInstaller.py)
+	* A copy of [ScriptedInstaller.py](../ScriptedInstaller.py)
 	* A copy of the Tableau Server installer (v10.1 or higher)
 	* A copy of the Tableau Server worker installer (v10.1 or higher) *(Required for distributed installations-only)*
 * *(Optional)* A domain managed by [Amazon Route53](https://aws.amazon.com/route53/). *(Required for the SSL examples)*

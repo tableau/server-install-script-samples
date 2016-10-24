@@ -16,7 +16,7 @@ Getting Started
 This repository has the following samples for performing installs and/or upgrades of Tableau Server:
 
 * **[ScriptedInstaller.py:](#ScriptedInstaller)** Python script for installing or upgrading Tableau Server.  This script supports both single and multi-node instances of Tableau Server. We have also included several samples of the input files to the installer script.
-* **[CloudFormation Templates:](CloudFormation/README.md)** Sample CloudFormation templates for deploying Tableau Server to Amazon AWS.
+* **[AWS CloudFormation Templates:](CloudFormation/README.md)** Sample AWS CloudFormation templates for deploying Tableau Server to Amazon Web Services(AWS).
 
 <a name="ScriptedInstaller"></a> ScriptedInstaller.py
 ----
