@@ -7,9 +7,8 @@ We are providing some reference implementations to show users and organizations 
 
 See also [Automated Installation of Tableau Server](http://onlinehelp.tableau.com/v10.1/server/en-us/server_install_unattended.htm) for general documentation regarding this feature.  
 
-***Note: The samples contained in this repository only work with the Tableau Server 10.1 Beta 2 Installer.  For more information or to join the beta, please visit [http://www.tableau.com/tableau-10-beta-program](http://www.tableau.com/tableau-10-beta-program).***
 
-Please use 'Issues' to note any bugs or make suggestions.  You can also e-mail [beta@tableau.com](mailto:beta@tableau.com) during the 10.1 Beta to provide additional feedback or receive support. 
+Please use 'Issues' to note any bugs or make suggestions.  
 
 Getting Started
 ---------------
