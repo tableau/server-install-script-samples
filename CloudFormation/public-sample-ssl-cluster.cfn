@@ -5,16 +5,16 @@
 
   "Parameters" : {
     "AwsHostedZoneId" : {
-        "Description" : "ZoneID for the Hosted Zone to contain the machine's DNS entry",
+        "Description" : "DNS ZoneID to contain the cluster's DNS entry",
         "Type" : "AWS::Route53::HostedZone::Id"
     },
     "AwsPublicFQDN" : {
-        "Description" : "The FQDN of the created entry; used to create the DNS entry in the hosted zone",
+        "Description" : "Tableau Server portal will be reachable at this address",
         "Type" : "String",
         "MinLength" : "1"
     },
     "SSLCertificateARN" : {
-        "Description" : "The ARN for the SSL cert use; blank for no SSL",
+        "Description" : "The Amazon Resource Name for the existing SSL cert you wish to use",
         "Type" : "String",
         "Default" : ""
     },
@@ -24,28 +24,29 @@
       "ConstraintDescription" : "must be the name of an existing EC2 KeyPair."
     },
     "ResourceAvailabilityZone" : {
-        "Description" : "The availability zone in which our server and storage volume reside",
+        "Description" : "The availability zone (AZ) in which our server and storage volume reside",
         "Type": "AWS::EC2::AvailabilityZone::Name"
     },
     "BastionCidrForRDP" : {
-      "Description" : "IP Cidr from which you are likely to RDP into the bastion host",
+      "Description" : "CIDR from which you may RDP into the bastion host (e.g., 1.1.1.1/32)",
       "Type" : "String",
       "MinLength" : "9",
       "MaxLength" : "18",
+      "Default": "1.1.1.1/32",
       "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
       "ConstraintDescription": "Must be a valid IP CIDR range of the form x.x.x.x/x."
     },
     "LoadBalancerCidrForWeb" : {
-      "Description" : "IP Cidr for Web clients. This can be a specific subnet (yours), or open to the world. 0.0.0.0/0",
+      "Description" : "CIDR for Web clients. This can be a specific subnet (yours), or open to the world. (e.g., 0.0.0.0/0)",
       "Type" : "String",
       "MinLength" : "9",
       "MaxLength" : "18",
-      "Default": "0.0.0.0/0",
+      "Default": "1.1.1.1/32",
       "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
       "ConstraintDescription": "Must be a valid IP CIDR range of the form x.x.x.x/x."
     },
     "InstanceType" : {
-      "Description" : "Amazon EC2 instance type",
+      "Description" : "EC2 instance type for Tableau Server instances",
       "Type" : "String",
       "Default" : "m4.xlarge",
       "AllowedValues" : [ "m4.xlarge", "m4.2xlarge", "m4.4xlarge", "m4.10xlarge"],
@@ -59,17 +60,17 @@
       "ConstraintDescription" : "must be one of: Windows2012r2"
     },
     "InstallationBucket" : {
-      "Description" : "The name of the S3 bucket from which to fetch the server installer",
+      "Description" : "The name of the S3 bucket from which to fetch installation files",
       "Type" : "String",
       "MinLength" : "1"
     },
     "RunasUser" : {
-      "Description" : "The name of the user which runs the service; blank for default",
+      "Description" : "The name of the user which runs the Windows service; blank for default",
       "Type" : "String",
       "Default" : ""
     },
     "RunasPassword" : {
-      "Description" : "The password of the user which runs the service; blank for default",
+      "Description" : "The password of the user which runs the Windows services; blank for default",
       "Type" : "String",
       "Default" : "",
       "NoEcho" : "true"
@@ -92,13 +93,13 @@
       "MinLength" : "1"
     },
     "TableauServerPrimaryInstaller" : {
-      "Description" : "Primary installer to use",
+      "Description" : "Primary installer to use; fetched from the Source S3 Bucket",
       "Type" : "String",
       "Default" : "Setup-Server-x64.exe",
       "MinLength" : "1"
     },
     "TableauServerWorkerInstaller" : {
-      "Description" : "Worker installer to use",
+      "Description" : "Worker installer to use; fetched from the Source S3 Bucket",
       "Type" : "String",
       "Default" : "Setup-Worker-x64.exe",
       "MinLength" : "1"
@@ -186,7 +187,95 @@
                             "RegPhone","RegCity","RegState","RegZip","RegCountry"]
         }
       ],
-      "ParameterLabels" : {}
+      "ParameterLabels" : {
+        "AwsHostedZoneId": {
+            "default": "DNS ZoneID"
+        },
+        "AwsPublicFQDN": {
+            "default": "Full DNS name for cluster"
+        },
+        "SSLCertificateARN": {
+            "default": "SSL certificate ARN"
+        },
+        "KeyName": {
+            "default": "EC2 keypair"
+        },
+        "ResourceAvailabilityZone": {
+            "default": "Target AZ"
+        },
+        "BastionCidrForRDP": {
+            "default": "Source CIDR for RDP access to bastion host "
+        },
+        "LoadBalancerCidrForWeb": {
+            "default": "Source CIDR for web access to the web UI"
+        },
+        "InstanceType": {
+            "default": "EC2 Instance Type"
+        },
+        "WindowsVersion": {
+            "default": "Server OS Version"
+        },
+        "InstallationBucket": {
+            "default": "Source S3 Bucket"
+        },
+        "RunasUser": {
+            "default": "Service runas user"
+        },
+        "RunasPassword": {
+            "default": "Service runas password"
+        },
+        "ContentAdminUser": {
+            "default": "Portal admin username"
+        },
+        "ContentAdminPassword": {
+            "default": "Portal admin password"
+        },
+        "TableauServerLicenseKey": {
+            "default": "Tableau Activation Key"
+        },
+        "TableauServerPrimaryInstaller": {
+            "default": "Primary installer executable"
+        },
+        "TableauServerWorkerInstaller": {
+            "default": "Worker installer executable"
+        },
+        "RegFirstName": {
+            "default": "First Name"
+        },
+        "RegLastName": {
+            "default": "Last name"
+        },
+        "RegEmail": {
+            "default": "Email Address"
+        },
+        "RegCompany": {
+            "default": "Company"
+        },
+        "RegTitle": {
+            "default": "Title"
+        },
+        "RegDepartment": {
+            "default": "Department"
+        },
+        "RegIndustry": {
+            "default": "Industry"
+        },
+        "RegPhone": {
+            "default": "Phone"
+        },
+        "RegCity": {
+            "default": "City"
+        },
+        "RegState": {
+            "default": "State"
+        },
+        "RegZip": {
+            "default": "Zip/Postal Code"
+        },
+        "RegCountry": {
+            "default": "Country"
+        }
+      }
     }
   },
   "Mappings" : {
@@ -411,7 +500,7 @@
             "Tags": [
                 {
                     "Key" : "Name",
-                    "Value" : {"Fn::Sub" : "ssl-tableau-cfn-lb"}
+                    "Value" : {"Fn::Sub" : "tableaucluster-cfn-lb"}
                 }
             ]
         }
@@ -484,7 +573,7 @@
         "Tags": [
             {
                 "Key" : "Name",
-                "Value" : {"Fn::Sub" : "tableau-bastion-host"}
+                "Value" : "cluster-bastion-host"
             }
         ]
       }
@@ -550,36 +639,42 @@
                                 "install.component.samples" : "true",
                                 "wgserver.authenticate" : "local",
                                 "worker.hosts" : "10.0.1.11, 10.0.1.12, 10.0.1.13",
-                                "worker0.backgrounder.procs" : "INTEGER:2",
-                                "worker0.cacheserver.procs" : "INTEGER:1",
-                                "worker0.dataengine.procs" : "INTEGER:1",
-                                "worker0.dataserver.procs" : "INTEGER:2",
-                                "worker0.filestore.enabled" : "true",
+                                "pgsql.host" : "10.0.1.12",
+                                "pgsql0.host" : "10.0.1.12",
+                                "pgsql1.host" : "10.0.1.13",
                                 "worker0.gateway.enabled" : "true",
                                 "worker0.gateway.port" : "INTEGER:80",
-                                "worker0.vizportal.procs" : "INTEGER:1",
-                                "worker0.vizqlserver.procs" : "INTEGER:2",
+                                "worker0.vizportal.procs" : "INTEGER:0",
+                                "worker0.vizqlserver.procs" : "INTEGER:0",
+                                "worker0.cacheserver.procs" : "INTEGER:0",
+                                "worker0.searchserver.enabled" : "true",
+                                "worker0.backgrounder.procs" : "INTEGER:0",
+                                "worker0.dataserver.procs" : "INTEGER:0",
+                                "worker0.dataengine.procs" : "INTEGER:0",
+                                "worker0.filestore.enabled" : "false",
                                 "worker0.zookeeper.procs" : "INTEGER:1",
-                                "worker1.backgrounder.procs" : "INTEGER:1",
-                                "worker1.cacheserver.procs" : "INTEGER:1",
-                                "worker1.dataengine.procs" : "INTEGER:1",
-                                "worker1.dataserver.procs" : "INTEGER:1",
-                                "worker1.filestore.enabled" : "true",
                                 "worker1.gateway.enabled" : "true",
                                 "worker1.gateway.port" : "INTEGER:80",
                                 "worker1.vizportal.procs" : "INTEGER:2",
-                                "worker1.vizqlserver.procs" : "INTEGER:1",
+                                "worker1.vizqlserver.procs" : "INTEGER:2",
+                                "worker1.cacheserver.procs" : "INTEGER:2",
+                                "worker1.searchserver.enabled" : "true",
+                                "worker1.backgrounder.procs" : "INTEGER:1",
+                                "worker1.dataserver.procs" : "INTEGER:1",
+                                "worker1.dataengine.procs" : "INTEGER:1",
+                                "worker1.filestore.enabled" : "true",
                                 "worker1.zookeeper.procs" : "INTEGER:1",
-                                "worker2.backgrounder.procs" : "INTEGER:1",
-                                "worker2.cacheserver.procs" : "INTEGER:1",
-                                "worker2.dataengine.procs" : "INTEGER:1",
-                                "worker2.dataserver.procs" : "INTEGER:1",
-                                "worker2.filestore.enabled" : "true",
-                                "worker2.gateway.enabled" : "false",
+                                "worker2.gateway.enabled" : "true",
                                 "worker2.gateway.port" : "INTEGER:80",
-                                "worker2.vizportal.procs" : "INTEGER:1",
+                                "worker2.vizportal.procs" : "INTEGER:2",
                                 "worker2.vizqlserver.procs" : "INTEGER:2",
-                                "worker2.zookeeper.procs" : "INTEGER:1"
+                                "worker2.cacheserver.procs" : "INTEGER:2",
+                                "worker2.searchserver.enabled" : "true",
+                                "worker2.backgrounder.procs" : "INTEGER:1",
+                                "worker2.dataserver.procs" : "INTEGER:1",
+                                "worker2.dataengine.procs" : "INTEGER:1",
+                                "worker2.filestore.enabled" : "true",
+                                "worker2.zookeeper.procs" : "INTEGER:1",
                             }
                         },
                         "c:\\tabsetup\\tableau-primary-installer.exe" : {
@@ -669,7 +764,7 @@
             "Tags": [
                 {
                     "Key" : "Name",
-                    "Value" : {"Fn::Sub" : "tableau-cluster-primary"}
+                    "Value" : "tableau-cluster-primary"
                 }
             ]
         }
@@ -739,7 +834,7 @@
             "Tags": [
                 {
                     "Key" : "Name",
-                    "Value" : {"Fn::Sub" : "tableau-cluster-worker-1"}
+                    "Value" : "tableaucluster-worker-1"
                 }
             ]
         }
@@ -809,7 +904,7 @@
             "Tags": [
                 {
                     "Key" : "Name",
-                    "Value" : {"Fn::Sub" : "tableau-cluster-worker-2"}
+                    "Value" : "tableaucluster-worker-2"
                 }
             ]
         }
