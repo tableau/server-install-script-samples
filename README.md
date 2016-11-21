@@ -55,8 +55,10 @@ Option|Argument|Required|Description
 --enablePublicFwRule||Optional|Use this to specify that a firewall rule to enable connections to the Gateway process (if configured to be created at all), should also be enabled on the Windows "public" profile. _If omitted, the firewall rule, if created at all, will default to the private and domain profiles only._
 --secretsFile|[FILE PATH]|**Required**|Path to a .json file (relative or absolute) that describes both the credentials of the Windows account that Tableau Server will run as, and the username/password of the initial admin user for Tableau Server.  See [Secrets File](#SecretsFile) for more information.
 --registrationFile|[FILE PATH]|**Required**|Path to a .json file (relative or absolute) describing the Tableau Server registration information. See [Server Registration File](#RegFile) for more information.
---licenseKey|[KEY]|**Required**|Your server license key, acquired through the usual channels.
+--licenseKey|[KEY]|**Required***|Your server license key, acquired through the usual channels.
+--trialLicense||**Required***|Use trial license (not valid for cluster setup)
 (installer executable)|[FILE PATH]|**Required**|The final argument to the script is simply the path, absolute or relative, to the Tableau Server installer executable, acquired through usual channels such as downloaded from the Tableau Website. _This script is only supported for use with Tableau Server v10.1 and higher._ 
+\* ***One and only one of --licenseKey or --trialLicense must be used***
 
 #### _upgrade_ mode
 
