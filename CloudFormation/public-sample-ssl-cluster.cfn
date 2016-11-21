@@ -295,8 +295,7 @@
             "EnableDnsSupport" : "true",
             "EnableDnsHostnames" : "true",
             "Tags" : [ 
-                {"Key" : "Name", "Value" : "ClusterVPC"}, 
-                {"Key" : "CreatedBy", "Value" : "jcase@tableau.com"}
+                {"Key" : "Name", "Value" : "ClusterVPC"}
             ]
         }
     },
@@ -304,8 +303,7 @@
         "Type" : "AWS::EC2::InternetGateway",
         "Properties" : {
             "Tags" : [ 
-                {"Key" : "Name", "Value" : "ClusterInternetGateway"}, 
-                {"Key" : "CreatedBy", "Value" : "jcase@tableau.com"}
+                {"Key" : "Name", "Value" : "ClusterInternetGateway"}
             ]
         }
     },
@@ -336,8 +334,7 @@
         "Properties" : {
             "VpcId" : { "Ref" : "ClusterVPC" },
             "Tags" : [
-                {"Key" : "Name", "Value" : "MainRouteTable"}, 
-                {"Key" : "CreatedBy", "Value" : "jcase@tableau.com"}
+                {"Key" : "Name", "Value" : "MainRouteTable"}
             ]
         }
     },
@@ -361,8 +358,7 @@
         "Properties" : {
             "VpcId" : { "Ref" : "ClusterVPC" },
             "Tags" : [
-                {"Key" : "Name", "Value" : "PrivateRouteTable"}, 
-                {"Key" : "CreatedBy", "Value" : "jcase@tableau.com"}
+                {"Key" : "Name", "Value" : "PrivateRouteTable"}
             ]
         }
     },
@@ -388,8 +384,7 @@
             "CidrBlock" : "10.0.0.0/24",
             "MapPublicIpOnLaunch" : "true",
             "Tags" : [ 
-                {"Key" : "Name", "Value" : "jcase cluster public subnet"}, 
-                {"Key" : "CreatedBy", "Value" : "jcase@tableau.com"}
+                {"Key" : "Name", "Value" : "cluster public subnet"}
             ],
             "VpcId" : { "Ref" : "ClusterVPC" }
         }
@@ -401,8 +396,7 @@
             "CidrBlock" : "10.0.1.0/24",
             "MapPublicIpOnLaunch" : "false",
             "Tags" : [ 
-                {"Key" : "Name", "Value" : "jcase cluster private subnet"}, 
-                {"Key" : "CreatedBy", "Value" : "jcase@tableau.com"}
+                {"Key" : "Name", "Value" : "cluster private subnet"}
             ],
             "VpcId" : { "Ref" : "ClusterVPC" }
         }
@@ -420,8 +414,7 @@
           }
         ],
         "Tags" : [
-            {"Key" : "Name", "Value" : "BastionSecurityGroup"}, 
-            {"Key" : "CreatedBy", "Value" : "jcase@tableau.com"}
+            {"Key" : "Name", "Value" : "BastionSecurityGroup"} 
         ],
         "VpcId" : { "Ref" : "ClusterVPC" }
       }
@@ -455,8 +448,7 @@
             }
         ],
         "Tags" : [
-            {"Key" : "Name", "Value" : "InternalSecurityGroup"}, 
-            {"Key" : "CreatedBy", "Value" : "jcase@tableau.com"}
+            {"Key" : "Name", "Value" : "InternalSecurityGroup"}
         ],
         "VpcId": { "Ref" : "ClusterVPC" }
       }
@@ -474,8 +466,7 @@
           }
         ],
         "Tags" : [
-            {"Key" : "Name", "Value" : "LoadBalancerSecurityGroup"}, 
-            {"Key" : "CreatedBy", "Value" : "jcase@tableau.com"}
+            {"Key" : "Name", "Value" : "LoadBalancerSecurityGroup"}
         ],
         "VpcId" : { "Ref" : "ClusterVPC" }
       }

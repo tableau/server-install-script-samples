@@ -91,7 +91,10 @@ def make_cmd_line_parser():
     required_flags.add_argument('installer', help='installer path, e.g: Tableau-Server-64bit-9-3-1.exe')
     required_flags.add_argument('--secretsFile', dest='secretsFile', required=True, help='User credentials json file')
     required_flags.add_argument('--registrationFile', dest='registrationFile', required=True, help='User registration file, in json format')
-    required_flags.add_argument('--licenseKey', dest='licenseKey', required=True, help='Activation key')
+
+    mutex_flags = install_parser.add_mutually_exclusive_group(required=True)
+    mutex_flags.add_argument('--licenseKey', dest='licenseKey', help='Activation key')
+    mutex_flags.add_argument('--trialLicense', dest='trial', action='store_true', default=False, help='Use an expiring trial license')
 
     ### UPGRADE ARGS
     upgrade_parser = subparsers.add_parser('upgrade')
@@ -444,9 +447,14 @@ def run_install(options, secrets):
         # Install the Windows service
     install_service(tabadmin_path, options, secrets)
 
-    # Let's activate with the key given on the command line.
-    print('Activating product')
-    run_command(tabadmin_path, ['activate', '--key', options.licenseKey])
+    # If they're using the 'trial' option, activate with that. Otherwise, use the license key given on the cmdline
+    if options.trial:
+        print('Activating product using trial option')
+        run_command(tabadmin_path, ['activate', '--trial'])
+    else:
+        print('Activating product')
+        run_command(tabadmin_path, ['activate', '--key', options.licenseKey])
+
     print('Registering product set')
     run_command(tabadmin_path, ['register', '--file', options.registrationFile])
 
