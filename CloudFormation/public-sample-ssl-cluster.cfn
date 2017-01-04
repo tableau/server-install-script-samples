@@ -59,6 +59,7 @@
     "InstallationBucket" : {
       "Description" : "The name of the S3 bucket from which to fetch installation files",
       "Type" : "String",
+      "Default" : "tableau-server-installer",
       "MinLength" : "1"
     },
     "RunasUser" : {
