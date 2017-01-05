@@ -282,7 +282,7 @@
             "default": "Server installer executable"
         },
         "TableauServerLicenseKey": {
-            "default": "License Key (leave blank for trial)",
+            "default": "License Key (leave blank for trial)"
         },
         "TableauServerVolumeSize": {
             "default": "Size for server volume in GB"
@@ -365,7 +365,7 @@
   },
   "Conditions" : {
     "EnablePublicFirewallRule" : { "Fn::Equals" : [{ "Ref" : "PublicFirewallProfileHole"},"Yes"]},
-    "IsTrial" :                  { "Fn::Equals":  [ "", { "Ref" : "TableauServerLicenseKey" }]
+    "IsTrial" :                  { "Fn::Equals":  [ "", { "Ref" : "TableauServerLicenseKey" }]},
   },
   "Resources" : {
     "InstanceSecurityGroup" : {
@@ -579,10 +579,6 @@
         "Description" : "EC2 InstanceID of the instance running Tableau Server",
         "Value" : { "Ref" : "TableauWindowsServer" }
     },
-    "PublicIpAddress" : {
-        "Description" : "Public IP Address of instance running Tableau Server",
-        "Value" : { "Fn::GetAtt" : [ "TableauWindowsServer", "PublicIp"]}
-    },
     "PublicDNSName" : {
         "Description" : "Public DNS name of instance running Tableau Server",
         "Value" : { "Fn::GetAtt" : [ "TableauWindowsServer", "PublicDnsName"]}
@@ -590,6 +586,6 @@
     "PublicGatewayPort" : {
         "Description" : "The port serving web traffic on the public interface of Tableau Server",
         "Value" : {"Ref" : "Worker0GatewayPort"}
-    },
+    }
   }    
 }

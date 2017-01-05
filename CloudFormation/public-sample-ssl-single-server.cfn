@@ -305,7 +305,7 @@
             "default": "Server installer executable"
         },
         "TableauServerLicenseKey": {
-            "default": "License Key (leave blank for trial)",
+            "default": "License Key (leave blank for trial)"
         },
         "TableauServerVolumeSize": {
             "default": "Size for server volume in GB"
@@ -387,9 +387,8 @@
     }
   },
   "Conditions" : {
-    "EnablePublicFirewallRule" : { "Fn::Equals" : [{ "Ref" : "PublicFirewallProfileHole"}, "Yes"]},
-    "IsTrial" :                  { "Fn::Equals":  [ "", { "Ref" : "TableauServerLicenseKey"}]
-    }
+      "EnablePublicFirewallRule" : { "Fn::Equals" : [{ "Ref" : "PublicFirewallProfileHole"}, "Yes"]},
+      "IsTrial" :                  { "Fn::Equals":  [ "", { "Ref" : "TableauServerLicenseKey"}]}
   },
   "Resources" : {
     "InstanceSecurityGroup" : {
@@ -668,11 +667,7 @@
         "Description" : "EC2 InstanceID of the instance running Tableau Server",
         "Value" : { "Ref" : "TableauWindowsServer" }
     },
-    "LoadBalancerId" : {
-        "Description" : "Logical ID of the load balancer used ",
-        "Value" : { "Ref" : "TableauWindowsServer" }
-    },
-    "InstanceDNSName" : {
+    "PublicDNSName" : {
         "Description" : "Public DNS name of instance running Tableau Server; use for RDS connections",
         "Value" : { "Fn::GetAtt" : [ "TableauWindowsServer", "PublicDnsName"]}
     },
