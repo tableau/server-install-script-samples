@@ -36,8 +36,8 @@
     "InstanceType" : {
       "Description" : "EC2 instance type for Tableau Server instances",
       "Type" : "String",
-      "Default" : "m4.xlarge",
-      "AllowedValues" : [ "m4.xlarge", "m4.2xlarge", "m4.4xlarge", "m4.10xlarge"],
+      "Default" : "m4.4xlarge",
+      "AllowedValues" : [ "m4.xlarge", "m4.2xlarge", "m4.4xlarge", "m4.8xlarge", "r4.xlarge", "r4.2xlarge", "r4.4xlarge", "r4.8xlarge"],
       "ConstraintDescription" : "must be a valid EC2 instance type."
     },
     "InstallationBucket" : {
@@ -129,6 +129,12 @@
       "Default" : "Setup-Server-x64.exe",
       "MinLength" : "1"
     },
+    "TableauServerVolumeSize" : {
+      "Description" : "Size of volume for server in GB; need at least 30 GB free for server installation",
+      "Type" : "Number",
+      "Default" : "100",
+      "MinValue" : "30"
+    },
     "TableauServerWorkerInstaller" : {
       "Description" : "Worker installer to use; fetched from the Source S3 Bucket",
       "Type" : "String",
@@ -156,7 +162,7 @@
         },
         {
             "Label" : { "default" : "Machine Configuration" },
-            "Parameters" : ["InstanceType", "WindowsVersion"]
+            "Parameters" : ["InstanceType", "TableauServerVolumeSize", "WindowsVersion"]
         },
         {
             "Label" : { "default" : "Installation Config" },
@@ -249,6 +255,9 @@
         },
         "TableauServerPrimaryInstaller": {
             "default": "Primary installer executable"
+        },
+        "TableauServerVolumeSize": {
+            "default": "Size for server volume in GB; Requires at least 30 GB"
         },
         "TableauServerWorkerInstaller": {
             "default": "Worker installer executable"
@@ -496,10 +505,14 @@
     },
     "ServerLoadBalancer" : {
         "Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
-        "DependsOn" : ["LoadBalancerSecurityGroup", "PrimaryHost"],
+        "DependsOn" : ["LoadBalancerSecurityGroup", "PrimaryHost", "WorkerHost1", "WorkerHost2" ],
         "Properties" : {
             "Scheme" : "internet-facing",
-            "Instances" : [ { "Ref" : "PrimaryHost"} ],
+            "Instances" : [ 
+                { "Ref" : "PrimaryHost"},
+                { "Ref" : "WorkerHost1"},
+                { "Ref" : "WorkerHost2"}
+            ],
             "Subnets" : [  { "Ref" : "ClusterPublicSubnet"} ],
             "SecurityGroups" : [ { "Ref" : "LoadBalancerSecurityGroup"} ],
             "Listeners" : [
@@ -717,11 +730,9 @@
                         "5-run-installer" : {
                             "cwd" : "c:\\tabsetup",
                             "command" : { "Fn::Join" : [ " ", [
-                                "set \"TA_READ_FILE_CHUNK_SIZE=1500\" && ",
                                 "c:\\Python27\\python.exe",
                                 "ScriptedInstaller.py", "install",
                                 "--installerLog", "C:\\tabsetup\\tabinstall.txt",
-                                "--installDir C:\\TableauServer",
                                 "--secretsFile c:\\tabsetup\\secrets.json",
                                 "--configFile c:\\tabsetup\\config.yml",
                                 "--registrationFile c:\\tabsetup\\registration.json",
@@ -760,7 +771,7 @@
             "BlockDeviceMappings" : [
                { 
                 "DeviceName" : "/dev/sda1",
-                "Ebs" : { "VolumeSize" : "100" }
+                "Ebs" : { "VolumeSize" : { "Ref" : "TableauServerVolumeSize" } }
                }
             ],
             "UserData" : { "Fn::Base64" : { "Fn::Join" : ["\n", [
@@ -801,7 +812,7 @@
                       "2-run-installer" : {
                         "cwd" : "c:\\tabsetup",
                         "command" : { "Fn::Join" : [ " ", [
-                          "c:\\tabsetup\\tableau-worker-installer.exe /PRIMARYIP=\"10.0.1.11\" /DIR=C:\\TableauServer /VERYSILENT /SUPPRESSMSGBOXES /ACCEPTEULA /LOG=c:\\tabsetup\\installerlog.txt",
+                          "c:\\tabsetup\\tableau-worker-installer.exe /PRIMARYIP=\"10.0.1.11\" /VERYSILENT /SUPPRESSMSGBOXES /ACCEPTEULA /LOG=c:\\tabsetup\\installerlog.txt",
                           " > c:\\tabsetup\\installer-output.txt 2>&1"
                           ]]
                         },
@@ -830,7 +841,7 @@
             "BlockDeviceMappings" : [
                { 
                 "DeviceName" : "/dev/sda1",
-                "Ebs" : { "VolumeSize" : "100" }
+                "Ebs" : { "VolumeSize" : { "Ref" : "TableauServerVolumeSize" } }
                }
             ],
             "UserData" : { "Fn::Base64" : { "Fn::Join" : ["\n", [
@@ -871,7 +882,7 @@
                       "2-run-installer" : {
                         "cwd" : "c:\\tabsetup",
                         "command" : { "Fn::Join" : [ " ", [
-                          "c:\\tabsetup\\tableau-worker-installer.exe /DIR=C:\\TableauServer /PRIMARYIP=\"10.0.1.11\" /VERYSILENT /SUPPRESSMSGBOXES /ACCEPTEULA /LOG=c:\\tabsetup\\installerlog.txt",
+                          "c:\\tabsetup\\tableau-worker-installer.exe /PRIMARYIP=\"10.0.1.11\" /VERYSILENT /SUPPRESSMSGBOXES /ACCEPTEULA /LOG=c:\\tabsetup\\installerlog.txt",
                           " > c:\\tabsetup\\installer-output.txt 2>&1"
                           ]]
                         },
@@ -900,7 +911,7 @@
             "BlockDeviceMappings" : [
                { 
                 "DeviceName" : "/dev/sda1",
-                "Ebs" : { "VolumeSize" : "100" }
+                "Ebs" : { "VolumeSize" : { "Ref" : "TableauServerVolumeSize" } }
                }
             ],
             "UserData" : { "Fn::Base64" : { "Fn::Join" : ["\n", [
@@ -945,9 +956,9 @@
     }
   },
   "Outputs" : {
-    "BastionIpAddress" : {
-        "Description" : "Public IP Address of bastion host",
-        "Value" : { "Fn::GetAtt" : [ "BastionHost", "PublicIp"]}
+    "VPCId" : {
+        "Description" : "VPC created for cluster",
+        "Value" : {  "Ref" : "ClusterVPC" },
     },
     "BastionDNSName" : {
         "Description" : "Public DNS name of bastion host",

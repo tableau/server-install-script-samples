@@ -25,8 +25,8 @@
     "InstanceType" : {
       "Description" : "Amazon EC2 instance type",
       "Type" : "String",
-      "Default" : "m4.xlarge",
-      "AllowedValues" : [ "m4.xlarge", "m4.2xlarge", "m4.4xlarge", "m4.10xlarge"],
+      "Default" : "m4.4xlarge",
+      "AllowedValues" : [ "m4.xlarge", "m4.2xlarge", "m4.4xlarge", "m4.8xlarge", "r4.xlarge", "r4.2xlarge", "r4.4xlarge", "r4.8xlarge"],
       "ConstraintDescription" : "must be a valid EC2 instance type."
     },
     "KeyPairName" : {
@@ -124,10 +124,10 @@
       "MinLength" : "1"
     },
     "TableauServerVolumeSize" : {
-      "Description" : "Size of volume for server in GB; need at least 30 meg free for server installation",
+      "Description" : "Size of volume for server in GB; need at least 30 GB free for server installation",
       "Type" : "Number",
       "Default" : "100",
-      "MinValue" : "60"
+      "MinValue" : "30"
     },
     "WindowsVersion" : {
       "Description" : "The version of Windows to use",
@@ -283,7 +283,7 @@
             "default": "Server installer executable"
         },
         "TableauServerLicenseKey": {
-            "default": "Tableau Activation Key"
+            "Description": "License Key (leave blank for trial)",
         },
         "TableauServerVolumeSize": {
             "default": "Size for server volume in GB; Requires at least 30 GB"
@@ -365,7 +365,8 @@
     }
   },
   "Conditions" : {
-    "EnablePublicFirewallRule" : { "Fn::Equals" : [ {"Ref" : "PublicFirewallProfileHole"},"Yes"]}
+    "EnablePublicFirewallRule" : { "Fn::Equals" : [{ "Ref" : "PublicFirewallProfileHole"},"Yes"]},
+    "IsTrial" :                  { "Fn::Equals":  [{ "Ref" : "TableauServerLicenseKey", "" }]
   },
   "Resources" : {
     "InstanceSecurityGroup" : {
@@ -506,12 +507,19 @@
                   "c:\\Python27\\python.exe",
                   "ScriptedInstaller.py", "install",
                   "--installerLog", "C:\\tabsetup\\tabinstall.txt",
-                  "--installDir C:\\TableauServer",
                   { "Fn::If" : [ "EnablePublicFirewallRule", "--enablePublicFwRule", ""]},
                   "--secretsFile c:\\tabsetup\\secrets.json",
                   "--configFile c:\\tabsetup\\config.yml",
                   "--registrationFile c:\\tabsetup\\registration.json",
-                  "--licenseKey", { "Ref" : "TableauServerLicenseKey"},
+                  {
+                    "Fn::If": [
+                        "IsTrial",
+                        "--trialLicense",
+                        {
+                            "Fn::Sub": "--licenseKey ${TableauServerLicenseKey}"
+                        }
+                    ]
+                  },
                   "c:\\tabsetup\\tableau-server-installer.exe",
                   " > c:\\tabsetup\\installer-output.txt 2>&1"
                   ]]
