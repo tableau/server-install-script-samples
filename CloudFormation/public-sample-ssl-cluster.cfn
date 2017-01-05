@@ -114,15 +114,6 @@
         "Description" : "The availability zone (AZ) in which our server and storage volume reside",
         "Type": "AWS::EC2::AvailabilityZone::Name"
     },
-    "RunasPassword" : {
-      "Description" : "The password of the user which runs the Windows services; blank for default",
-      "Type" : "String",
-      "NoEcho" : "true"
-    },
-    "RunasUser" : {
-      "Description" : "The name of the user which runs the Windows service; blank for default",
-      "Type" : "String"
-    },
     "SSLCertificateARN" : {
         "Description" : "The Amazon Resource Name for the existing SSL cert you wish to use",
         "Type" : "String"
@@ -173,7 +164,7 @@
         },
         {
             "Label" : { "default" : "Secrets" },
-            "Parameters" : ["RunasUser","RunasPassword","ContentAdminUser","ContentAdminPassword"]
+            "Parameters" : ["ContentAdminUser","ContentAdminPassword"]
         },
         {
             "Label" : { "default" : "Registration" },
@@ -249,12 +240,6 @@
         },
         "ResourceAvailabilityZone": {
             "default": "Target AZ"
-        },
-        "RunasPassword": {
-            "default": "Service runas password"
-        },
-        "RunasUser": {
-            "default": "Service runas user"
         },
         "SSLCertificateARN": {
             "default": "SSL certificate ARN (Requires mattching DNS name)"
@@ -640,8 +625,6 @@
                         },
                         "c:\\tabsetup\\secrets.json" : {
                             "content" : {
-                                "runas_user" : {"Ref" : "RunasUser"},
-                                "runas_pass" : {"Ref" : "RunasPassword"},
                                 "content_admin_user" : {"Ref" : "ContentAdminUser"},
                                 "content_admin_pass" : {"Ref" : "ContentAdminPassword"}
                             }

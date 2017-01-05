@@ -96,15 +96,6 @@
         "Description" : "The availability zone in which our server and storage volume reside",
         "Type": "AWS::EC2::AvailabilityZone::Name"
     },
-    "RunasPassword" : {
-      "Description" : "The password of the user which runs the service; blank for default",
-      "Type" : "String",
-      "NoEcho" : "true"
-    },
-    "RunasUser" : {
-      "Description" : "The name of the user which runs the service; blank for default",
-      "Type" : "String"
-    },
     "SourceCidrForRDP" : {
       "Description" : "IP Cidr from which you are likely to RDP into the instances. You can add rules later by modifying the created security groups e.g. 54.32.98.160/32",
       "Type" : "String",
@@ -202,7 +193,7 @@
         },
         {
             "Label" : { "default" : "Secrets" },
-            "Parameters" : ["RunasUser","RunasPassword","ContentAdminUser","ContentAdminPassword"]
+            "Parameters" : ["ContentAdminUser","ContentAdminPassword"]
         },
         {
             "Label" : { "default" : "Registration" },
@@ -278,12 +269,6 @@
         },
         "ResourceAvailabilityZone": {
             "default": "Target AZ"
-        },
-        "RunasPassword": {
-            "default": "Service runas password"
-        },
-        "RunasUser": {
-            "default": "Service runas user"
         },
         "SourceCidrForRDP": {
             "default": "Allowed CIDR for RDP access"
@@ -457,8 +442,6 @@
               },
               "c:\\tabsetup\\secrets.json" : {
                 "content" : {
-                    "runas_user" : {"Ref" : "RunasUser"},
-                    "runas_pass" : {"Ref" : "RunasPassword"},
                     "content_admin_user" : {"Ref" : "ContentAdminUser"},
                     "content_admin_pass" : {"Ref" : "ContentAdminPassword"}
                 }
