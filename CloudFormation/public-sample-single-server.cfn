@@ -283,10 +283,10 @@
             "default": "Server installer executable"
         },
         "TableauServerLicenseKey": {
-            "Description": "License Key (leave blank for trial)",
+            "default": "License Key (leave blank for trial)",
         },
         "TableauServerVolumeSize": {
-            "default": "Size for server volume in GB; Requires at least 30 GB"
+            "default": "Size for server volume in GB"
         },
         "WindowsVersion": {
             "default": "Server OS Version"

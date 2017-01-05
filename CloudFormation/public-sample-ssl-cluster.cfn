@@ -257,7 +257,7 @@
             "default": "Primary installer executable"
         },
         "TableauServerVolumeSize": {
-            "default": "Size for server volume in GB; Requires at least 30 GB"
+            "default": "Size for server volume in GB"
         },
         "TableauServerWorkerInstaller": {
             "default": "Worker installer executable"
