@@ -4,32 +4,17 @@
   "Description" : "Create a Tableau Server instance running on Windows",
 
   "Parameters" : {
-    "KeyName" : {
-      "Description" : "Name of an existing EC2 KeyPair used to get the Administrator password for the instance",
-      "Type" : "AWS::EC2::KeyPair::KeyName",
-      "ConstraintDescription" : "must be the name of an existing EC2 KeyPair."
-    },
-    "ResourceAvailabilityZone" : {
-        "Description" : "The availability zone in which our server and storage volume reside",
-        "Type": "AWS::EC2::AvailabilityZone::Name"
-    },
-    "SourceCidrForRDP" : {
-      "Description" : "IP Cidr from which you are likely to RDP into the instances. You can add rules later by modifying the created security groups e.g. 54.32.98.160/32",
+    "ContentAdminPassword" : {
+      "Description" : "The password for the initial Admin user for Tableau server",
       "Type" : "String",
-      "MinLength" : "9",
-      "MaxLength" : "18",
-      "Default": "0.0.0.0/0",
-      "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
-      "ConstraintDescription": "Must be a valid IP CIDR range of the form x.x.x.x/x."
+      "MinLength" : "1",
+      "NoEcho" : "true"
     },
-    "SourceCidrForWeb" : {
-      "Description" : "IP Cidr for Web clients. This can be a specific subnet (yours), or open to the world. 0.0.0.0/0",
+    "ContentAdminUser" : {
+      "Description" : "The name of the initial Admin user for Tableau server",
       "Type" : "String",
-      "MinLength" : "9",
-      "MaxLength" : "18",
-      "Default": "0.0.0.0/0",
-      "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
-      "ConstraintDescription": "Must be a valid IP CIDR range of the form x.x.x.x/x."
+      "Default" : "admin",
+      "MinLength" : "1"
     },
     "InstallationBucket" : {
       "Description" : "The name of the S3 bucket from which to fetch the server installer",
@@ -40,50 +25,21 @@
     "InstanceType" : {
       "Description" : "Amazon EC2 instance type",
       "Type" : "String",
-      "Default" : "m4.xlarge",
-      "AllowedValues" : [ "m4.xlarge", "m4.2xlarge", "m4.4xlarge", "m4.10xlarge"],
+      "Default" : "m4.4xlarge",
+      "AllowedValues" : [ "m4.xlarge", "m4.2xlarge", "m4.4xlarge", "m4.8xlarge", "r4.xlarge", "r4.2xlarge", "r4.4xlarge", "r4.8xlarge"],
       "ConstraintDescription" : "must be a valid EC2 instance type."
     },
-    "TableauServerVolumeSize" : {
-      "Description" : "Size of volume for server in GB; need at least 30 meg free for server installation",
-      "Type" : "Number",
-      "Default" : "100",
-      "MinValue" : "60"
+    "KeyPairName" : {
+      "Description" : "Name of an existing EC2 KeyPair used to get the Administrator password for the instance",
+      "Type" : "AWS::EC2::KeyPair::KeyName",
+      "ConstraintDescription" : "must be the name of an existing EC2 KeyPair."
     },
-    "WindowsVersion" : {
-      "Description" : "The version of Windows to use",
+    "PublicFirewallProfileHole": {
+      "Description" : "If firewall rules are created allowing access to the server, create rule allowing access via the Public profile (useful for AWS)",
       "Type" : "String",
-      "Default" : "Windows2012r2",
-      "AllowedValues" : ["Windows2012r2"],
-      "ConstraintDescription" : "must be one of : Windows2012r2"
-    },
-    "RunasUser" : {
-      "Description" : "The name of the user which runs the service; blank for default",
-      "Type" : "String",
-      "Default" : ""
-    },
-    "RunasPassword" : {
-      "Description" : "The password of the user which runs the service; blank for default",
-      "Type" : "String",
-      "Default" : "",
-      "NoEcho" : "true"
-    },
-    "ContentAdminUser" : {
-      "Description" : "The name of the initial Admin user for Tableau server",
-      "Type" : "String",
-      "Default" : "admin",
-      "MinLength" : "1"
-    },
-    "ContentAdminPassword" : {
-      "Description" : "The password for the initial Admin user for Tableau server",
-      "Type" : "String",
-      "MinLength" : "1",
-      "NoEcho" : "true"
-    },
-    "TableauServerLicenseKey" : {
-      "Description" : "License Key",
-      "Type" : "String",
-      "MinLength" : "1"
+      "Default" : "Yes",
+      "AllowedValues" : ["Yes", "No"],
+      "ConstraintDescription" : "must be one of Yes , No"
     },
     "RegFirstName" : {
       "Description" : "First Name",
@@ -136,18 +92,48 @@
       "Description" : "Country",
       "Type" : "String"
     },
+    "ResourceAvailabilityZone" : {
+        "Description" : "The availability zone in which our server and storage volume reside",
+        "Type": "AWS::EC2::AvailabilityZone::Name"
+    },
+    "SourceCidrForRDP" : {
+      "Description" : "IP Cidr from which you are likely to RDP into the instances. You can add rules later by modifying the created security groups e.g. 54.32.98.160/32",
+      "Type" : "String",
+      "MinLength" : "9",
+      "MaxLength" : "18",
+      "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+      "ConstraintDescription": "Must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+    "SourceCidrForWeb" : {
+      "Description" : "IP Cidr for Web clients. This can be a specific subnet (yours), or open to the world. 0.0.0.0/0",
+      "Type" : "String",
+      "MinLength" : "9",
+      "MaxLength" : "18",
+      "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+      "ConstraintDescription": "Must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
     "TableauServerInstaller" : {
       "Description" : "Installer to use",
       "Type" : "String",
       "Default" : "Setup-Server-x64.exe",
       "MinLength" : "1"
     },
-    "PublicFirewallProfileHole": {
-      "Description" : "If firewall rules are created allowing access to the server, create rule allowing access via the Public profile (useful for AWS)",
+    "TableauServerLicenseKey" : {
+      "Description" : "License Key",
+      "Type" : "String"
+    },
+    "TableauServerVolumeSize" : {
+      "Description" : "Size of volume for server in GB; need at least 30 GB free for server installation",
+      "Type" : "Number",
+      "Default" : "100",
+      "MinValue" : "30"
+    },
+    "WindowsVersion" : {
+      "Description" : "The version of Windows to use",
       "Type" : "String",
-      "Default" : "No",
-      "AllowedValues" : ["Yes", "No"],
-      "ConstraintDescription" : "must be one of Yes , No"
+      "Default" : "WS2012R2",
+      "AllowedValues" : ["WS2012R2"],
+      "ConstraintDescription" : "must be one of : WS2012R2"
     },
     "Worker0GatewayPort" : {
       "Description" : "Web port for Tableau gateway",
@@ -198,7 +184,7 @@
       "ParameterGroups" : [
         {
             "Label" : { "default" : "AWS Environment" },
-            "Parameters" : ["KeyName","ResourceAvailabilityZone","SourceCidrForRDP","SourceCidrForWeb", "InstallationBucket"]
+            "Parameters" : ["KeyPairName","ResourceAvailabilityZone","SourceCidrForRDP","SourceCidrForWeb", "InstallationBucket"]
         },
         {
             "Label" : { "default" : "Machine Configuration" },
@@ -206,7 +192,7 @@
         },
         {
             "Label" : { "default" : "Secrets" },
-            "Parameters" : ["RunasUser","RunasPassword","ContentAdminUser","ContentAdminPassword"]
+            "Parameters" : ["ContentAdminUser","ContentAdminPassword"]
         },
         {
             "Label" : { "default" : "Registration" },
@@ -225,18 +211,161 @@
             "Parameters" : [ "TableauServerInstaller" ]
         }
       ],
-      "ParameterLabels" : {}
+      "ParameterLabels" : {
+        "ContentAdminPassword": {
+            "default": "Portal admin password"
+        },
+        "ContentAdminUser": {
+            "default": "Portal admin username"
+        },
+        "InstallationBucket": {
+            "default": "Source S3 Bucket"
+        },
+        "InstanceType": {
+            "default": "Tableau Server EC2 Instance Type"
+        },
+        "KeyPairName": {
+            "default": "Key Pair Name"
+        },
+        "PublicFirewallProfileHole": {
+            "default": "Windows firewall rules also apply to the Public profile"
+        },
+        "RegFirstName": {
+            "default": "First Name"
+        },
+        "RegLastName": {
+            "default": "Last name"
+        },
+        "RegEmail": {
+            "default": "Email Address"
+        },
+        "RegCompany": {
+            "default": "Company"
+        },
+        "RegTitle": {
+            "default": "Title"
+        },
+        "RegDepartment": {
+            "default": "Department"
+        },
+        "RegIndustry": {
+            "default": "Industry"
+        },
+        "RegPhone": {
+            "default": "Phone"
+        },
+        "RegCity": {
+            "default": "City"
+        },
+        "RegState": {
+            "default": "State"
+        },
+        "RegZip": {
+            "default": "Zip/Postal Code"
+        },
+        "RegCountry": {
+            "default": "Country"
+        },
+        "ResourceAvailabilityZone": {
+            "default": "Target AZ"
+        },
+        "SourceCidrForRDP": {
+            "default": "Allowed CIDR for RDP access"
+        },
+        "SourceCidrForWeb": {
+            "default": "Allowed CIDR for access to the Web UI"
+        },
+        "SSLCertificateARN": {
+            "default": "SSL certificate ARN (Requires mattching DNS name)"
+        },
+        "TableauServerInstaller": {
+            "default": "Server installer executable"
+        },
+        "TableauServerLicenseKey": {
+            "default": "License Key (leave blank for trial)"
+        },
+        "TableauServerVolumeSize": {
+            "default": "Size for server volume in GB"
+        },
+        "WindowsVersion": {
+            "default": "Server OS Version"
+        },
+        "Worker0GatewayPort": {
+            "default": "Gateway (web) port"
+        },
+        "Worker0BackgrounderProcs": {
+            "default": "Number of Backgrounder processes"
+        },
+        "Worker0CacheserverProcs": {
+            "default": "Number of CacheServer processes"
+        },
+        "Worker0DataengineProcs": {
+            "default": "Numnber of Data Engine processes"
+        },
+        "Worker0DataserverProcs": {
+            "default": "Numnber of Data Server processes"
+        },
+        "Worker0VizportalProcs": {
+            "default": "Number of Vizportal processes"
+        },
+        "Worker0VizqlserverProcs": {
+            "default": "Number of VizqlServer processes"
+        }
+      }
     }
   },
   "Mappings" : {
-    "AWSRegion2AMI" : {
-      "us-east-1"        : { "Windows2012r2" : "ami-ee7805f9"},
-      "us-west-2"        : { "Windows2012r2" : "ami-2827f548"},
-      "us-west-1"        : { "Windows2012r2" : "ami-c06b24a0"}
+    "AWSAMIRegionMap": {
+        "AMI": {
+            "WS2012R2": "Windows_Server-2012-R2_RTM-English-64Bit-Base-2016.11.23"
+        },
+        "ap-northeast-1": {
+            "WS2012R2": "ami-5b299d3a"
+        },
+        "ap-northeast-2": {
+            "WS2012R2": "ami-69d30407"
+        },
+        "ap-south-1": {
+            "WS2012R2": "ami-79255216"
+        },
+        "ap-southeast-1": {
+            "WS2012R2": "ami-9d7ad8fe"
+        },
+        "ap-southeast-2": {
+            "WS2012R2": "ami-9fe7d9fc"
+        },
+        "ca-central-1": {
+            "WS2012R2": "ami-f57fcd91"
+        },
+        "eu-central-1": {
+            "WS2012R2": "ami-21cb0f4e"
+        },
+        "eu-west-1": {
+            "WS2012R2": "ami-95d984e6"
+        },
+        "eu-west-2": {
+            "WS2012R2": "ami-bb353fdf"
+        },
+        "sa-east-1": {
+            "WS2012R2": "ami-628e100e"
+        },
+        "us-east-1": {
+            "WS2012R2": "ami-bfeddca8"
+        },
+        "us-east-2": {
+            "WS2012R2": "ami-e999c38c"
+        },
+        "us-west-1": {
+            "WS2012R2": "ami-8b590deb"
+        },
+        "us-west-2": {
+            "WS2012R2": "ami-24e64944"
+        }
     }
   },
   "Conditions" : {
-    "EnablePublicFirewallRule" : { "Fn::Equals" : [ {"Ref" : "PublicFirewallProfileHole"},"Yes"]}
+    "EnablePublicFirewallRule" : { "Fn::Equals" : [{ "Ref" : "PublicFirewallProfileHole"},"Yes"]},
+    "IsTrial" :                  { "Fn::Equals":  [ "", { "Ref" : "TableauServerLicenseKey" }]},
   },
   "Resources" : {
     "InstanceSecurityGroup" : {
@@ -271,11 +400,6 @@
                               "Effect": "Allow",
                               "Action": ["s3:GetObject"],
                               "Resource": {"Fn::Sub" : "arn:aws:s3:::${InstallationBucket}/*"}
-                            },
-                            {
-                              "Effect": "Allow",
-                              "Action": [ "s3:ListBucket"],
-                              "Resource": {"Fn::Sub" : "arn:aws:s3:::${InstallationBucket}"}
                             }
                           ]
                     }
@@ -318,8 +442,6 @@
               },
               "c:\\tabsetup\\secrets.json" : {
                 "content" : {
-                    "runas_user" : {"Ref" : "RunasUser"},
-                    "runas_pass" : {"Ref" : "RunasPassword"},
                     "content_admin_user" : {"Ref" : "ContentAdminUser"},
                     "content_admin_pass" : {"Ref" : "ContentAdminPassword"}
                 }
@@ -360,30 +482,6 @@
               },
               "c:\\tabsetup\\tableau-server-installer.exe" : {
                 "source":  { "Fn::Sub" : "https://${InstallationBucket}.s3.amazonaws.com/${TableauServerInstaller}"}
-              },
-              "c:\\tabsetup\\send-done-signal.cmd" : {
-                "content" : { "Fn::Join" : ["\n", [
-                    "@echo off",
-                    "if not exist c:\\tabsetup\\installer-output.txt goto no_installer_output",
-                    "SetLocal EnableDelayedExpansion",
-                    "set content=",
-                    "for /F \"delims=\" %%i in (c:\\tabsetup\\installer-output.txt) do set content=!content! %%i",
-                    { "Fn::Sub" : ["cfn-signal.exe --reason \"Installer failed\" --data \"%content%\" -e %1 ${WHUrl}",
-                            {
-                                "WHUrl" : { "Fn::Base64" : { "Ref" : "TableauServerWaitHandle"}}
-                            }]
-                    },
-                    "EndLocal",
-                    "goto alldone",
-                    ":no_installer_output",
-                    { "Fn::Sub" : ["cfn-signal.exe -e %1 ${WHUrl}",
-                            {
-                                "WHUrl" : { "Fn::Base64" : { "Ref" : "TableauServerWaitHandle"}}
-                            }]
-                    },
-                    ":alldone",
-                    "exit /B %1"
-                ]]}
               }
             },
             "commands" : {
@@ -408,12 +506,19 @@
                   "c:\\Python27\\python.exe",
                   "ScriptedInstaller.py", "install",
                   "--installerLog", "C:\\tabsetup\\tabinstall.txt",
-                  "--installDir C:\\TableauServer",
                   { "Fn::If" : [ "EnablePublicFirewallRule", "--enablePublicFwRule", ""]},
                   "--secretsFile c:\\tabsetup\\secrets.json",
                   "--configFile c:\\tabsetup\\config.yml",
                   "--registrationFile c:\\tabsetup\\registration.json",
-                  "--licenseKey", { "Ref" : "TableauServerLicenseKey"},
+                  {
+                    "Fn::If": [
+                        "IsTrial",
+                        "--trialLicense",
+                        {
+                            "Fn::Sub": "--licenseKey ${TableauServerLicenseKey}"
+                        }
+                    ]
+                  },
                   "c:\\tabsetup\\tableau-server-installer.exe",
                   " > c:\\tabsetup\\installer-output.txt 2>&1"
                   ]]
@@ -439,7 +544,7 @@
       
       "Properties": {
         "InstanceType" : { "Ref" : "InstanceType" },
-        "ImageId" : { "Fn::FindInMap" : [ "AWSRegion2AMI", { "Ref" : "AWS::Region" }, { "Ref" : "WindowsVersion" } ]},
+        "ImageId" : { "Fn::FindInMap" : [ "AWSAMIRegionMap", { "Ref" : "AWS::Region" }, { "Ref" : "WindowsVersion" } ]},
         "AvailabilityZone" : { "Ref" : "ResourceAvailabilityZone" },
         "BlockDeviceMappings" : [
            { 
@@ -449,11 +554,11 @@
         ],
         "SecurityGroups" : [ {"Ref" : "InstanceSecurityGroup"} ],
         "IamInstanceProfile" : { "Ref" : "TableauWindowsServerInstanceProfile" },
-        "KeyName" : { "Ref" : "KeyName" },
-        "UserData" : { "Fn::Base64" : { "Fn::Join" : ["\n", [
-            "<script>",
-            { "Fn::Sub" : "cfn-init.exe -v -s ${AWS::StackId} -r TableauWindowsServer --region ${AWS::Region}"},
-            "c:\\tabsetup\\send-done-signal.cmd %errorlevel%",
+        "KeyName" : { "Ref" : "KeyPairName" },
+        "UserData" : { "Fn::Base64" : { "Fn::Join" : ["", [
+            "<script>\n",
+            { "Fn::Sub" : "cfn-init.exe -v -s ${AWS::StackId} -r TableauWindowsServer --region ${AWS::Region}\n"},
+            { "Fn::Sub" : "cfn-signal.exe -e %ERRORLEVEL% --stack ${AWS::StackName} --resource TableauWindowsServer --region ${AWS::Region}\n"},
              "</script>"
         ]]}},
         "Tags": [
@@ -461,17 +566,11 @@
                 "Key" : "Name",
                 "Value" : {"Fn::Sub" : "cfn-tableau-server"}
             }
-        ]
-        }
-    },
-    "TableauServerWaitHandle" : {
-        "Type" : "AWS::CloudFormation::WaitConditionHandle"
-    },
-    "TableauServerWaitCondition" : {
-        "Type" : "AWS::CloudFormation::WaitCondition",
-        "Properties" : {
-            "Handle" : { "Ref" : "TableauServerWaitHandle" },
-            "Timeout" : "3600"
+        ]},
+        "CreationPolicy" : {
+            "ResourceSignal" : {
+                "Timeout" : "PT60M"
+            }
         }
     }
   },
@@ -480,10 +579,6 @@
         "Description" : "EC2 InstanceID of the instance running Tableau Server",
         "Value" : { "Ref" : "TableauWindowsServer" }
     },
-    "PublicIpAddress" : {
-        "Description" : "Public IP Address of instance running Tableau Server",
-        "Value" : { "Fn::GetAtt" : [ "TableauWindowsServer", "PublicIp"]}
-    },
     "PublicDNSName" : {
         "Description" : "Public DNS name of instance running Tableau Server",
         "Value" : { "Fn::GetAtt" : [ "TableauWindowsServer", "PublicDnsName"]}
@@ -491,6 +586,6 @@
     "PublicGatewayPort" : {
         "Description" : "The port serving web traffic on the public interface of Tableau Server",
         "Value" : {"Ref" : "Worker0GatewayPort"}
-    },
+    }
   }    
 }

@@ -13,66 +13,18 @@
         "Type" : "String",
         "MinLength" : "1"
     },
-    "SSLCertificateARN" : {
-        "Description" : "The Amazon Resource Name for the existing SSL cert you wish to use",
-        "Type" : "String",
-        "Default" : ""
-    },
-    "KeyName" : {
-      "Description" : "Name of an existing EC2 KeyPair used to get the Administrator password for the instance",
-      "Type" : "AWS::EC2::KeyPair::KeyName",
-      "ConstraintDescription" : "must be the name of an existing EC2 KeyPair."
-    },
-    "ResourceAvailabilityZone" : {
-        "Description" : "The availability zone (AZ) in which our server and storage volume reside",
-        "Type": "AWS::EC2::AvailabilityZone::Name"
-    },
     "BastionCidrForRDP" : {
       "Description" : "CIDR from which you may RDP into the bastion host (e.g., 1.1.1.1/32)",
       "Type" : "String",
       "MinLength" : "9",
       "MaxLength" : "18",
-      "Default": "1.1.1.1/32",
       "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
       "ConstraintDescription": "Must be a valid IP CIDR range of the form x.x.x.x/x."
     },
-    "LoadBalancerCidrForWeb" : {
-      "Description" : "CIDR for Web clients. This can be a specific subnet (yours), or open to the world. (e.g., 0.0.0.0/0)",
+    "ContentAdminPassword" : {
+      "Description" : "The password for the initial Admin user for Tableau server",
       "Type" : "String",
-      "MinLength" : "9",
-      "MaxLength" : "18",
-      "Default": "1.1.1.1/32",
-      "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
-      "ConstraintDescription": "Must be a valid IP CIDR range of the form x.x.x.x/x."
-    },
-    "InstanceType" : {
-      "Description" : "EC2 instance type for Tableau Server instances",
-      "Type" : "String",
-      "Default" : "m4.xlarge",
-      "AllowedValues" : [ "m4.xlarge", "m4.2xlarge", "m4.4xlarge", "m4.10xlarge"],
-      "ConstraintDescription" : "must be a valid EC2 instance type."
-    },
-    "WindowsVersion" : {
-      "Description" : "The version of Windows to use",
-      "Type" : "String",
-      "Default" : "Windows2012r2",
-      "AllowedValues" : ["Windows2012r2"],
-      "ConstraintDescription" : "must be one of: Windows2012r2"
-    },
-    "InstallationBucket" : {
-      "Description" : "The name of the S3 bucket from which to fetch installation files",
-      "Type" : "String",
-      "MinLength" : "1"
-    },
-    "RunasUser" : {
-      "Description" : "The name of the user which runs the Windows service; blank for default",
-      "Type" : "String",
-      "Default" : ""
-    },
-    "RunasPassword" : {
-      "Description" : "The password of the user which runs the Windows services; blank for default",
-      "Type" : "String",
-      "Default" : "",
+      "MinLength" : "1",
       "NoEcho" : "true"
     },
     "ContentAdminUser" : {
@@ -81,28 +33,31 @@
       "Default" : "admin",
       "MinLength" : "1"
     },
-    "ContentAdminPassword" : {
-      "Description" : "The password for the initial Admin user for Tableau server",
+    "InstanceType" : {
+      "Description" : "EC2 instance type for Tableau Server instances",
       "Type" : "String",
-      "MinLength" : "1",
-      "NoEcho" : "true"
+      "Default" : "m4.4xlarge",
+      "AllowedValues" : [ "m4.xlarge", "m4.2xlarge", "m4.4xlarge", "m4.8xlarge", "r4.xlarge", "r4.2xlarge", "r4.4xlarge", "r4.8xlarge"],
+      "ConstraintDescription" : "must be a valid EC2 instance type."
     },
-    "TableauServerLicenseKey" : {
-      "Description" : "License Key",
+    "InstallationBucket" : {
+      "Description" : "The name of the S3 bucket from which to fetch installation files",
       "Type" : "String",
+      "Default" : "tableau-server-installer",
       "MinLength" : "1"
     },
-    "TableauServerPrimaryInstaller" : {
-      "Description" : "Primary installer to use; fetched from the Source S3 Bucket",
-      "Type" : "String",
-      "Default" : "Setup-Server-x64.exe",
-      "MinLength" : "1"
+    "KeyPairName" : {
+      "Description" : "Name of an existing EC2 KeyPair used to get the Administrator password for the instance",
+      "Type" : "AWS::EC2::KeyPair::KeyName",
+      "ConstraintDescription" : "must be the name of an existing EC2 KeyPair."
     },
-    "TableauServerWorkerInstaller" : {
-      "Description" : "Worker installer to use; fetched from the Source S3 Bucket",
+    "LoadBalancerCidrForWeb" : {
+      "Description" : "CIDR for Web clients. This can be a specific subnet (yours), or open to the world. (e.g., 0.0.0.0/0)",
       "Type" : "String",
-      "Default" : "Setup-Worker-x64.exe",
-      "MinLength" : "1"
+      "MinLength" : "9",
+      "MaxLength" : "18",
+      "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+      "ConstraintDescription": "Must be a valid IP CIDR range of the form x.x.x.x/x."
     },
     "RegFirstName" : {
       "Description" : "First Name",
@@ -154,6 +109,44 @@
     "RegCountry" : {
       "Description" : "Country",
       "Type" : "String"
+    },
+    "ResourceAvailabilityZone" : {
+        "Description" : "The availability zone (AZ) in which our server and storage volume reside",
+        "Type": "AWS::EC2::AvailabilityZone::Name"
+    },
+    "SSLCertificateARN" : {
+        "Description" : "The Amazon Resource Name for the existing SSL cert you wish to use",
+        "Type" : "String"
+    },
+    "TableauServerLicenseKey" : {
+      "Description" : "License Key",
+      "Type" : "String",
+      "MinLength" : "1"
+    },
+    "TableauServerPrimaryInstaller" : {
+      "Description" : "Primary installer to use; fetched from the Source S3 Bucket",
+      "Type" : "String",
+      "Default" : "Setup-Server-x64.exe",
+      "MinLength" : "1"
+    },
+    "TableauServerVolumeSize" : {
+      "Description" : "Size of volume for server in GB; need at least 30 GB free for server installation",
+      "Type" : "Number",
+      "Default" : "100",
+      "MinValue" : "30"
+    },
+    "TableauServerWorkerInstaller" : {
+      "Description" : "Worker installer to use; fetched from the Source S3 Bucket",
+      "Type" : "String",
+      "Default" : "Setup-Worker-x64.exe",
+      "MinLength" : "1"
+    },
+    "WindowsVersion" : {
+      "Description" : "The version of Windows to use",
+      "Type" : "String",
+      "Default" : "WS2012R2",
+      "AllowedValues" : ["WS2012R2"],
+      "ConstraintDescription" : "must be one of: WS2012R2"
     }
   },
   "Metadata" : {
@@ -161,7 +154,7 @@
       "ParameterGroups" : [
         {
             "Label" : { "default" : "AWS Environment" },
-            "Parameters" : ["KeyName","ResourceAvailabilityZone","BastionCidrForRDP", "LoadBalancerCidrForWeb", "InstallationBucket"]
+            "Parameters" : ["KeyPairName","ResourceAvailabilityZone","BastionCidrForRDP", "LoadBalancerCidrForWeb", "InstallationBucket"]
         },
         {
             "Label" : { "default" : "Server DNS configuration"},
@@ -169,7 +162,7 @@
         },
         {
             "Label" : { "default" : "Machine Configuration" },
-            "Parameters" : ["InstanceType", "WindowsVersion"]
+            "Parameters" : ["InstanceType", "TableauServerVolumeSize", "WindowsVersion"]
         },
         {
             "Label" : { "default" : "Installation Config" },
@@ -177,7 +170,7 @@
         },
         {
             "Label" : { "default" : "Secrets" },
-            "Parameters" : ["RunasUser","RunasPassword","ContentAdminUser","ContentAdminPassword"]
+            "Parameters" : ["ContentAdminUser","ContentAdminPassword"]
         },
         {
             "Label" : { "default" : "Registration" },
@@ -194,50 +187,26 @@
         "AwsPublicFQDN": {
             "default": "Full DNS name for cluster"
         },
-        "SSLCertificateARN": {
-            "default": "SSL certificate ARN"
-        },
-        "KeyName": {
-            "default": "EC2 keypair"
-        },
-        "ResourceAvailabilityZone": {
-            "default": "Target AZ"
-        },
         "BastionCidrForRDP": {
-            "default": "Source CIDR for RDP access to bastion host "
-        },
-        "LoadBalancerCidrForWeb": {
-            "default": "Source CIDR for web access to the web UI"
-        },
-        "InstanceType": {
-            "default": "EC2 Instance Type"
-        },
-        "WindowsVersion": {
-            "default": "Server OS Version"
-        },
-        "InstallationBucket": {
-            "default": "Source S3 Bucket"
-        },
-        "RunasUser": {
-            "default": "Service runas user"
-        },
-        "RunasPassword": {
-            "default": "Service runas password"
-        },
-        "ContentAdminUser": {
-            "default": "Portal admin username"
+            "default": "Allowed CIDR for RDP access to bastion host "
         },
         "ContentAdminPassword": {
             "default": "Portal admin password"
         },
-        "TableauServerLicenseKey": {
-            "default": "Tableau Activation Key"
+        "ContentAdminUser": {
+            "default": "Portal admin username"
         },
-        "TableauServerPrimaryInstaller": {
-            "default": "Primary installer executable"
+        "InstanceType": {
+            "default": "Tableau Server EC2 Instance Type"
         },
-        "TableauServerWorkerInstaller": {
-            "default": "Worker installer executable"
+        "InstallationBucket": {
+            "default": "Source S3 Bucket"
+        },
+        "KeyPairName": {
+            "default": "Key Pair Name"
+        },
+        "LoadBalancerCidrForWeb": {
+            "default": "Allowed CIDR for access to the Web UI"
         },
         "RegFirstName": {
             "default": "First Name"
@@ -274,16 +243,79 @@
         },
         "RegCountry": {
             "default": "Country"
+        },
+        "ResourceAvailabilityZone": {
+            "default": "Target AZ"
+        },
+        "SSLCertificateARN": {
+            "default": "SSL certificate ARN (Requires mattching DNS name)"
+        },
+        "TableauServerLicenseKey": {
+            "default": "Tableau Activation Key"
+        },
+        "TableauServerPrimaryInstaller": {
+            "default": "Primary installer executable"
+        },
+        "TableauServerVolumeSize": {
+            "default": "Size for server volume in GB"
+        },
+        "TableauServerWorkerInstaller": {
+            "default": "Worker installer executable"
+        },
+        "WindowsVersion": {
+            "default": "Server OS Version"
         }
       }
     }
   },
   "Mappings" : {
-    "AWSRegion2AMI" : {
-      "us-east-1"        : { "Windows2012r2" : "ami-ee7805f9"},
-      "us-west-2"        : { "Windows2012r2" : "ami-2827f548"},
-      "us-west-1"        : { "Windows2012r2" : "ami-c06b24a0"}
-    }
+        "AWSAMIRegionMap": {
+            "AMI": {
+                "WS2012R2": "Windows_Server-2012-R2_RTM-English-64Bit-Base-2016.11.23"
+            },
+            "ap-northeast-1": {
+                "WS2012R2": "ami-5b299d3a"
+            },
+            "ap-northeast-2": {
+                "WS2012R2": "ami-69d30407"
+            },
+            "ap-south-1": {
+                "WS2012R2": "ami-79255216"
+            },
+            "ap-southeast-1": {
+                "WS2012R2": "ami-9d7ad8fe"
+            },
+            "ap-southeast-2": {
+                "WS2012R2": "ami-9fe7d9fc"
+            },
+            "ca-central-1": {
+                "WS2012R2": "ami-f57fcd91"
+            },
+            "eu-central-1": {
+                "WS2012R2": "ami-21cb0f4e"
+            },
+            "eu-west-1": {
+                "WS2012R2": "ami-95d984e6"
+            },
+            "eu-west-2": {
+                "WS2012R2": "ami-bb353fdf"
+            },
+            "sa-east-1": {
+                "WS2012R2": "ami-628e100e"
+            },
+            "us-east-1": {
+                "WS2012R2": "ami-bfeddca8"
+            },
+            "us-east-2": {
+                "WS2012R2": "ami-e999c38c"
+            },
+            "us-west-1": {
+                "WS2012R2": "ami-8b590deb"
+            },
+            "us-west-2": {
+                "WS2012R2": "ami-24e64944"
+            }
+        }
   },
   "Conditions" : {
   },
@@ -295,8 +327,7 @@
             "EnableDnsSupport" : "true",
             "EnableDnsHostnames" : "true",
             "Tags" : [ 
-                {"Key" : "Name", "Value" : "ClusterVPC"}, 
-                {"Key" : "CreatedBy", "Value" : "jcase@tableau.com"}
+                {"Key" : "Name", "Value" : "ClusterVPC"}
             ]
         }
     },
@@ -304,8 +335,7 @@
         "Type" : "AWS::EC2::InternetGateway",
         "Properties" : {
             "Tags" : [ 
-                {"Key" : "Name", "Value" : "ClusterInternetGateway"}, 
-                {"Key" : "CreatedBy", "Value" : "jcase@tableau.com"}
+                {"Key" : "Name", "Value" : "ClusterInternetGateway"}
             ]
         }
     },
@@ -336,8 +366,7 @@
         "Properties" : {
             "VpcId" : { "Ref" : "ClusterVPC" },
             "Tags" : [
-                {"Key" : "Name", "Value" : "MainRouteTable"}, 
-                {"Key" : "CreatedBy", "Value" : "jcase@tableau.com"}
+                {"Key" : "Name", "Value" : "MainRouteTable"}
             ]
         }
     },
@@ -361,8 +390,7 @@
         "Properties" : {
             "VpcId" : { "Ref" : "ClusterVPC" },
             "Tags" : [
-                {"Key" : "Name", "Value" : "PrivateRouteTable"}, 
-                {"Key" : "CreatedBy", "Value" : "jcase@tableau.com"}
+                {"Key" : "Name", "Value" : "PrivateRouteTable"}
             ]
         }
     },
@@ -388,8 +416,7 @@
             "CidrBlock" : "10.0.0.0/24",
             "MapPublicIpOnLaunch" : "true",
             "Tags" : [ 
-                {"Key" : "Name", "Value" : "jcase cluster public subnet"}, 
-                {"Key" : "CreatedBy", "Value" : "jcase@tableau.com"}
+                {"Key" : "Name", "Value" : "cluster public subnet"}
             ],
             "VpcId" : { "Ref" : "ClusterVPC" }
         }
@@ -401,8 +428,7 @@
             "CidrBlock" : "10.0.1.0/24",
             "MapPublicIpOnLaunch" : "false",
             "Tags" : [ 
-                {"Key" : "Name", "Value" : "jcase cluster private subnet"}, 
-                {"Key" : "CreatedBy", "Value" : "jcase@tableau.com"}
+                {"Key" : "Name", "Value" : "cluster private subnet"}
             ],
             "VpcId" : { "Ref" : "ClusterVPC" }
         }
@@ -420,8 +446,7 @@
           }
         ],
         "Tags" : [
-            {"Key" : "Name", "Value" : "BastionSecurityGroup"}, 
-            {"Key" : "CreatedBy", "Value" : "jcase@tableau.com"}
+            {"Key" : "Name", "Value" : "BastionSecurityGroup"} 
         ],
         "VpcId" : { "Ref" : "ClusterVPC" }
       }
@@ -455,8 +480,7 @@
             }
         ],
         "Tags" : [
-            {"Key" : "Name", "Value" : "InternalSecurityGroup"}, 
-            {"Key" : "CreatedBy", "Value" : "jcase@tableau.com"}
+            {"Key" : "Name", "Value" : "InternalSecurityGroup"}
         ],
         "VpcId": { "Ref" : "ClusterVPC" }
       }
@@ -474,18 +498,21 @@
           }
         ],
         "Tags" : [
-            {"Key" : "Name", "Value" : "LoadBalancerSecurityGroup"}, 
-            {"Key" : "CreatedBy", "Value" : "jcase@tableau.com"}
+            {"Key" : "Name", "Value" : "LoadBalancerSecurityGroup"}
         ],
         "VpcId" : { "Ref" : "ClusterVPC" }
       }
     },
     "ServerLoadBalancer" : {
         "Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
-        "DependsOn" : ["LoadBalancerSecurityGroup", "PrimaryHost"],
+        "DependsOn" : ["LoadBalancerSecurityGroup", "PrimaryHost", "WorkerHost1", "WorkerHost2" ],
         "Properties" : {
             "Scheme" : "internet-facing",
-            "Instances" : [ { "Ref" : "PrimaryHost"} ],
+            "Instances" : [ 
+                { "Ref" : "PrimaryHost"},
+                { "Ref" : "WorkerHost1"},
+                { "Ref" : "WorkerHost2"}
+            ],
             "Subnets" : [  { "Ref" : "ClusterPublicSubnet"} ],
             "SecurityGroups" : [ { "Ref" : "LoadBalancerSecurityGroup"} ],
             "Listeners" : [
@@ -565,10 +592,10 @@
       "DependsOn" : ["BastionSecurityGroup"],
       "Properties": {
         "InstanceType" : "t2.micro",
-        "ImageId" : { "Fn::FindInMap" : [ "AWSRegion2AMI", { "Ref" : "AWS::Region" }, { "Ref" : "WindowsVersion" } ]},
+        "ImageId" : { "Fn::FindInMap" : [ "AWSAMIRegionMap", { "Ref" : "AWS::Region" }, { "Ref" : "WindowsVersion" } ]},
         "AvailabilityZone" : { "Ref" : "ResourceAvailabilityZone" },
         "SecurityGroupIds" : [ {"Ref" : "BastionSecurityGroup"} ],
-        "KeyName" : { "Ref" : "KeyName" },
+        "KeyName" : { "Ref" : "KeyPairName" },
         "SubnetId" : { "Ref" : "ClusterPublicSubnet"},
         "Tags": [
             {
@@ -611,8 +638,6 @@
                         },
                         "c:\\tabsetup\\secrets.json" : {
                             "content" : {
-                                "runas_user" : {"Ref" : "RunasUser"},
-                                "runas_pass" : {"Ref" : "RunasPassword"},
                                 "content_admin_user" : {"Ref" : "ContentAdminUser"},
                                 "content_admin_pass" : {"Ref" : "ContentAdminPassword"}
                             }
@@ -674,7 +699,7 @@
                                 "worker2.dataserver.procs" : "INTEGER:1",
                                 "worker2.dataengine.procs" : "INTEGER:1",
                                 "worker2.filestore.enabled" : "true",
-                                "worker2.zookeeper.procs" : "INTEGER:1",
+                                "worker2.zookeeper.procs" : "INTEGER:1"
                             }
                         },
                         "c:\\tabsetup\\tableau-primary-installer.exe" : {
@@ -705,11 +730,9 @@
                         "5-run-installer" : {
                             "cwd" : "c:\\tabsetup",
                             "command" : { "Fn::Join" : [ " ", [
-                                "set \"TA_READ_FILE_CHUNK_SIZE=1500\" && ",
                                 "c:\\Python27\\python.exe",
                                 "ScriptedInstaller.py", "install",
                                 "--installerLog", "C:\\tabsetup\\tabinstall.txt",
-                                "--installDir C:\\TableauServer",
                                 "--secretsFile c:\\tabsetup\\secrets.json",
                                 "--configFile c:\\tabsetup\\config.yml",
                                 "--registrationFile c:\\tabsetup\\registration.json",
@@ -738,17 +761,17 @@
         },
         "Properties": {
             "InstanceType" : { "Ref" : "InstanceType" },
-            "ImageId" : { "Fn::FindInMap" : [ "AWSRegion2AMI", { "Ref" : "AWS::Region" }, { "Ref" : "WindowsVersion" } ]},
+            "ImageId" : { "Fn::FindInMap" : [ "AWSAMIRegionMap", { "Ref" : "AWS::Region" }, { "Ref" : "WindowsVersion" } ]},
             "AvailabilityZone" : { "Ref" : "ResourceAvailabilityZone" },
             "SecurityGroupIds" : [ {"Ref" : "InternalSecurityGroup"} ],
             "IamInstanceProfile" : { "Ref" : "TableauWindowsServerInstanceProfile" },
-            "KeyName" : { "Ref" : "KeyName" },
+            "KeyName" : { "Ref" : "KeyPairName" },
             "SubnetId" : { "Ref" : "ClusterPrivateSubnet"},
             "PrivateIpAddress" : "10.0.1.11",
             "BlockDeviceMappings" : [
                { 
                 "DeviceName" : "/dev/sda1",
-                "Ebs" : { "VolumeSize" : "100" }
+                "Ebs" : { "VolumeSize" : { "Ref" : "TableauServerVolumeSize" } }
                }
             ],
             "UserData" : { "Fn::Base64" : { "Fn::Join" : ["\n", [
@@ -789,7 +812,7 @@
                       "2-run-installer" : {
                         "cwd" : "c:\\tabsetup",
                         "command" : { "Fn::Join" : [ " ", [
-                          "c:\\tabsetup\\tableau-worker-installer.exe /PRIMARYIP=\"10.0.1.11\" /DIR=C:\\TableauServer /VERYSILENT /SUPPRESSMSGBOXES /ACCEPTEULA /LOG=c:\\tabsetup\\installerlog.txt",
+                          "c:\\tabsetup\\tableau-worker-installer.exe /PRIMARYIP=\"10.0.1.11\" /VERYSILENT /SUPPRESSMSGBOXES /ACCEPTEULA /LOG=c:\\tabsetup\\installerlog.txt",
                           " > c:\\tabsetup\\installer-output.txt 2>&1"
                           ]]
                         },
@@ -808,17 +831,17 @@
         },
         "Properties": {
             "InstanceType" : { "Ref" : "InstanceType" },
-            "ImageId" : { "Fn::FindInMap" : [ "AWSRegion2AMI", { "Ref" : "AWS::Region" }, { "Ref" : "WindowsVersion" } ]},
+            "ImageId" : { "Fn::FindInMap" : [ "AWSAMIRegionMap", { "Ref" : "AWS::Region" }, { "Ref" : "WindowsVersion" } ]},
             "AvailabilityZone" : { "Ref" : "ResourceAvailabilityZone" },
             "SecurityGroupIds" : [ {"Ref" : "InternalSecurityGroup"} ],
             "IamInstanceProfile" : { "Ref" : "TableauWindowsServerInstanceProfile" },
-            "KeyName" : { "Ref" : "KeyName" },
+            "KeyName" : { "Ref" : "KeyPairName" },
             "SubnetId" : { "Ref" : "ClusterPrivateSubnet"},
             "PrivateIpAddress" : "10.0.1.12",
             "BlockDeviceMappings" : [
                { 
                 "DeviceName" : "/dev/sda1",
-                "Ebs" : { "VolumeSize" : "100" }
+                "Ebs" : { "VolumeSize" : { "Ref" : "TableauServerVolumeSize" } }
                }
             ],
             "UserData" : { "Fn::Base64" : { "Fn::Join" : ["\n", [
@@ -859,7 +882,7 @@
                       "2-run-installer" : {
                         "cwd" : "c:\\tabsetup",
                         "command" : { "Fn::Join" : [ " ", [
-                          "c:\\tabsetup\\tableau-worker-installer.exe /DIR=C:\\TableauServer /PRIMARYIP=\"10.0.1.11\" /VERYSILENT /SUPPRESSMSGBOXES /ACCEPTEULA /LOG=c:\\tabsetup\\installerlog.txt",
+                          "c:\\tabsetup\\tableau-worker-installer.exe /PRIMARYIP=\"10.0.1.11\" /VERYSILENT /SUPPRESSMSGBOXES /ACCEPTEULA /LOG=c:\\tabsetup\\installerlog.txt",
                           " > c:\\tabsetup\\installer-output.txt 2>&1"
                           ]]
                         },
@@ -878,17 +901,17 @@
         },
         "Properties": {
             "InstanceType" : { "Ref" : "InstanceType" },
-            "ImageId" : { "Fn::FindInMap" : [ "AWSRegion2AMI", { "Ref" : "AWS::Region" }, { "Ref" : "WindowsVersion" } ]},
+            "ImageId" : { "Fn::FindInMap" : [ "AWSAMIRegionMap", { "Ref" : "AWS::Region" }, { "Ref" : "WindowsVersion" } ]},
             "AvailabilityZone" : { "Ref" : "ResourceAvailabilityZone" },
             "SecurityGroupIds" : [ {"Ref" : "InternalSecurityGroup"} ],
             "IamInstanceProfile" : { "Ref" : "TableauWindowsServerInstanceProfile" },
-            "KeyName" : { "Ref" : "KeyName" },
+            "KeyName" : { "Ref" : "KeyPairName" },
             "SubnetId" : { "Ref" : "ClusterPrivateSubnet"},
             "PrivateIpAddress" : "10.0.1.13",
             "BlockDeviceMappings" : [
                { 
                 "DeviceName" : "/dev/sda1",
-                "Ebs" : { "VolumeSize" : "100" }
+                "Ebs" : { "VolumeSize" : { "Ref" : "TableauServerVolumeSize" } }
                }
             ],
             "UserData" : { "Fn::Base64" : { "Fn::Join" : ["\n", [
@@ -933,9 +956,9 @@
     }
   },
   "Outputs" : {
-    "BastionIpAddress" : {
-        "Description" : "Public IP Address of bastion host",
-        "Value" : { "Fn::GetAtt" : [ "BastionHost", "PublicIp"]}
+    "VPCId" : {
+        "Description" : "VPC created for cluster",
+        "Value" : {  "Ref" : "ClusterVPC" },
     },
     "BastionDNSName" : {
         "Description" : "Public DNS name of bastion host",
