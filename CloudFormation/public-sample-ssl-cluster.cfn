@@ -13,19 +13,6 @@
         "Type" : "String",
         "MinLength" : "1"
     },
-    "SSLCertificateARN" : {
-        "Description" : "The Amazon Resource Name for the existing SSL cert you wish to use",
-        "Type" : "String"
-    },
-    "KeyName" : {
-      "Description" : "Name of an existing EC2 KeyPair used to get the Administrator password for the instance",
-      "Type" : "AWS::EC2::KeyPair::KeyName",
-      "ConstraintDescription" : "must be the name of an existing EC2 KeyPair."
-    },
-    "ResourceAvailabilityZone" : {
-        "Description" : "The availability zone (AZ) in which our server and storage volume reside",
-        "Type": "AWS::EC2::AvailabilityZone::Name"
-    },
     "BastionCidrForRDP" : {
       "Description" : "CIDR from which you may RDP into the bastion host (e.g., 1.1.1.1/32)",
       "Type" : "String",
@@ -34,41 +21,10 @@
       "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
       "ConstraintDescription": "Must be a valid IP CIDR range of the form x.x.x.x/x."
     },
-    "LoadBalancerCidrForWeb" : {
-      "Description" : "CIDR for Web clients. This can be a specific subnet (yours), or open to the world. (e.g., 0.0.0.0/0)",
+    "ContentAdminPassword" : {
+      "Description" : "The password for the initial Admin user for Tableau server",
       "Type" : "String",
-      "MinLength" : "9",
-      "MaxLength" : "18",
-      "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
-      "ConstraintDescription": "Must be a valid IP CIDR range of the form x.x.x.x/x."
-    },
-    "InstanceType" : {
-      "Description" : "EC2 instance type for Tableau Server instances",
-      "Type" : "String",
-      "Default" : "m4.xlarge",
-      "AllowedValues" : [ "m4.xlarge", "m4.2xlarge", "m4.4xlarge", "m4.10xlarge"],
-      "ConstraintDescription" : "must be a valid EC2 instance type."
-    },
-    "WindowsVersion" : {
-      "Description" : "The version of Windows to use",
-      "Type" : "String",
-      "Default" : "WS2012R2",
-      "AllowedValues" : ["WS2012R2"],
-      "ConstraintDescription" : "must be one of: WS2012R2"
-    },
-    "InstallationBucket" : {
-      "Description" : "The name of the S3 bucket from which to fetch installation files",
-      "Type" : "String",
-      "Default" : "tableau-server-installer",
-      "MinLength" : "1"
-    },
-    "RunasUser" : {
-      "Description" : "The name of the user which runs the Windows service; blank for default",
-      "Type" : "String"
-    },
-    "RunasPassword" : {
-      "Description" : "The password of the user which runs the Windows services; blank for default",
-      "Type" : "String",
+      "MinLength" : "1",
       "NoEcho" : "true"
     },
     "ContentAdminUser" : {
@@ -77,28 +33,31 @@
       "Default" : "admin",
       "MinLength" : "1"
     },
-    "ContentAdminPassword" : {
-      "Description" : "The password for the initial Admin user for Tableau server",
+    "InstanceType" : {
+      "Description" : "EC2 instance type for Tableau Server instances",
       "Type" : "String",
-      "MinLength" : "1",
-      "NoEcho" : "true"
+      "Default" : "m4.xlarge",
+      "AllowedValues" : [ "m4.xlarge", "m4.2xlarge", "m4.4xlarge", "m4.10xlarge"],
+      "ConstraintDescription" : "must be a valid EC2 instance type."
     },
-    "TableauServerLicenseKey" : {
-      "Description" : "License Key",
+    "InstallationBucket" : {
+      "Description" : "The name of the S3 bucket from which to fetch installation files",
       "Type" : "String",
+      "Default" : "tableau-server-installer",
       "MinLength" : "1"
     },
-    "TableauServerPrimaryInstaller" : {
-      "Description" : "Primary installer to use; fetched from the Source S3 Bucket",
-      "Type" : "String",
-      "Default" : "Setup-Server-x64.exe",
-      "MinLength" : "1"
+    "KeyPairName" : {
+      "Description" : "Name of an existing EC2 KeyPair used to get the Administrator password for the instance",
+      "Type" : "AWS::EC2::KeyPair::KeyName",
+      "ConstraintDescription" : "must be the name of an existing EC2 KeyPair."
     },
-    "TableauServerWorkerInstaller" : {
-      "Description" : "Worker installer to use; fetched from the Source S3 Bucket",
+    "LoadBalancerCidrForWeb" : {
+      "Description" : "CIDR for Web clients. This can be a specific subnet (yours), or open to the world. (e.g., 0.0.0.0/0)",
       "Type" : "String",
-      "Default" : "Setup-Worker-x64.exe",
-      "MinLength" : "1"
+      "MinLength" : "9",
+      "MaxLength" : "18",
+      "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+      "ConstraintDescription": "Must be a valid IP CIDR range of the form x.x.x.x/x."
     },
     "RegFirstName" : {
       "Description" : "First Name",
@@ -150,6 +109,47 @@
     "RegCountry" : {
       "Description" : "Country",
       "Type" : "String"
+    },
+    "ResourceAvailabilityZone" : {
+        "Description" : "The availability zone (AZ) in which our server and storage volume reside",
+        "Type": "AWS::EC2::AvailabilityZone::Name"
+    },
+    "RunasPassword" : {
+      "Description" : "The password of the user which runs the Windows services; blank for default",
+      "Type" : "String",
+      "NoEcho" : "true"
+    },
+    "RunasUser" : {
+      "Description" : "The name of the user which runs the Windows service; blank for default",
+      "Type" : "String"
+    },
+    "SSLCertificateARN" : {
+        "Description" : "The Amazon Resource Name for the existing SSL cert you wish to use",
+        "Type" : "String"
+    },
+    "TableauServerLicenseKey" : {
+      "Description" : "License Key",
+      "Type" : "String",
+      "MinLength" : "1"
+    },
+    "TableauServerPrimaryInstaller" : {
+      "Description" : "Primary installer to use; fetched from the Source S3 Bucket",
+      "Type" : "String",
+      "Default" : "Setup-Server-x64.exe",
+      "MinLength" : "1"
+    },
+    "TableauServerWorkerInstaller" : {
+      "Description" : "Worker installer to use; fetched from the Source S3 Bucket",
+      "Type" : "String",
+      "Default" : "Setup-Worker-x64.exe",
+      "MinLength" : "1"
+    },
+    "WindowsVersion" : {
+      "Description" : "The version of Windows to use",
+      "Type" : "String",
+      "Default" : "WS2012R2",
+      "AllowedValues" : ["WS2012R2"],
+      "ConstraintDescription" : "must be one of: WS2012R2"
     }
   },
   "Metadata" : {
@@ -157,7 +157,7 @@
       "ParameterGroups" : [
         {
             "Label" : { "default" : "AWS Environment" },
-            "Parameters" : ["KeyName","ResourceAvailabilityZone","BastionCidrForRDP", "LoadBalancerCidrForWeb", "InstallationBucket"]
+            "Parameters" : ["KeyPairName","ResourceAvailabilityZone","BastionCidrForRDP", "LoadBalancerCidrForWeb", "InstallationBucket"]
         },
         {
             "Label" : { "default" : "Server DNS configuration"},
@@ -190,50 +190,26 @@
         "AwsPublicFQDN": {
             "default": "Full DNS name for cluster"
         },
-        "SSLCertificateARN": {
-            "default": "SSL certificate ARN"
-        },
-        "KeyName": {
-            "default": "EC2 keypair"
-        },
-        "ResourceAvailabilityZone": {
-            "default": "Target AZ"
-        },
         "BastionCidrForRDP": {
-            "default": "Source CIDR for RDP access to bastion host "
-        },
-        "LoadBalancerCidrForWeb": {
-            "default": "Source CIDR for web access to the web UI"
-        },
-        "InstanceType": {
-            "default": "EC2 Instance Type"
-        },
-        "WindowsVersion": {
-            "default": "Server OS Version"
-        },
-        "InstallationBucket": {
-            "default": "Source S3 Bucket"
-        },
-        "RunasUser": {
-            "default": "Service runas user"
-        },
-        "RunasPassword": {
-            "default": "Service runas password"
-        },
-        "ContentAdminUser": {
-            "default": "Portal admin username"
+            "default": "Allowed CIDR for RDP access to bastion host "
         },
         "ContentAdminPassword": {
             "default": "Portal admin password"
         },
-        "TableauServerLicenseKey": {
-            "default": "Tableau Activation Key"
+        "ContentAdminUser": {
+            "default": "Portal admin username"
         },
-        "TableauServerPrimaryInstaller": {
-            "default": "Primary installer executable"
+        "InstanceType": {
+            "default": "Tableau Server EC2 Instance Type"
         },
-        "TableauServerWorkerInstaller": {
-            "default": "Worker installer executable"
+        "InstallationBucket": {
+            "default": "Source S3 Bucket"
+        },
+        "KeyPairName": {
+            "default": "Key Pair Name"
+        },
+        "LoadBalancerCidrForWeb": {
+            "default": "Allowed CIDR for access to the Web UI"
         },
         "RegFirstName": {
             "default": "First Name"
@@ -270,6 +246,30 @@
         },
         "RegCountry": {
             "default": "Country"
+        },
+        "ResourceAvailabilityZone": {
+            "default": "Target AZ"
+        },
+        "RunasPassword": {
+            "default": "Service runas password"
+        },
+        "RunasUser": {
+            "default": "Service runas user"
+        },
+        "SSLCertificateARN": {
+            "default": "SSL certificate ARN (Requires mattching DNS name)"
+        },
+        "TableauServerLicenseKey": {
+            "default": "Tableau Activation Key"
+        },
+        "TableauServerPrimaryInstaller": {
+            "default": "Primary installer executable"
+        },
+        "TableauServerWorkerInstaller": {
+            "default": "Worker installer executable"
+        },
+        "WindowsVersion": {
+            "default": "Server OS Version"
         }
       }
     }
@@ -597,7 +597,7 @@
         "ImageId" : { "Fn::FindInMap" : [ "AWSAMIRegionMap", { "Ref" : "AWS::Region" }, { "Ref" : "WindowsVersion" } ]},
         "AvailabilityZone" : { "Ref" : "ResourceAvailabilityZone" },
         "SecurityGroupIds" : [ {"Ref" : "BastionSecurityGroup"} ],
-        "KeyName" : { "Ref" : "KeyName" },
+        "KeyName" : { "Ref" : "KeyPairName" },
         "SubnetId" : { "Ref" : "ClusterPublicSubnet"},
         "Tags": [
             {
@@ -771,7 +771,7 @@
             "AvailabilityZone" : { "Ref" : "ResourceAvailabilityZone" },
             "SecurityGroupIds" : [ {"Ref" : "InternalSecurityGroup"} ],
             "IamInstanceProfile" : { "Ref" : "TableauWindowsServerInstanceProfile" },
-            "KeyName" : { "Ref" : "KeyName" },
+            "KeyName" : { "Ref" : "KeyPairName" },
             "SubnetId" : { "Ref" : "ClusterPrivateSubnet"},
             "PrivateIpAddress" : "10.0.1.11",
             "BlockDeviceMappings" : [
@@ -841,7 +841,7 @@
             "AvailabilityZone" : { "Ref" : "ResourceAvailabilityZone" },
             "SecurityGroupIds" : [ {"Ref" : "InternalSecurityGroup"} ],
             "IamInstanceProfile" : { "Ref" : "TableauWindowsServerInstanceProfile" },
-            "KeyName" : { "Ref" : "KeyName" },
+            "KeyName" : { "Ref" : "KeyPairName" },
             "SubnetId" : { "Ref" : "ClusterPrivateSubnet"},
             "PrivateIpAddress" : "10.0.1.12",
             "BlockDeviceMappings" : [
@@ -911,7 +911,7 @@
             "AvailabilityZone" : { "Ref" : "ResourceAvailabilityZone" },
             "SecurityGroupIds" : [ {"Ref" : "InternalSecurityGroup"} ],
             "IamInstanceProfile" : { "Ref" : "TableauWindowsServerInstanceProfile" },
-            "KeyName" : { "Ref" : "KeyName" },
+            "KeyName" : { "Ref" : "KeyPairName" },
             "SubnetId" : { "Ref" : "ClusterPrivateSubnet"},
             "PrivateIpAddress" : "10.0.1.13",
             "BlockDeviceMappings" : [

@@ -13,34 +13,17 @@
         "Type" : "String",
         "MinLength" : "1"
     },
-    "SSLCertificateARN" : {
-        "Description" : "The ARN for the SSL cert use",
-        "Type" : "String"
-    },
-    "KeyName" : {
-      "Description" : "Name of an existing EC2 KeyPair used to get the Administrator password for the instance",
-      "Type" : "AWS::EC2::KeyPair::KeyName",
-      "ConstraintDescription" : "must be the name of an existing EC2 KeyPair."
-    },
-    "ResourceAvailabilityZone" : {
-        "Description" : "The availability zone in which our server and storage volume reside",
-        "Type": "AWS::EC2::AvailabilityZone::Name"
-    },
-    "SourceCidrForRDP" : {
-      "Description" : "IP Cidr from which you are likely to RDP into the instances. You can add rules later by modifying the created security groups e.g. 54.32.98.160/32",
+    "ContentAdminPassword" : {
+      "Description" : "The password for the initial Admin user for Tableau server",
       "Type" : "String",
-      "MinLength" : "9",
-      "MaxLength" : "18",
-      "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
-      "ConstraintDescription": "Must be a valid IP CIDR range of the form x.x.x.x/x."
+      "MinLength" : "1",
+      "NoEcho" : "true"
     },
-    "SourceCidrForWeb" : {
-      "Description" : "IP Cidr for Web clients. This can be a specific subnet (yours), or open to the world. 0.0.0.0/0",
+    "ContentAdminUser" : {
+      "Description" : "The name of the initial Admin user for Tableau server",
       "Type" : "String",
-      "MinLength" : "9",
-      "MaxLength" : "18",
-      "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
-      "ConstraintDescription": "Must be a valid IP CIDR range of the form x.x.x.x/x."
+      "Default" : "admin",
+      "MinLength" : "1"
     },
     "InstallationBucket" : {
       "Description" : "The name of the S3 bucket from which to fetch the server installer",
@@ -55,44 +38,17 @@
       "AllowedValues" : [ "m4.xlarge", "m4.2xlarge", "m4.4xlarge", "m4.10xlarge"],
       "ConstraintDescription" : "must be a valid EC2 instance type."
     },
-    "TableauServerVolumeSize" : {
-      "Description" : "Size of volume for server in GB; need at least 30 GB free for server installation",
-      "Type" : "Number",
-      "Default" : "100",
-      "MinValue" : "60"
+    "KeyPairName" : {
+      "Description" : "Name of an existing EC2 KeyPair used to get the Administrator password for the instance",
+      "Type" : "AWS::EC2::KeyPair::KeyName",
+      "ConstraintDescription" : "must be the name of an existing EC2 KeyPair."
     },
-    "WindowsVersion" : {
-      "Description" : "The version of Windows to use",
+    "PublicFirewallProfileHole": {
+      "Description" : "If firewall rules are created allowing access to the server, create rule allowing access via the Public profile (useful for AWS)",
       "Type" : "String",
-      "Default" : "WS2012R2",
-      "AllowedValues" : [ "WS2012R2"],
-      "ConstraintDescription" : "must be one : WS2012R2"
-    },
-    "RunasUser" : {
-      "Description" : "The name of the user which runs the service; blank for default",
-      "Type" : "String"
-    },
-    "RunasPassword" : {
-      "Description" : "The password of the user which runs the service; blank for default",
-      "Type" : "String",
-      "NoEcho" : "true"
-    },
-    "ContentAdminUser" : {
-      "Description" : "The name of the initial Admin user for Tableau server",
-      "Type" : "String",
-      "Default" : "admin",
-      "MinLength" : "1"
-    },
-    "ContentAdminPassword" : {
-      "Description" : "The password for the initial Admin user for Tableau server",
-      "Type" : "String",
-      "MinLength" : "1",
-      "NoEcho" : "true"
-    },
-    "TableauServerLicenseKey" : {
-      "Description" : "License Key",
-      "Type" : "String",
-      "MinLength" : "1"
+      "Default" : "Yes",
+      "AllowedValues" : ["Yes", "No"],
+      "ConstraintDescription" : "must be one of Yes , No"
     },
     "RegFirstName" : {
       "Description" : "First Name",
@@ -145,18 +101,62 @@
       "Description" : "Country",
       "Type" : "String"
     },
+    "ResourceAvailabilityZone" : {
+        "Description" : "The availability zone in which our server and storage volume reside",
+        "Type": "AWS::EC2::AvailabilityZone::Name"
+    },
+    "RunasPassword" : {
+      "Description" : "The password of the user which runs the service; blank for default",
+      "Type" : "String",
+      "NoEcho" : "true"
+    },
+    "RunasUser" : {
+      "Description" : "The name of the user which runs the service; blank for default",
+      "Type" : "String"
+    },
+    "SourceCidrForRDP" : {
+      "Description" : "IP Cidr from which you are likely to RDP into the instances. You can add rules later by modifying the created security groups e.g. 54.32.98.160/32",
+      "Type" : "String",
+      "MinLength" : "9",
+      "MaxLength" : "18",
+      "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+      "ConstraintDescription": "Must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+    "SourceCidrForWeb" : {
+      "Description" : "IP Cidr for Web clients. This can be a specific subnet (yours), or open to the world. 0.0.0.0/0",
+      "Type" : "String",
+      "MinLength" : "9",
+      "MaxLength" : "18",
+      "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+      "ConstraintDescription": "Must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+    "SSLCertificateARN" : {
+        "Description" : "The ARN for the SSL cert use",
+        "Type" : "String"
+    },
     "TableauServerInstaller" : {
       "Description" : "Installer to use",
       "Type" : "String",
       "Default" : "Setup-Server-x64.exe",
       "MinLength" : "1"
     },
-    "PublicFirewallProfileHole": {
-      "Description" : "If firewall rules are created allowing access to the server, create rule allowing access via the Public profile (useful for AWS)",
+    "TableauServerLicenseKey" : {
+      "Description" : "License Key",
       "Type" : "String",
-      "Default" : "No",
-      "AllowedValues" : ["Yes", "No"],
-      "ConstraintDescription" : "must be one of Yes , No"
+      "MinLength" : "1"
+    },
+    "TableauServerVolumeSize" : {
+      "Description" : "Size of volume for server in GB; need at least 30 GB free for server installation",
+      "Type" : "Number",
+      "Default" : "100",
+      "MinValue" : "60"
+    },
+    "WindowsVersion" : {
+      "Description" : "The version of Windows to use",
+      "Type" : "String",
+      "Default" : "WS2012R2",
+      "AllowedValues" : [ "WS2012R2"],
+      "ConstraintDescription" : "must be one : WS2012R2"
     },
     "Worker0GatewayPort" : {
       "Description" : "Web port for Tableau gateway",
@@ -211,7 +211,7 @@
         },
         {
             "Label" : { "default" : "AWS Environment" },
-            "Parameters" : ["KeyName","ResourceAvailabilityZone","SourceCidrForRDP","SourceCidrForWeb", "InstallationBucket"]
+            "Parameters" : ["KeyPairName","ResourceAvailabilityZone","SourceCidrForRDP","SourceCidrForWeb", "InstallationBucket"]
         },
         {
             "Label" : { "default" : "Machine Configuration" },
@@ -238,7 +238,119 @@
             "Parameters" : [ "TableauServerInstaller" ]
         }
       ],
-      "ParameterLabels" : {}
+      "ParameterLabels" : {
+        "AwsHostedZoneId": {
+            "default": "DNS ZoneID"
+        },
+        "AwsPublicFQDN": {
+            "default": "Full DNS name for cluster"
+        },
+        "ContentAdminPassword": {
+            "default": "Portal admin password"
+        },
+        "ContentAdminUser": {
+            "default": "Portal admin username"
+        },
+        "InstallationBucket": {
+            "default": "Source S3 Bucket"
+        },
+        "InstanceType": {
+            "default": "Tableau Server EC2 Instance Type"
+        },
+        "KeyPairName": {
+            "default": "Key Pair Name"
+        },
+        "PublicFirewallProfileHole": {
+            "default": "Windows firewall rules also apply to the Public profile"
+        },
+        "RegFirstName": {
+            "default": "First Name"
+        },
+        "RegLastName": {
+            "default": "Last name"
+        },
+        "RegEmail": {
+            "default": "Email Address"
+        },
+        "RegCompany": {
+            "default": "Company"
+        },
+        "RegTitle": {
+            "default": "Title"
+        },
+        "RegDepartment": {
+            "default": "Department"
+        },
+        "RegIndustry": {
+            "default": "Industry"
+        },
+        "RegPhone": {
+            "default": "Phone"
+        },
+        "RegCity": {
+            "default": "City"
+        },
+        "RegState": {
+            "default": "State"
+        },
+        "RegZip": {
+            "default": "Zip/Postal Code"
+        },
+        "RegCountry": {
+            "default": "Country"
+        },
+        "ResourceAvailabilityZone": {
+            "default": "Target AZ"
+        },
+        "RunasPassword": {
+            "default": "Service runas password"
+        },
+        "RunasUser": {
+            "default": "Service runas user"
+        },
+        "SourceCidrForRDP": {
+            "default": "Allowed CIDR for RDP access"
+        },
+        "SourceCidrForWeb": {
+            "default": "Allowed CIDR for access to the Web UI"
+        },
+        "SSLCertificateARN": {
+            "default": "SSL certificate ARN (Requires mattching DNS name)"
+        },
+        "TableauServerInstaller": {
+            "default": "Server installer executable"
+        },
+        "TableauServerLicenseKey": {
+            "default": "Tableau Activation Key"
+        },
+        "TableauServerVolumeSize": {
+            "default": "Size for server volume in GB; Requires at least 30 GB"
+        },
+        "WindowsVersion": {
+            "default": "Server OS Version"
+        },
+        "Worker0GatewayPort": {
+            "default": "Gateway (web) port"
+        },
+        "Worker0BackgrounderProcs": {
+            "default": "Number of Backgrounder processes"
+        },
+        "Worker0CacheserverProcs": {
+            "default": "Number of CacheServer processes"
+        },
+        "Worker0DataengineProcs": {
+            "default": "Numnber of Data Engine processes"
+        },
+        "Worker0DataserverProcs": {
+            "default": "Numnber of Data Server processes"
+        },
+        "Worker0VizportalProcs": {
+            "default": "Number of Vizportal processes"
+        },
+        "Worker0VizqlserverProcs": {
+            "default": "Number of VizqlServer processes"
+        }
+      }
     }
   },
   "Mappings" : {
@@ -503,7 +615,7 @@
         ],
         "SecurityGroups" : [ {"Ref" : "InstanceSecurityGroup"} ],
         "IamInstanceProfile" : { "Ref" : "TableauWindowsServerInstanceProfile" },
-        "KeyName" : { "Ref" : "KeyName" },
+        "KeyName" : { "Ref" : "KeyPairName" },
         "UserData" : { "Fn::Base64" : { "Fn::Join" : ["", [
             "<script>\n",
             { "Fn::Sub" : "cfn-init.exe -v -s ${AWS::StackId} -r TableauWindowsServer --region ${AWS::Region}\n"},
