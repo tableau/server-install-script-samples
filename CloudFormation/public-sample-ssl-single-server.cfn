@@ -133,8 +133,7 @@
     },
     "TableauServerLicenseKey" : {
       "Description" : "License Key",
-      "Type" : "String",
-      "MinLength" : "1"
+      "Type" : "String"
     },
     "TableauServerVolumeSize" : {
       "Description" : "Size of volume for server in GB; need at least 30 GB free for server installation",
