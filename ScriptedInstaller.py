@@ -365,7 +365,7 @@ def get_config_parameter(options, tabadmin_path, config_parameter):
         workgroup_yml = get_workgroup_yml(options)
         if config_parameter in workgroup_yml:
             if config_parameter in workgroup_yml:
-                return workgroup_yml[config_parameter]
+                return str(workgroup_yml[config_parameter])
         return None
 
 # Open the firewall on a given port.
