@@ -44,7 +44,7 @@
       "ConstraintDescription" : "must be the name of an existing EC2 KeyPair."
     },
     "PublicFirewallProfileHole": {
-      "Description" : "If firewall rules are created allowing access to the server, create rule allowing access via the Public profile (useful for AWS)",
+      "Description" : "If firewall rules are created allowing access to the server, create rule allowing access via the Public profile",
       "Type" : "String",
       "Default" : "Yes",
       "AllowedValues" : ["Yes", "No"],
@@ -122,7 +122,7 @@
       "ConstraintDescription": "Must be a valid IP CIDR range of the form x.x.x.x/x."
     },
     "SSLCertificateARN" : {
-        "Description" : "The ARN for the SSL cert use",
+        "Description" : "SSL certificate ARN (Requires matching DNS name)",
         "Type" : "String"
     },
     "TableauServerInstaller" : {
@@ -132,7 +132,7 @@
       "MinLength" : "1"
     },
     "TableauServerLicenseKey" : {
-      "Description" : "License Key",
+      "Description" : "License Key (leave blank for trial)",
       "Type" : "String"
     },
     "TableauServerVolumeSize" : {
@@ -251,7 +251,7 @@
             "default": "Key Pair Name"
         },
         "PublicFirewallProfileHole": {
-            "default": "Windows firewall rules also apply to the Public profile"
+            "default": "Apply firewall rules to the Public profile"
         },
         "RegFirstName": {
             "default": "First Name"
@@ -299,13 +299,13 @@
             "default": "Allowed CIDR for access to the Web UI"
         },
         "SSLCertificateARN": {
-            "default": "SSL certificate ARN (Requires mattching DNS name)"
+            "default": "The ARN for your SSL cert"
         },
         "TableauServerInstaller": {
             "default": "Server installer executable"
         },
         "TableauServerLicenseKey": {
-            "default": "License Key (leave blank for trial)"
+            "default": "License Key"
         },
         "TableauServerVolumeSize": {
             "default": "Size for server volume in GB"
@@ -317,22 +317,22 @@
             "default": "Gateway (web) port"
         },
         "Worker0BackgrounderProcs": {
-            "default": "Number of Backgrounder processes"
+            "default": "Backgrounder process count"
         },
         "Worker0CacheserverProcs": {
-            "default": "Number of CacheServer processes"
+            "default": "CacheServer process count"
         },
         "Worker0DataengineProcs": {
-            "default": "Numnber of Data Engine processes"
+            "default": "Data Engine process count"
         },
         "Worker0DataserverProcs": {
-            "default": "Numnber of Data Server processes"
+            "default": "Data Server process count"
         },
         "Worker0VizportalProcs": {
-            "default": "Number of Vizportal processes"
+            "default": "Vizportal process count"
         },
         "Worker0VizqlserverProcs": {
-            "default": "Number of VizqlServer processes"
+            "default": "VizqlServer process count"
         }
       }
     }
