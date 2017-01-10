@@ -488,6 +488,9 @@
                         "    elif v.startswith('FLOAT:'):",
                         "        newvalue = v[len('FLOAT:'):]",
                         "        config_data[k] = float(newvalue)",
+                        "    elif v.startswith('BOOLEAN:'):",
+                        "        newvalue = v[len('BOOLEAN:'):]",
+                        "        config_data[k] = json.loads(newvalue.lower())",
                         "yaml.safe_dump(config_data, sys.stdout, default_flow_style=False)",
                         ""
                     ]]
@@ -517,7 +520,7 @@
               },
               "c:\\tabsetup\\config.json" : {
                 "content" : {
-                    "config.version" : "15",
+                    "config.version" : "INTEGER:16",
                     "worker0.gateway.port"       : {"Fn::Sub" : "INTEGER:${Worker0GatewayPort}"},
                     "worker0.backgrounder.procs" : {"Fn::Sub" : "INTEGER:${Worker0BackgrounderProcs}"},
                     "worker0.cacheserver.procs"  : {"Fn::Sub" : "INTEGER:${Worker0CacheserverProcs}"},
