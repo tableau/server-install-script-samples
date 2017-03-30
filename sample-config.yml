@@ -8,6 +8,7 @@ wgserver.authenticate: local
 # When mail is sent the server, this info used for that
 svcmonitor.notification.smtp.canonical_url: http://myserver.example.com
 svcmonitor.notification.smtp.from_address: donut-reply@example.com
+# replace this with something useful.
 svcmonitor.notification.smtp.password: password
 svcmonitor.notification.smtp.send_account: person
 svcmonitor.notification.smtp.server: mail.example.com
