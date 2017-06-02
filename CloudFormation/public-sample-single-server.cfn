@@ -313,52 +313,52 @@
   },
   "Mappings" : {
     "AWSAMIRegionMap": {
-        "AMI": {
-            "WS2012R2": "Windows_Server-2012-R2_RTM-English-64Bit-Base-2016.11.23"
-        },
-        "ap-northeast-1": {
-            "WS2012R2": "ami-5b299d3a"
-        },
-        "ap-northeast-2": {
-            "WS2012R2": "ami-69d30407"
-        },
-        "ap-south-1": {
-            "WS2012R2": "ami-79255216"
-        },
-        "ap-southeast-1": {
-            "WS2012R2": "ami-9d7ad8fe"
-        },
-        "ap-southeast-2": {
-            "WS2012R2": "ami-9fe7d9fc"
-        },
-        "ca-central-1": {
-            "WS2012R2": "ami-f57fcd91"
-        },
-        "eu-central-1": {
-            "WS2012R2": "ami-21cb0f4e"
-        },
-        "eu-west-1": {
-            "WS2012R2": "ami-95d984e6"
-        },
-        "eu-west-2": {
-            "WS2012R2": "ami-bb353fdf"
-        },
-        "sa-east-1": {
-            "WS2012R2": "ami-628e100e"
-        },
-        "us-east-1": {
-            "WS2012R2": "ami-bfeddca8"
-        },
-        "us-east-2": {
-            "WS2012R2": "ami-e999c38c"
-        },
-        "us-west-1": {
-            "WS2012R2": "ami-8b590deb"
-        },
-        "us-west-2": {
-            "WS2012R2": "ami-24e64944"
-        }
-    }
+                "AMI": {
+                    "WS2012R2": "Windows_Server-2012-R2_RTM-English-64Bit-Base-2017.05.10"
+                },
+                "ap-northeast-1": {
+                    "WS2012R2": "ami-539aa834"
+                },
+                "ap-northeast-2": {
+                    "WS2012R2": "ami-50e13c3e"
+                },
+                "ap-south-1": {
+                    "WS2012R2": "ami-67047908"
+                },
+                "ap-southeast-1": {
+                    "WS2012R2": "ami-9e3bbefd"
+                },
+                "ap-southeast-2": {
+                    "WS2012R2": "ami-c4262ca7"
+                },
+                "ca-central-1": {
+                    "WS2012R2": "ami-687ec20c"
+                },
+                "eu-central-1": {
+                    "WS2012R2": "ami-f9528c96"
+                },
+                "eu-west-1": {
+                    "WS2012R2": "ami-96d4daf0"
+                },
+                "eu-west-2": {
+                    "WS2012R2": "ami-07455263"
+                },
+                "sa-east-1": {
+                    "WS2012R2": "ami-af6708c3"
+                },
+                "us-east-1": {
+                    "WS2012R2": "ami-271b6d31"
+                },
+                "us-east-2": {
+                    "WS2012R2": "ami-7fc4e31a"
+                },
+                "us-west-1": {
+                    "WS2012R2": "ami-59a78139"
+                },
+                "us-west-2": {
+                    "WS2012R2": "ami-3189ec51"
+                }
+            }
   },
   "Conditions" : {
     "EnablePublicFirewallRule" : { "Fn::Equals" : [{ "Ref" : "PublicFirewallProfileHole"},"Yes"]},
