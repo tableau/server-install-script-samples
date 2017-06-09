@@ -961,7 +961,7 @@
   "Outputs" : {
     "VPCId" : {
         "Description" : "VPC created for cluster",
-        "Value" : {  "Ref" : "ClusterVPC" },
+        "Value" : {  "Ref" : "ClusterVPC" }
     },
     "BastionDNSName" : {
         "Description" : "Public DNS name of bastion host",
