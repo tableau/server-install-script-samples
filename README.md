@@ -1,4 +1,5 @@
 # server-install-script-samples
+[![Community Supported](https://img.shields.io/badge/Support%20Level-Community%20Supported-457387.svg)](https://www.tableau.com/support-levels-it-and-developer-tools)
 ----
 
 The Tableau Server installer uses a wizard-like approach to installing and configuring Tableau server. This approach works well for many users and administrators, but limits the ability to perform automated deployments using tools like Chef or Puppet.
