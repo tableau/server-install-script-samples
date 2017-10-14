@@ -8,15 +8,13 @@ We are providing some reference implementations to show users and organizations 
 
 See also [Automated Installation of Tableau Server](http://onlinehelp.tableau.com/v10.1/server/en-us/server_install_unattended.htm) for general documentation regarding this feature.  
 
+For a reference implementation of automating the deployment of Tableau Server to AWS using [AWS CloudFormation](https://aws.amazon.com/cloudformation/), please see the [Tableau Server on AWS Quick Start] (https://aws.amazon.com/quickstart/architecture/tableau-server/).
 
 Please use 'Issues' to note any bugs or make suggestions.  
 
 Getting Started
 ---------------
-This repository has the following samples for performing installs and/or upgrades of Tableau Server:
-
-* **[ScriptedInstaller.py:](#ScriptedInstaller)** Python script for installing or upgrading Tableau Server.  This script supports both single and multi-node instances of Tableau Server. We have also included several samples of the input files to the installer script.
-* **[AWS CloudFormation Templates:](CloudFormation/README.md)** Sample AWS CloudFormation templates for deploying Tableau Server to Amazon Web Services(AWS).
+This repository includes a sample Python script for performing installs and/or upgrades of Tableau Server.  This script supports both single and multi-node instances of Tableau Server. We have also included several samples of the input files to the installer script.
 
 <a name="ScriptedInstaller"></a> ScriptedInstaller.py
 ----
