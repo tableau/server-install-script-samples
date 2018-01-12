@@ -1,0 +1,8 @@
+{
+  "configEntities": {
+    "identityStore": {
+      "_type": "identityStoreType",
+      "type": "local"
+    }
+  }
+}
