@@ -1,12 +1,12 @@
-# server-install-script-samples
+# Windows ScriptedInstaller
 [![Community Supported](https://img.shields.io/badge/Support%20Level-Community%20Supported-457387.svg)](https://www.tableau.com/support-levels-it-and-developer-tools)
 ----
 
-The Tableau Server installer uses a wizard-like approach to installing and configuring Tableau server. This approach works well for many users and administrators, but limits the ability to perform automated deployments using tools like Chef or Puppet.
+The Tableau Server installer on Windows uses a wizard-like approach to installing and configuring Tableau server. This approach works well for many users and administrators, but limits the ability to perform automated deployments using tools like Chef or Puppet.
 
-We are providing some reference implementations to show users and organizations how they can automate deployment of Tableau Server, using scripts to prepare the installation and run the installer executable with appropriate command-line arguments.  
+We are providing some reference implementations to show users and organizations how they can automate deployment of Tableau Server on Windows, using scripts to prepare the installation and run the installer executable with appropriate command-line arguments.  
 
-See also [Automated Installation of Tableau Server](http://onlinehelp.tableau.com/v10.1/server/en-us/server_install_unattended.htm) for general documentation regarding this feature.  
+See also [Automated Installation of Tableau Server](http://onlinehelp.tableau.com/v10.5/server/en-us/server_install_unattended.htm) for general documentation regarding these scripts.
 
 For a reference implementation of automating the deployment of Tableau Server to AWS using [AWS CloudFormation](https://aws.amazon.com/cloudformation/), please see the [Tableau Server on AWS Quick Start](https://aws.amazon.com/quickstart/architecture/tableau-server/).
 
