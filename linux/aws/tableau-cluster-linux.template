@@ -1,0 +1,955 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "AWS CloudFormation Template: Tableau Server Cluster running on Linux (CentOS).",
+
+  "Parameters" : {
+      "InstanceType" : {
+          "Description" : "Amazon EC2 instance type",
+          "Type" : "String",
+          "Default" : "m4.4xlarge",
+          "AllowedValues" : ["m4.2xlarge", "m4.4xlarge", "m4.10xlarge"],
+          "ConstraintDescription" : "must be a valid EC2 instance type."
+      },
+      "WorkerCount" : {
+          "Description" : "Number of (additional) worker nodes",
+          "Type" : "Number",
+          "Default" : "2",
+          "MinValue" : "2",
+          "MaxValue" : "30"
+      },
+      "PrivateSubnetIds": {
+          "Description": "The private subnets to use",
+          "Type" : "List<AWS::EC2::Subnet::Id>"
+      },
+      "PublicSubnetIds": {
+          "Description": "The public subnets to use",
+          "Type" : "List<AWS::EC2::Subnet::Id>"
+      },
+      "KeyPairName": {
+          "Description": "Name of an existing EC2 KeyPair to enable SSH access to the instances",
+          "Type": "AWS::EC2::KeyPair::KeyName",
+          "AllowedPattern" : ".+",
+          "ConstraintDescription": "must be the name of an existing EC2 KeyPair."
+      },
+      "SourceCIDR" : {
+          "Description" : "IP address/range to allow access from",
+          "Type" : "String",
+          "MinLength" : "9",
+          "MaxLength": "18",
+          "AllowedPattern" : "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+          "ConstraintDescription" : "Must be a valid IP CIDR range of the form x.x.x.x/x."
+      },
+      "SSLCertificateARN": {
+          "Default": "",
+          "Description": "The Amazon Resource Name for the existing SSL cert you wish to use; empty for none",
+          "Type": "String"
+      },
+      "AWSHostedZoneID": {
+          "Description": "DNS Zone ID to contain the cluster's DNS entry (blank = no DNS)",
+          "Type": "String"
+      },
+      "AWSPublicFQDN": {
+          "Description": "Tableau Server portal will be reachable at this address (blank = no DNS)",
+          "Type": "String"
+      },
+      "TableauServerInstaller" : {
+          "Description" : "S3 bucket file path for Tableau Server Installer",
+          "Default" : "https://tableau-server-10-4-linux-beta.s3.amazonaws.com/tableau-server.x86_64.rpm",
+          "Type": "String"
+      },
+      "AutomatedInstaller" : {
+          "Description" : "S3 bucket file path for Automated Installer",
+          "Default" : "https://tableau-server-10-4-linux-beta.s3.amazonaws.com/automated-installer",
+          "Type": "String"
+      },
+      "TableauServerVolumeSize" : {
+          "Description" : "Size of volume for server in GB; need at least 30 GB free for server installation",
+          "Type" : "Number",
+          "MinValue" : "30",
+          "MaxValue" : "16384",
+          "Default" : "100"
+      },
+      "Username" : {
+          "Description" : "Tableau Services Manager (TSM) administrator username (cannot be 'tableau' or 'tsmagent')",
+          "Type": "String",
+          "AllowedPattern" : "[A-Za-z0-9]+",
+          "MaxLength" : "30"
+      },
+      "Password" : {
+          "Description" : "Tableau Services Manager (TSM) administrator password",
+          "Type": "String",
+          "MinLength" : "6",
+          "NoEcho" : "true"
+      },
+      "TableauServerAdminUser" : {
+          "Description" : "The name of the initial administrator for Tableau Server",
+          "Type" : "String",
+          "MinLength" : "1"
+      },
+      "TableauServerAdminPassword" : {
+          "Description" : "The password of the initial administrator for Tableau Server",
+          "Type" : "String",
+          "MinLength" : "1",
+          "NoEcho" : "true"
+      },
+      "TableauServerLicenseKey" : {
+          "Description" : "License Key",
+          "Type" : "String",
+          "MinLength" : "1"
+      },
+      "RegFirstName" : {
+          "Description" : "First Name",
+          "Type" : "String",
+          "MinLength" : "1"
+      },
+      "RegLastName" : {
+          "Description" : "Last Name",
+          "Type" : "String",
+          "MinLength" : "1"
+      },
+      "RegEmail" : {
+          "Description" : "Email",
+          "Type" : "String",
+          "MinLength" : "1"
+      },
+      "RegCompany" : {
+          "Description" : "Company",
+          "Type" : "String",
+          "MinLength" : "1"
+      },
+      "RegTitle" : {
+          "Description" : "Title",
+          "Type" : "String",
+          "MinLength" : "1"
+      },
+      "RegDepartment" : {
+          "Description" : "Department",
+          "Type" : "String",
+          "MinLength" : "1"
+      },
+      "RegIndustry" : {
+          "Description" : "Industry",
+          "Type" : "String",
+          "MinLength" : "1"
+      },
+      "RegPhone" : {
+          "Description" : "Phone",
+          "Type" : "String",
+          "MinLength" : "1"
+      },
+      "RegCity" : {
+          "Description" : "City",
+          "Type" : "String",
+          "MinLength" : "1"
+      },
+      "RegState" : {
+          "Description" : "State",
+          "Type" : "String",
+          "MinLength" : "1"
+      },
+      "RegZip" : {
+          "Description" : "ZIP/Postal Code",
+          "Type" : "String",
+          "MinLength" : "1"
+      },
+      "RegCountry" : {
+          "Description" : "Country",
+          "Type" : "String",
+          "MinLength" : "1"
+      },
+      "VpcId": {
+          "Description": "The ID of the VPC into which to deploy the cluster",
+          "Type": "AWS::EC2::VPC::Id"
+      },
+      "ExistingSecurityGroup" : {
+          "Description" : "Provide an existing security group or leave blank for creating a new one",
+          "Type" : "String"
+      },
+      "IPAddress" : {
+          "Description" : "Provide an Elastic IP address (EIP) for the initial node (blank = no EIP)",
+          "Type" : "String"
+      }
+  },
+
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default":"AWS Environment and Machine Configuration" },
+          "Parameters" : [ "VpcId", "PrivateSubnetIds", "PublicSubnetIds",
+                           "InstanceType", "WorkerCount", "TableauServerVolumeSize", "KeyPairName", "SourceCIDR", "ExistingSecurityGroup", "IPAddress" ]
+        },
+        {
+          "Label": { "default": "Server DNS configuration" },
+          "Parameters": [ "SSLCertificateARN", "AWSPublicFQDN", "AWSHostedZoneID" ]
+        },
+        {
+          "Label" : { "default" : "Secrets" },
+          "Parameters" : [ "Username", "Password", "TableauServerAdminUser", "TableauServerAdminPassword" ]
+        },
+        {
+          "Label" : { "default" : "Registration" },
+          "Parameters" : ["TableauServerLicenseKey",
+                          "RegFirstName","RegLastName","RegEmail",
+                          "RegCompany","RegTitle","RegDepartment","RegIndustry",
+                          "RegPhone","RegCity","RegState","RegZip","RegCountry"]
+        },
+        {
+          "Label" : { "default":"Tableau Server Installation Files" },
+          "Parameters" : [ "TableauServerInstaller", "AutomatedInstaller" ]
+        }
+      ],
+      "ParameterLabels" : {
+        "VpcId" : { "default" : "Target VPC" },
+        "PrivateSubnetIds": { "default": "Target Private Subnets" },
+        "PublicSubnetIds": { "default": "Target Public Subnets" },
+        "InstanceType" : { "default" : "Amazon EC2 instance type" },
+        "WorkerCount" : { "default" : "Number of additional Tableau Server instances" },
+        "TableauServerVolumeSize" : { "default" : "Size for server volume in GB" },
+        "KeyPairName" : { "default" : "Key Pair Name" },
+        "SourceCIDR" : { "default" : "Source CIDR for Access" },
+        "SSLCertificateARN": { "default": "SSL Certificate ARN (Requires matching DNS name)" },
+        "AWSHostedZoneID": { "default": "DNS Zone ID" },
+        "AWSPublicFQDN": { "default": "Full DNS Name for Cluster" },
+        "ExistingSecurityGroup": { "default": "Existing Security Group" },
+        "IPAddress": { "default": "EIP address for initial node" },
+
+        "TableauServerInstaller" : { "default" : "Tableau Server Installer" },
+        "AutomatedInstaller" : { "default" : "Automated Installer" },
+
+        "Username" : { "default" : "Tableau Services Manager (TSM) administrator username" },
+        "Password" : { "default" : "Tableau Services Manager (TSM) administrator password" },
+        "TableauServerAdminUser": { "default": "Tableau Server administrator username" },
+        "TableauServerAdminPassword": { "default": "Tableau Server administrator password" },
+
+        "TableauServerLicenseKey": { "default": "Tableau Activation Key" },
+        "RegFirstName": { "default": "First Name" },
+        "RegLastName": { "default": "Last name" },
+        "RegEmail": { "default": "Email Address" },
+        "RegCompany": { "default": "Company" },
+        "RegTitle": { "default": "Title" },
+        "RegDepartment": { "default": "Department" },
+        "RegIndustry": { "default": "Industry" },
+        "RegPhone": { "default": "Phone" },
+        "RegCity": { "default": "City" },
+        "RegState": { "default": "State" },
+        "RegZip": { "default": "Zip/Postal Code" },
+        "RegCountry": { "default": "Country" }
+      }
+    }
+  },
+
+  "Conditions" : {
+        "HasWorkers": { "Fn::Not" : [{ "Fn::Equals" : [0, { "Ref" : "WorkerCount" }] }]},
+        "NoSSLCertficate": { "Fn::Equals": [ "", { "Ref" : "SSLCertificateARN" }]},
+        "HasSSLCertificate": { "Fn::Not": [{ "Condition" : "NoSSLCertficate" }]},
+        "NoServerSecurityGroup": { "Fn::Equals": [ "", { "Ref" : "ExistingSecurityGroup" }]},
+        "HasServerSecurityGroup": { "Fn::Not": [{ "Condition" : "NoServerSecurityGroup" }]},
+        "NoElasticIP": { "Fn::Equals": [ "", { "Ref" : "IPAddress" }]},
+        "HasElasticIP": { "Fn::Not": [{ "Condition" : "NoElasticIP" }]},
+        "NoDNSEntry": { "Fn::Or": [{ "Fn::Equals": [ "", { "Ref": "AWSHostedZoneID" }]}, { "Fn::Equals": [ "", { "Ref": "AWSPublicFQDN" }]} ]},
+        "CreateDNSEntry": { "Fn::Not": [{ "Condition" : "NoDNSEntry" }]}
+  },
+
+  "Mappings" : {
+    "AwsRegionToAMI" : {
+      "us-east-1" : { "id" : "ami-6d1c2007" },
+      "us-east-2" : { "id" : "ami-6a2d760f" },
+      "us-west-1" : { "id" : "ami-af4333cf" },
+      "us-west-2" : { "id" : "ami-d2c924b2" },
+      "ca-central-1" : { "id" : "ami-af62d0cb" },
+      "sa-east-1" : { "id" : "ami-26b93b4a" },
+      "eu-west-1" : { "id" : "ami-7abd0209" },
+      "eu-west-2" : { "id" : "ami-bb373ddf" },
+      "eu-central-1" : { "id" : "ami-9bf712f4" },
+      "ap-south-1" : { "id" : "ami-95cda6fa" },
+      "ap-southeast-1" : { "id" : "ami-f068a193" },
+      "ap-southeast-2" : { "id" : "ami-fedafc9d" },
+      "ap-northeast-1" : { "id" : "ami-eec1c380" },
+      "ap-northeast-2" : { "id" : "ami-c74789a9" }
+    }
+  },
+
+  "Resources" : {
+      "VpcInfo": {
+          "Type": "Custom::VpcInfo",
+          "Properties": {
+              "ServiceToken": { "Fn::GetAtt" : ["InfoLambda", "Arn"] },
+              "Region": { "Ref": "AWS::Region" },
+              "Func": "DescribeVpc",
+              "VpcId": { "Ref" : "VpcId" }
+          }
+      },
+
+      "InfoLambda": {
+          "Type": "AWS::Lambda::Function",
+          "Properties": {
+              "Code": {
+                  "ZipFile": {
+                      "Fn::Join": ["\n", [
+                            "var aws = require('aws-sdk');",
+                            "",
+                            "exports.handler = (e, c) => {",
+                            "\tconsole.log('REQUEST RECEIVED:\\n' + JSON.stringify(e));",
+                            "",
+                            "\t// For Delete requests, immediately send a SUCCESS response.",
+                            "\tif (e.RequestType == 'Delete') {",
+                            "\t\tsendResponse(e, c, 'SUCCESS');",
+                            "\t\treturn;",
+                            "\t}",
+                            "",
+                            "\tvar ec2 = new aws.EC2({ region: e.ResourceProperties.Region });",
+                            "\tvar vpc = e.ResourceProperties.VpcId;",
+                            "\tvar func = e.ResourceProperties.Func;",
+                            "",
+                            "\tvar status = 'FAILED';",
+                            "\tvar responseData = {};",
+                            "\tif (func === 'DescribeVpc') {",
+                            "\t\t// Get VPCs with the specified id",
+                            "\t\tec2.describeVpcs({ VpcIds: [vpc] }, (err, data) => {",
+                            "\t\t\tconsole.log('vpcs:\\n' + JSON.stringify(data));",
+                            "\t\t\terr = err || (data.Vpcs.length !== 1 ? 'DescribeVpcs returned ' + data.Vpcs.length + ' results.' : undefined);",
+                            "\t\t\tif (err) {",
+                            "\t\t\t\tresponseData.Error = 'DescribeVpcs call failed';",
+                            "\t\t\t\tconsole.log(responseData.Error + ':\\n', err);",
+                            "\t\t\t} else {",
+                            "\t\t\t\tstatus = 'SUCCESS';",
+                            "\t\t\t\tresponseData = data.Vpcs[0];",
+                            "\t\t\t}",
+                            "\t\t\tsendResponse(e, c, status, responseData);",
+                            "\t\t});",
+                            "\t} else {",
+                            "\t\tsendResponse(e, c, status, {Error: 'Unknown Function ' + func});",
+                            "\t}",
+                            "};",
+                            "",
+                            "// Send response to the pre-signed S3 URL",
+                            "function sendResponse(e, c, status, responseData) {",
+                            "\tvar responseBody = JSON.stringify({",
+                            "\t\tStatus: status,",
+                            "\t\tReason: 'See the details in CloudWatch Log Stream: ' + c.logStreamName,",
+                            "\t\tPhysicalResourceId: c.logStreamName,",
+                            "\t\tStackId: e.StackId,",
+                            "\t\tRequestId: e.RequestId,",
+                            "\t\tLogicalResourceId: e.LogicalResourceId,",
+                            "\t\tData: responseData",
+                            "\t});",
+                            "",
+                            "\tconsole.log('RESPONSE BODY:\\n', responseBody);",
+                            "",
+                            "\tvar https = require('https');",
+                            "\tvar url = require('url');",
+                            "",
+                            "\tvar parsedUrl = url.parse(e.ResponseURL);",
+                            "\tvar options = {",
+                            "\t\thostname: parsedUrl.hostname,",
+                            "\t\tport: 443,",
+                            "\t\tpath: parsedUrl.path,",
+                            "\t\tmethod: 'PUT',",
+                            "\t\theaders: {",
+                            "\t\t\t'content-type': '',",
+                            "\t\t\t'content-length': responseBody.length",
+                            "\t\t}",
+                            "\t};",
+                            "",
+                            "\tconsole.log('SENDING RESPONSE...\\n');",
+                            "",
+                            "\tvar request = https.request(options, (response) => {",
+                            "\t\tconsole.log('STATUS: ' + response.statusCode);",
+                            "\t\tconsole.log('HEADERS: ' + JSON.stringify(response.headers));",
+                            "\t\tc.done(); // Tell AWS Lambda function execution is done",
+                            "\t});",
+                            "",
+                            "\trequest.on('error', (err) => {",
+                            "\t\tconsole.log('sendResponse Error:' + err);",
+                            "\t\tc.done(); // Tell AWS Lambda function execution is done",
+                            "\t});",
+                            "",
+                            "\t// write data to request body",
+                            "\trequest.write(responseBody);",
+                            "\trequest.end();",
+                            "}"
+                      ]]
+                  }
+              },
+              "Handler": "index.handler",
+              "Role": { "Fn::GetAtt" : ["LambdaExecutionRole", "Arn"] },
+              "Runtime": "nodejs4.3",
+              "Timeout": "30"
+          }
+      },
+
+      "LambdaExecutionRole": {
+          "Type": "AWS::IAM::Role",
+          "Properties": {
+              "AssumeRolePolicyDocument": {
+                  "Version": "2012-10-17",
+                  "Statement": [{
+                      "Effect": "Allow",
+                      "Principal": {"Service": ["lambda.amazonaws.com"]},
+                      "Action": ["sts:AssumeRole"]
+                  }]
+              },
+              "Path": "/",
+              "Policies": [{
+                  "PolicyName": "root",
+                  "PolicyDocument": {
+                      "Version": "2012-10-17",
+                      "Statement": [{
+                          "Effect": "Allow",
+                          "Action": ["logs:CreateLogGroup","logs:CreateLogStream","logs:PutLogEvents"],
+                          "Resource": "arn:aws:logs:*:*:*"
+                      },
+                      {
+                          "Effect": "Allow",
+                          "Action": "ec2:DescribeVpcs",
+                          "Resource": "*"
+                      }]
+                  }
+              }]
+          }
+      },
+
+      "RootRole": {
+          "Type": "AWS::IAM::Role",
+          "Properties": {
+              "AssumeRolePolicyDocument": {
+                  "Version" : "2012-10-17",
+                  "Statement": [ {
+                      "Effect": "Allow",
+                      "Principal": { "Service": [ "ec2.amazonaws.com" ] },
+                      "Action": [ "sts:AssumeRole" ]
+                  } ]
+              },
+              "Path": "/",
+              "Policies": [ {
+                 "PolicyName": "root",
+                 "PolicyDocument": {
+                     "Version" : "2012-10-17",
+                     "Statement": [
+                         { "Effect": "Allow", "Action": ["cloudformation:DescribeStackResource", "cloudformation:SignalResource"], "Resource": { "Fn::Join" : ["", [ "arn:aws:cloudformation:", { "Ref" : "AWS::Region" }, ":", { "Ref" : "AWS::AccountId" }, ":stack/", { "Ref": "AWS::StackName" }, "/*" ]]} },
+                         { "Effect": "Allow", "Action": "ec2:DescribeInstances", "Resource": "*" }
+                     ]
+                 }
+              } ]
+          }
+      },
+
+      "RootInstanceProfile": {
+          "Type": "AWS::IAM::InstanceProfile",
+          "Properties": {
+              "Path": "/",
+              "Roles": [ { "Ref": "RootRole" } ]
+          }
+      },
+
+      "WorkerWaitHandle" : {
+          "Type" : "AWS::CloudFormation::WaitConditionHandle",
+          "Condition": "HasWorkers",
+          "Properties" : {}
+      },
+
+      "WorkerWaitCondition" : {
+          "Type" : "AWS::CloudFormation::WaitCondition",
+          "Condition": "HasWorkers",
+          "DependsOn" : "PrimaryServer",
+          "Properties" : {
+              "Count" : { "Ref" : "WorkerCount" },
+              "Handle" : { "Ref" : "WorkerWaitHandle" },
+              "Timeout" : "600"
+          }
+      },
+
+      "TopologyWaitHandle" : {
+          "Type" : "AWS::CloudFormation::WaitConditionHandle",
+          "Condition": "HasWorkers",
+          "Properties" : {}
+      },
+
+      "TopologyWaitCondition" : {
+          "Type" : "AWS::CloudFormation::WaitCondition",
+          "Condition": "HasWorkers",
+          "DependsOn" : "WorkerWaitCondition",
+          "Properties" : {
+              "Count" : 1,
+              "Handle" : { "Ref" : "TopologyWaitHandle" },
+              "Timeout" : "1500"
+          }
+      },
+
+      "LoadBalancerSecurityGroup": {
+        "Type": "AWS::EC2::SecurityGroup",
+        "Properties": {
+          "GroupDescription": "Enable Web traffic",
+          "SecurityGroupIngress": [
+            {
+              "IpProtocol": "tcp",
+              "FromPort": { "Fn::If": [ "HasSSLCertificate", "443", "80" ]},
+              "ToPort": { "Fn::If": [ "HasSSLCertificate", "443", "80" ]},
+              "CidrIp": { "Ref": "SourceCIDR" }
+            }
+          ],
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "LoadBalancerSecurityGroup"
+            }
+          ],
+          "VpcId": { "Ref": "VpcId" }
+        }
+      },
+
+      "ServerLoadBalancer": {
+        "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
+        "DependsOn": [
+          "LoadBalancerSecurityGroup"
+        ],
+        "Properties": {
+          "Scheme": "internet-facing",
+          "Subnets": { "Fn::Split" : [ ",", { "Fn::Join" : [",", { "Ref": "PublicSubnetIds" } ] } ] },
+          "SecurityGroups": [ { "Ref": "LoadBalancerSecurityGroup" } ],
+          "Listeners": [
+            {
+              "Protocol": { "Fn::If": [ "HasSSLCertificate", "HTTPS", "HTTP" ]},
+              "LoadBalancerPort": { "Fn::If": [ "HasSSLCertificate", "443", "80" ]},
+              "InstanceProtocol": "HTTP",
+              "InstancePort": "80",
+              "SSLCertificateId": { "Fn::If": [ "HasSSLCertificate", { "Ref": "SSLCertificateARN" }, { "Ref": "AWS::NoValue" }]}
+             }
+          ],
+          "Instances" : [
+              { "Ref" : "PrimaryServer" }
+          ],
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": { "Fn::Sub": "${AWS::StackName}-cfn-lb" }
+            }
+          ]
+        }
+      },
+
+      "DNSNameEntry": {
+          "Type": "AWS::Route53::RecordSet",
+          "Condition": "CreateDNSEntry",
+          "DependsOn": [
+              "ServerLoadBalancer"
+          ],
+          "Properties": {
+              "HostedZoneId": {
+                  "Ref": "AWSHostedZoneID"
+              },
+              "Name": {
+                  "Fn::Sub": "${AWSPublicFQDN}."
+              },
+              "Type": "A",
+              "AliasTarget": {
+                  "HostedZoneId": { "Fn::GetAtt": [ "ServerLoadBalancer", "CanonicalHostedZoneNameID" ]},
+                  "DNSName": { "Fn::GetAtt": [ "ServerLoadBalancer", "DNSName" ]}
+              }
+          }
+      },
+
+      "PrimaryServer": {
+        "Type" : "AWS::EC2::Instance",
+        "Metadata" : {
+            "AWS::CloudFormation::Init" : {
+                "config" : {
+                    "packages" : {
+                        "rpm" : {
+                            "epel-release" : "https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm",
+                            "postgresql-odbc": "https://tableau-server-10-4-linux-beta.s3.amazonaws.com/tableau-postgresql-odbc-9.5.3-1.x86_64.rpm"
+                        },
+                        "yum" : {
+                            "haveged" : [],
+                            "awscli" : [],
+                            "jq" : [],
+                            "expect" : []
+                        }
+                    },
+
+                    "services" : {
+                        "sysvinit" : {
+                            "haveged" : {
+                                "enabled" : "true",
+                                "ensureRunning" : "true",
+                                "haveged" : { "yum" : ["haveged"] }
+                            }
+                        }
+                    },
+
+                    "files" : {
+                        "/tmp/secrets.properties" : {
+                            "mode": "640",
+                            "content" : { "Fn::Join" : ["\n", [
+                                { "Fn::Sub" : "tsm_admin_user='${Username}'" },
+                                { "Fn::Sub" : "tsm_admin_pass='${Password}'" },
+                                { "Fn::Sub" : "tableau_server_admin_user='${TableauServerAdminUser}'" },
+                                { "Fn::Sub" : "tableau_server_admin_pass='${TableauServerAdminPassword}'" }
+                            ]]}
+                        },
+
+                        "/tmp/tableau-server.rpm": {
+                            "source": { "Ref" : "TableauServerInstaller" }
+                        },
+
+                        "/tmp/automated-installer" : {
+                            "mode": "550",
+                            "source": { "Ref" : "AutomatedInstaller" }
+                        },
+
+                        "/tmp/workers.sh" : {
+                            "mode": "550",
+                            "content" : { "Fn::If" : [
+                                "HasWorkers",
+                                { "Fn::Join" : ["\n", [
+                                    "# Wait for workers",
+                                    "sleep 30",
+                                    { "Fn::Sub" : "wait_json=$(aws cloudformation describe-stack-resource --stack-name \"${AWS::StackName}\" --region \"${AWS::Region}\" --logical-resource-id WorkerWaitCondition)" },
+                                    "while [ $(echo $wait_json | jq -r '.StackResourceDetail.ResourceStatus') != 'CREATE_COMPLETE' ]; do",
+                                    "    sleep 10",
+                                    { "Fn::Sub" : "    wait_json=$(aws cloudformation describe-stack-resource --stack-name \"${AWS::StackName}\" --region \"${AWS::Region}\" --logical-resource-id WorkerWaitCondition)" },
+                                    "done",
+                                    "sleep 30",
+                                    "set_topology() {",
+                                    "    source '/tmp/secrets.properties'",
+                                    "    tsm topology list-nodes -u \"$tsm_admin_user\" -p \"$tsm_admin_pass\" | while read p; do",
+                                    "        tsm topology set-process -n \"$p\" -pr clustercontroller -c 1 -u \"$tsm_admin_user\" -p \"$tsm_admin_pass\"",
+                                    "        tsm topology set-process -n \"$p\" -pr gateway -c 1 -u \"$tsm_admin_user\" -p \"$tsm_admin_pass\"",
+                                    "        tsm topology set-process -n \"$p\" -pr vizportal -c 1 -u \"$tsm_admin_user\" -p \"$tsm_admin_pass\"",
+                                    "        tsm topology set-process -n \"$p\" -pr vizqlserver -c 1 -u \"$tsm_admin_user\" -p \"$tsm_admin_pass\"",
+                                    "        tsm topology set-process -n \"$p\" -pr cacheserver -c 1 -u \"$tsm_admin_user\" -p \"$tsm_admin_pass\"",
+                                    "        tsm topology set-process -n \"$p\" -pr searchserver -c 1 -u \"$tsm_admin_user\" -p \"$tsm_admin_pass\"",
+                                    "        tsm topology set-process -n \"$p\" -pr backgrounder -c 1 -u \"$tsm_admin_user\" -p \"$tsm_admin_pass\"",
+                                    "        tsm topology set-process -n \"$p\" -pr dataserver -c 1 -u \"$tsm_admin_user\" -p \"$tsm_admin_pass\"",
+                                    "        tsm topology set-process -n \"$p\" -pr dataengine -c 1 -u \"$tsm_admin_user\" -p \"$tsm_admin_pass\"",
+                                    "        tsm topology set-process -n \"$p\" -pr filestore -c 1 -u \"$tsm_admin_user\" -p \"$tsm_admin_pass\"",
+                                    "    done",
+
+                                    "    tsm topology set-process -n node2 -pr pgsql -c 1 -u \"$tsm_admin_user\" -p \"$tsm_admin_pass\"",
+                                    "    tsm pending-changes apply --restart -iw -u \"$tsm_admin_user\" -p \"$tsm_admin_pass\"",
+                                    "    tsm stop -u \"$tsm_admin_user\" -p \"$tsm_admin_pass\"",
+                                    "    tsm topology deploy-coordination-service -n node1,node2,node3  -u \"$tsm_admin_user\" -p \"$tsm_admin_pass\"",
+                                    "    sleep 120",
+                                    "    tsm topology cleanup-coordination-service -u \"$tsm_admin_user\" -p \"$tsm_admin_pass\"",
+                                    "    tsm start -u \"$tsm_admin_user\" -p \"$tsm_admin_pass\"",
+                                    "}",
+                                    "set_topology",
+                                    "unset -f set_topology",
+
+                                    "# Signal successful completion",
+                                    { "Fn::Sub" : "/opt/aws/bin/cfn-signal -e $? '${TopologyWaitHandle}'" }
+                                ]]},
+                                "# No action needed"
+                            ]}
+                        },
+
+                        "/tmp/config.json" : {
+                            "content" : { "Fn::Join" : ["\n", [
+                                "{\"configEntities\": {",
+                                "    \"runAsUser\": {",
+                                "        \"_type\": \"runAsUserType\",",
+                                { "Fn::Sub" : "        \"name\": \"${Username}\"" },
+                                "    },",
+                                "    \"gatewaySettings\": {",
+                                "        \"_type\": \"gatewaySettingsType\",",
+                                "        \"port\": 80,",
+                                "        \"firewallOpeningEnabled\": true,",
+                                "        \"sslRedirectEnabled\": true,",
+                                "        \"publicHost\": \"localhost\",",
+                                "        \"publicPort\": 80",
+                                "    },",
+                                "    \"identityStore\": {",
+                                "        \"_type\": \"identityStoreType\",",
+                                "        \"type\": \"local\"",
+                                "    }",
+                                "}}"
+                            ]]}
+                        },
+
+                        "/tmp/registration.json" : {
+                            "content" : {
+                                "first_name" : {"Ref" : "RegFirstName"},
+                                "last_name" : {"Ref" : "RegLastName"},
+                                "email" : {"Ref" : "RegEmail"},
+                                "company" : { "Fn::Sub" : "${RegCompany};linux-beta" },
+                                "title" : {"Ref" : "RegTitle"},
+                                "department" : {"Ref" : "RegDepartment"},
+                                "industry" : {"Ref" : "RegIndustry"},
+                                "phone" : {"Ref" : "RegPhone"},
+                                "city" : {"Ref" : "RegCity"},
+                                "state" : {"Ref" : "RegState"},
+                                "zip" : {"Ref" : "RegZip"},
+                                "country" : {"Ref" : "RegCountry"}
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "Properties": {
+          "SubnetId": { "Fn::Select" : [ "0", { "Ref": "PrivateSubnetIds" } ] },
+          "ImageId" : { "Fn::FindInMap" : ["AwsRegionToAMI", { "Ref" : "AWS::Region" }, "id"] },
+          "InstanceType" : { "Ref" : "InstanceType" },
+          "SecurityGroupIds" : { "Fn::If" : [ "HasServerSecurityGroup", [{ "Ref" : "ExistingSecurityGroup" }], [ {"Ref" : "ServerSecurityGroup"} ] ]},
+          "KeyName" : {"Ref" : "KeyPairName"},
+          "IamInstanceProfile" : {"Ref" : "RootInstanceProfile"},
+          "BlockDeviceMappings" : [
+              {
+                  "DeviceName" : "/dev/sda1",
+                  "Ebs" : {
+                      "VolumeType" : "gp2",
+                      "VolumeSize" : {"Ref" : "TableauServerVolumeSize"}
+                  }
+              }
+          ],
+          "EbsOptimized" : true,
+          "UserData" : { "Fn::Base64" : { "Fn::Join" : ["\n", [
+              "#!/bin/bash -xe",
+
+              "# Call Init",
+              "/usr/bin/easy_install --script-dir /opt/aws/bin https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz",
+              { "Fn::Sub" : "/opt/aws/bin/cfn-init --stack '${AWS::StackName}' --resource PrimaryServer  --region '${AWS::Region}'" },
+
+              "# Various machine configs",
+              "hostnamectl set-hostname $(hostnamectl --static)",
+              "setup_sftp() {",
+              "    source '/tmp/secrets.properties'",
+              "    useradd \"$tsm_admin_user\"",
+              "    echo $tsm_admin_pass | passwd \"$tsm_admin_user\" --stdin", "",
+              "    mkdir /restricted",
+              "    chown root:root /restricted",
+              "    chmod 551 /restricted",
+              "    sed -i.bak -e 's:Subsystem\\s\\+sftp\\s\\+/usr/libexec/openssh/sftp-server:Subsystem sftp  internal-sftp:' /etc/ssh/sshd_config",
+              "    printf \"\\nMatch User $tsm_admin_user\\n  ForceCommand internal-sftp\\n  ChrootDirectory /restricted\\n  PasswordAuthentication yes\\n  AllowTcpForwarding no\\n  PermitTunnel no\\n  X11Forwarding no\\n\" >>/etc/ssh/sshd_config",
+              "    service sshd restart",
+              "}",
+              "setup_sftp",
+              "unset -f setup_sftp",
+
+              "# Install Tableau Server",
+              "install() {",
+              "    source '/tmp/secrets.properties'",
+              { "Fn::Sub" : "    local license='${TableauServerLicenseKey}'" },
+              "    local license=$([ \"$license\" == '' ] && echo '' || echo \"-k '$license'\")",
+              "    /tmp/automated-installer -a $tsm_admin_user -f /tmp/config.json -r /tmp/registration.json -s /tmp/secrets.properties $license -v --accepteula --force /tmp/tableau-server.rpm",
+              "    source /etc/profile.d/tableau_server.sh",
+              "    tsm topology nodes get-bootstrap-file --file bootstrap.cfg -u \"$tsm_admin_user\" -p \"$tsm_admin_pass\"",
+              "}",
+              "install",
+              "unset -f install",
+
+              "# publish the Primary xml",
+              "mv bootstrap.cfg /restricted/",
+
+              "# Signal successful completion",
+              { "Fn::Sub" : "/opt/aws/bin/cfn-signal -e $? --stack '${AWS::StackName}' --resource PrimaryServer --region '${AWS::Region}'" },
+
+              "# Wait for workers",
+              "/tmp/workers.sh",
+
+              "# Cleanup",
+              "rm -f /tmp/config.json",
+              "rm -f /tmp/registration.json",
+              "rm -f /tmp/secrets.properties",
+              "rm -f /tmp/workers.sh",
+              "rm -f /tmp/tableau-server.rpm",
+              "rm -f /tmp/automated-installer"
+          ]]}},
+          "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Sub": "${AWS::StackName}-cfn-primary-tableau-server-linux"
+                        }
+                    }
+                ]
+        },
+
+        "CreationPolicy" : {
+          "ResourceSignal" : {
+            "Timeout" : "PT60M"
+          }
+        }
+      },
+
+
+      "IPAssoc" : {
+          "Type" : "AWS::EC2::EIPAssociation",
+          "Condition": "HasElasticIP",
+          "Properties" : {
+              "InstanceId" : { "Ref" : "PrimaryServer" },
+              "EIP" : { "Ref" : "IPAddress" }
+          }
+      },
+
+      "ServerSecurityGroup" : {
+          "Type" : "AWS::EC2::SecurityGroup",
+          "Condition": "NoServerSecurityGroup",
+          "Properties" : {
+              "VpcId": { "Ref": "VpcId" },
+              "GroupDescription" : {"Fn::Sub" :"Enable HTTP access via ports 80 and 8850, and SSH access from the provided network CIDR, plus all access from within the VPC"},
+              "SecurityGroupIngress" : [
+                  {"IpProtocol" : "tcp", "FromPort" : "80", "ToPort" : "80", "CidrIp" : { "Ref" : "SourceCIDR" } },
+                  {"IpProtocol" : "tcp", "FromPort" : "8850", "ToPort" : "8850", "CidrIp" : { "Ref" : "SourceCIDR" } },
+                  {"IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Ref" : "SourceCIDR" } },
+                  {"IpProtocol" : "tcp", "FromPort" : "0", "ToPort" : "65535", "CidrIp" : { "Fn::GetAtt" : ["VpcInfo", "CidrBlock"] } }
+              ]
+          }
+      },
+
+      "WorkerGroup" : {
+          "Type" : "AWS::AutoScaling::AutoScalingGroup",
+          "Properties" : {
+              "VPCZoneIdentifier" : { "Ref": "PrivateSubnetIds" },
+              "LaunchConfigurationName" : { "Ref" : "WorkerLaunchConfig" },
+              "MinSize" : { "Ref" : "WorkerCount" },
+              "MaxSize" : { "Ref" : "WorkerCount" },
+              "LoadBalancerNames" : [ { "Ref" : "ServerLoadBalancer" } ]
+          }
+      },
+
+      "WorkerLaunchConfig": {
+        "Type" : "AWS::AutoScaling::LaunchConfiguration",
+        "Metadata" : {
+            "AWS::CloudFormation::Init" : {
+                "config" : {
+                    "packages" : {
+                        "rpm" : {
+                            "epel-release" : "https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm",
+                            "postgresql-odbc": "https://tableau-server-10-4-linux-beta.s3.amazonaws.com/tableau-postgresql-odbc-9.5.3-1.x86_64.rpm"
+                        },
+                        "yum" : {
+                            "haveged" : [],
+                            "awscli" : [],
+                            "jq" : [],
+                            "expect" : []
+                        }
+                    },
+
+                    "services" : {
+                        "sysvinit" : {
+                            "haveged" : {
+                                "enabled" : "true",
+                                "ensureRunning" : "true",
+                                "haveged" : { "yum" : ["haveged"] }
+                            }
+                        }
+                    },
+
+                    "files" : {
+                        "/tmp/tableau-server.rpm": {
+                            "source": { "Ref" : "TableauServerInstaller" }
+                        },
+
+                        "/tmp/automated-installer" : {
+                            "mode": "550",
+                            "source": { "Ref" : "AutomatedInstaller" }
+                        },
+
+                        "/tmp/secrets.properties" : {
+                            "mode": "640",
+                            "content" : { "Fn::Join" : ["\n", [
+                                { "Fn::Sub" : "tsm_admin_user='${Username}'" },
+                                { "Fn::Sub" : "tsm_admin_pass='${Password}'" },
+                                { "Fn::Sub" : "tableau_server_admin_user='${TableauServerAdminUser}'" },
+                                { "Fn::Sub" : "tableau_server_admin_pass='${TableauServerAdminPassword}'" }
+                            ]]}
+                        }
+                    }
+                }
+            }
+        },
+        "Properties": {
+          "ImageId" : { "Fn::FindInMap" : ["AwsRegionToAMI", { "Ref" : "AWS::Region" }, "id"] },
+          "InstanceType" : { "Ref" : "InstanceType" },
+          "SecurityGroups" : { "Fn::If" : [ "HasServerSecurityGroup", [{ "Ref" : "ExistingSecurityGroup" }], [ {"Ref" : "ServerSecurityGroup"} ] ]},
+          "KeyName" : {"Ref" : "KeyPairName"},
+          "IamInstanceProfile" : {"Ref" : "RootInstanceProfile"},
+          "BlockDeviceMappings" : [
+              {
+                  "DeviceName" : "/dev/sda1",
+                  "Ebs" : {
+                      "VolumeType" : "gp2",
+                      "VolumeSize" : {"Ref" : "TableauServerVolumeSize"}
+                  }
+              }
+          ],
+          "EbsOptimized" : true,
+          "UserData" : { "Fn::Base64" : { "Fn::Join" : ["\n", [
+              "#!/bin/bash -xe",
+
+              "# Call Init",
+              "/usr/bin/easy_install --script-dir /opt/aws/bin https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz",
+              { "Fn::Sub" : "/opt/aws/bin/cfn-init --stack '${AWS::StackName}' --resource WorkerLaunchConfig  --region '${AWS::Region}'" },
+
+              "# Various machine configs",
+              "hostnamectl set-hostname $(hostnamectl --static)",
+
+              "# Wait for Primary (use a random sleep to split up the requests and avoid throttling)",
+              "sleep $(($(expr $RANDOM % 30) * 3))",
+              { "Fn::Sub" : "primary_json=$(aws cloudformation describe-stack-resource --stack-name '${AWS::StackName}' --region '${AWS::Region}' --logical-resource-id PrimaryServer)" },
+              "while [ $(echo $primary_json | jq -r '.StackResourceDetail.ResourceStatus') != 'CREATE_COMPLETE' ]; do",
+              "    sleep 30",
+              { "Fn::Sub" : "    primary_json=$(aws cloudformation describe-stack-resource --stack-name '${AWS::StackName}' --region '${AWS::Region}' --logical-resource-id PrimaryServer)" },
+              "done",
+              "primary_id=$(echo $primary_json | jq -r '.StackResourceDetail.PhysicalResourceId')",
+              { "Fn::Sub" : "primary_config=$(aws ec2 describe-instances --instance-id \"$primary_id\" --region '${AWS::Region}' | jq -r '.Reservations[0].Instances[0]')" },
+              "primary_dns=$(echo $primary_config | jq -r '.PrivateDnsName')",
+              "transfer() {",
+              "    source '/tmp/secrets.properties'",
+              "    expect -c \"spawn sftp -o \\\"StrictHostKeyChecking no\\\" \\\"$tsm_admin_user@$primary_dns\\\";expect \\\"password:\\\";send \\\"$tsm_admin_pass\\n\\\";expect \\\"sftp>\\\";send \\\"get bootstrap.cfg\\n\\\";expect \\\"sftp>\\\";send \\\"exit\\n\\\";interact\"",
+              "}",
+              "transfer",
+              "unset -f transfer",
+
+              "# Install Tableau Server",
+              "install() {",
+              "    source '/tmp/secrets.properties'",
+              "    useradd \"$tsm_admin_user\"",
+              "    echo $tsm_admin_pass | passwd \"$tsm_admin_user\" --stdin", "",
+              "    /tmp/automated-installer -a $tsm_admin_user -f /dev/zero -r /dev/zero -s /tmp/secrets.properties -b bootstrap.cfg -v --accepteula --force /tmp/tableau-server.rpm",
+              "}",
+              "install",
+              "unset -f install",
+
+              "# Signal successful completion",
+              { "Fn::Sub" : "/opt/aws/bin/cfn-signal -e $? '${WorkerWaitHandle}'" },
+
+              "# Cleanup",
+              "rm -f /tmp/secrets.properties",
+              "rm -f /tmp/tableau-server.rpm",
+              "rm -f /tmp/automated-installer"
+          ]]}}
+        }
+      }
+
+    },
+
+    "Outputs" : {
+        "LoadBalancerDNSName" : {
+            "Description" : "Direct DNS name of load balancer",
+            "Value" : { "Fn::GetAtt" : [ "ServerLoadBalancer", "DNSName" ]}
+        },
+        "PrimaryServer" : {
+            "Description" : "Primary server address",
+            "Value" : { "Fn::GetAtt" : [ "PrimaryServer", "PublicDnsName" ]}
+        },
+        "TableauServerURL": {
+            "Description": "Public DNS name to reach cluster",
+            "Value": {
+                "Fn::Join" : ["", [
+                    { "Fn::If" : [ "HasSSLCertificate", "https://", "http://" ]},
+                    { "Fn::If": [ "CreateDNSEntry", { "Ref": "AWSPublicFQDN" }, { "Fn::GetAtt" : [ "ServerLoadBalancer", "DNSName" ]}]},
+                    "/" ]]
+            }
+        },
+        "SecurityGroup": {
+            "Description": "The security group the instances belong to",
+            "Value": {
+                "Ref": "ServerSecurityGroup"
+            }
+        }
+    }
+}

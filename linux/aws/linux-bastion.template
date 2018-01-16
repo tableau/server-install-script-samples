@@ -1,0 +1,860 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "This template is intended to be deployed into an existing VPC with two public subnets. It will create an auto-scaling group of Linux bastion instances in the public VPC subnets. **WARNING** This template creates Amazon EC2 instance and related resources. You will be billed for the AWS resources used if you create a stack from this template. QS(0037)",
+    "Metadata": {
+        "AWS::CloudFormation::Interface": {
+            "ParameterGroups": [
+                {
+                    "Label": {
+                        "default": "Network Configuration"
+                    },
+                    "Parameters": [
+                        "VPCID",
+                        "PublicSubnet1ID",
+                        "PublicSubnet2ID",
+                        "RemoteAccessCIDR"
+                    ]
+                },
+                {
+                    "Label": {
+                        "default": "Amazon EC2 Configuration"
+                    },
+                    "Parameters": [
+                        "KeyPairName",
+                        "BastionAMIOS",
+                        "BastionInstanceType"
+                    ]
+                },
+                {
+                    "Label": {
+                        "default": "Linux Bastion Configuration"
+                    },
+                    "Parameters": [
+                        "NumBastionHosts",
+                        "EnableBanner",
+                        "BastionBanner",
+                        "EnableTCPForwarding",
+                        "EnableX11Forwarding"
+                    ]
+                },
+                {
+                    "Label": {
+                        "default": "AWS Quick Start Configuration"
+                    },
+                    "Parameters": [
+                        "QSS3BucketName",
+                        "QSS3KeyPrefix"
+                    ]
+                }
+            ],
+            "ParameterLabels": {
+                "BastionAMIOS": {
+                    "default": "Bastion AMI Operating System"
+                },
+                "BastionBanner": {
+                    "default": "Bastion Banner"
+                },
+                "BastionInstanceType": {
+                    "default": "Bastion Instance Type"
+                },
+                "EnableBanner": {
+                    "default": "Enable Banner"
+                },
+                "EnableTCPForwarding": {
+                    "default": "Enable TCP Forwarding"
+                },
+                "EnableX11Forwarding": {
+                    "default": "Enable X11 Forwarding"
+                },
+                "KeyPairName": {
+                    "default": "Key Pair Name"
+                },
+                "NumBastionHosts": {
+                    "default": "Number of Bastion Hosts"
+                },
+                "PublicSubnet1ID": {
+                    "default": "Public Subnet 1 ID"
+                },
+                "PublicSubnet2ID": {
+                    "default": "Public Subnet 2 ID"
+                },
+                "QSS3BucketName": {
+                    "default": "Quick Start S3 Bucket Name"
+                },
+                "QSS3KeyPrefix": {
+                    "default": "Quick Start S3 Key Prefix"
+                },
+                "RemoteAccessCIDR": {
+                    "default": "Allowed Bastion External Access CIDR"
+                },
+                "VPCID": {
+                    "default": "VPC ID"
+                }
+            }
+        }
+    },
+    "Parameters": {
+        "BastionAMIOS": {
+            "AllowedValues": [
+                "Amazon-Linux-HVM",
+                "CentOS-7-HVM",
+                "Ubuntu-Server-14.04-LTS-HVM",
+                "Ubuntu-Server-16.04-LTS-HVM"
+            ],
+            "Default": "Amazon-Linux-HVM",
+            "Description": "The Linux distribution for the AMI to be used for the bastion instances",
+            "Type": "String"
+        },
+        "BastionBanner": {
+            "Default": "https://s3.amazonaws.com/quickstart-reference/linux/bastion/latest/scripts/banner_message.txt",
+            "Description": "Banner text to display upon login",
+            "Type": "String"
+        },
+        "BastionInstanceType": {
+            "AllowedValues": [
+                "t2.nano",
+                "t2.micro",
+                "t2.small",
+                "t2.medium",
+                "t2.large",
+                "m3.large",
+                "m3.xlarge",
+                "m3.2xlarge",
+                "m4.large",
+                "m4.xlarge",
+                "m4.2xlarge",
+                "m4.4xlarge"
+            ],
+            "Default": "t2.micro",
+            "Description": "Amazon EC2 instance type for the bastion instances",
+            "Type": "String"
+        },
+        "EnableBanner": {
+            "AllowedValues": [
+                "true",
+                "false"
+            ],
+            "Default": "false",
+            "Description": "To include a banner to be displayed when connecting via SSH to the bastion, set this parameter to true",
+            "Type": "String"
+        },
+        "EnableTCPForwarding": {
+            "Type": "String",
+            "Description": "Enable/Disable TCP Forwarding",
+            "Default": "false",
+            "AllowedValues": [
+                "true",
+                "false"
+            ]
+        },
+        "EnableX11Forwarding": {
+            "Type": "String",
+            "Description": "Enable/Disable X11 Forwarding",
+            "Default": "false",
+            "AllowedValues": [
+                "true",
+                "false"
+            ]
+        },
+        "KeyPairName": {
+            "Description": "Enter a Public/private key pair. If you do not have one in this region, please create it before continuing",
+            "Type": "AWS::EC2::KeyPair::KeyName"
+        },
+        "NumBastionHosts": {
+            "AllowedValues": [
+                "1",
+                "2",
+                "3",
+                "4"
+            ],
+            "Default": "1",
+            "Description": "Enter the number of bastion hosts to create",
+            "Type": "String"
+        },
+        "PublicSubnet1ID": {
+            "Description": "ID of the public subnet 1 that you want to provision the first bastion into (e.g., subnet-a0246dcd)",
+            "Type": "AWS::EC2::Subnet::Id"
+        },
+        "PublicSubnet2ID": {
+            "Description": "ID of the public subnet 2 you want to provision the second bastion into (e.g., subnet-e3246d8e)",
+            "Type": "AWS::EC2::Subnet::Id"
+        },
+        "QSS3BucketName": {
+            "AllowedPattern": "^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$",
+            "ConstraintDescription": "Quick Start bucket name can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-).",
+            "Default": "quickstart-reference",
+            "Description": "S3 bucket name for the Quick Start assets. Quick Start bucket name can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-).",
+            "Type": "String"
+        },
+        "QSS3KeyPrefix": {
+            "AllowedPattern": "^[0-9a-zA-Z-/]*$",
+            "ConstraintDescription": "Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), and forward slash (/).",
+            "Default": "linux/bastion/latest/",
+            "Description": "S3 key prefix for the Quick Start assets. Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), and forward slash (/).",
+            "Type": "String"
+        },
+        "RemoteAccessCIDR": {
+            "AllowedPattern": "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$",
+            "ConstraintDescription": "CIDR block parameter must be in the form x.x.x.x/x",
+            "Description": "Allowed CIDR block for external SSH access to the bastions",
+            "Type": "String"
+        },
+        "VPCID": {
+            "Description": "ID of the VPC (e.g., vpc-0343606e)",
+            "Type": "AWS::EC2::VPC::Id"
+        }
+    },
+    "Rules": {
+        "SubnetsInVPC": {
+            "Assertions": [
+                {
+                    "Assert": {
+                        "Fn::EachMemberIn": [
+                            {
+                                "Fn::ValueOfAll": [
+                                    "AWS::EC2::Subnet::Id",
+                                    "VpcId"
+                                ]
+                            },
+                            {
+                                "Fn::RefAll": "AWS::EC2::VPC::Id"
+                            }
+                        ]
+                    },
+                    "AssertDescription": "All subnets must exist in the VPC"
+                }
+            ]
+        }
+    },
+    "Mappings": {
+        "AWSAMIRegionMap": {
+            "AMI": {
+                "AMZNLINUXHVM": "amzn-ami-hvm-2017.09.1.20171120-x86_64-gp2",
+                "CENTOS7HVM": "CentOS Linux 7 x86_64 HVM EBS 1708_11.01-b7ee8a69-ee97-4a49-9e68-afaee216db2e-ami-95096eef.4",
+                "US1404HVM": "ubuntu/images/hvm-ssd/ubuntu-trusty-14.04-amd64-server-20171208",
+                "US1604HVM": "ubuntu/images/hvm-ssd/ubuntu-xenial-16.04-amd64-server-20171208"
+            },
+            "ap-northeast-1": {
+                "AMZNLINUXHVM": "ami-da9e2cbc",
+                "CENTOS7HVM": "ami-4dd5522b",
+                "US1404HVM": "ami-fae6649c",
+                "US1604HVM": "ami-42ca4724"
+            },
+            "ap-northeast-2": {
+                "AMZNLINUXHVM": "ami-1196317f",
+                "CENTOS7HVM": "ami-53a1073d",
+                "US1404HVM": "ami-5451f73a",
+                "US1604HVM": "ami-5027813e"
+            },
+            "ap-south-1": {
+                "AMZNLINUXHVM": "ami-d5c18eba",
+                "CENTOS7HVM": "ami-82a3eaed",
+                "US1404HVM": "ami-feb4fc91",
+                "US1604HVM": "ami-84dc94eb"
+            },
+            "ap-southeast-1": {
+                "AMZNLINUXHVM": "ami-c63d6aa5",
+                "CENTOS7HVM": "ami-a6e88dda",
+                "US1404HVM": "ami-2be08157",
+                "US1604HVM": "ami-29aece55"
+            },
+            "ap-southeast-2": {
+                "AMZNLINUXHVM": "ami-ff4ea59d",
+                "CENTOS7HVM": "ami-5b778339",
+                "US1404HVM": "ami-a458afc6",
+                "US1604HVM": "ami-9b8076f9"
+            },
+            "ca-central-1": {
+                "AMZNLINUXHVM": "ami-d29e25b6",
+                "CENTOS7HVM": "ami-b111aad5",
+                "US1404HVM": "ami-72b90316",
+                "US1604HVM": "ami-b0c67cd4"
+            },
+            "eu-central-1": {
+                "AMZNLINUXHVM": "ami-bf2ba8d0",
+                "CENTOS7HVM": "ami-1e038d71",
+                "US1404HVM": "ami-5231b93d",
+                "US1604HVM": "ami-13b8337c"
+            },
+            "eu-west-1": {
+                "AMZNLINUXHVM": "ami-1a962263",
+                "CENTOS7HVM": "ami-192a9460",
+                "US1404HVM": "ami-64b3361d",
+                "US1604HVM": "ami-63b0341a"
+            },
+            "eu-west-2": {
+                "AMZNLINUXHVM": "ami-e7d6c983",
+                "CENTOS7HVM": "ami-c8d7c9ac",
+                "US1404HVM": "ami-7950491d",
+                "US1604HVM": "ami-22415846"
+            },
+            "sa-east-1": {
+                "AMZNLINUXHVM": "ami-286f2a44",
+                "CENTOS7HVM": "ami-6b5c1b07",
+                "US1404HVM": "ami-0f501663",
+                "US1604HVM": "ami-8181c7ed"
+            },
+            "us-east-1": {
+                "AMZNLINUXHVM": "ami-55ef662f",
+                "CENTOS7HVM": "ami-02e98f78",
+                "US1404HVM": "ami-764a210c",
+                "US1604HVM": "ami-3dec9947"
+            },
+            "us-east-2": {
+                "AMZNLINUXHVM": "ami-15e9c770",
+                "CENTOS7HVM": "ami-e0eac385",
+                "US1404HVM": "ami-d36e46b6",
+                "US1604HVM": "ami-597d553c"
+            },
+            "us-west-1": {
+                "AMZNLINUXHVM": "ami-a51f27c5",
+                "CENTOS7HVM": "ami-b1a59fd1",
+                "US1404HVM": "ami-1e4d497e",
+                "US1604HVM": "ami-1a17137a"
+            },
+            "us-west-2": {
+                "AMZNLINUXHVM": "ami-bf4193c7",
+                "CENTOS7HVM": "ami-b63ae0ce",
+                "US1404HVM": "ami-5dcc6a25",
+                "US1604HVM": "ami-a2e544da"
+            }
+        },
+        "LinuxAMINameMap": {
+            "Amazon-Linux-HVM": {
+                "Code": "AMZNLINUXHVM"
+            },
+            "CentOS-7-HVM": {
+                "Code": "CENTOS7HVM"
+            },
+            "Ubuntu-Server-14.04-LTS-HVM": {
+                "Code": "US1404HVM"
+            },
+            "Ubuntu-Server-16.04-LTS-HVM": {
+                "Code": "US1604HVM"
+            }
+        }
+    },
+    "Conditions": {
+        "2BastionCondition": {
+            "Fn::Or": [
+                {
+                    "Fn::Equals": [
+                        {
+                            "Ref": "NumBastionHosts"
+                        },
+                        "2"
+                    ]
+                },
+                {
+                    "Condition": "3BastionCondition"
+                },
+                {
+                    "Condition": "4BastionCondition"
+                }
+            ]
+        },
+        "3BastionCondition": {
+            "Fn::Or": [
+                {
+                    "Fn::Equals": [
+                        {
+                            "Ref": "NumBastionHosts"
+                        },
+                        "3"
+                    ]
+                },
+                {
+                    "Condition": "4BastionCondition"
+                }
+            ]
+        },
+        "4BastionCondition": {
+            "Fn::Equals": [
+                {
+                    "Ref": "NumBastionHosts"
+                },
+                "4"
+            ]
+        },
+        "GovCloudCondition": {
+            "Fn::Equals": [
+                {
+                    "Ref": "AWS::Region"
+                },
+                "us-gov-west-1"
+            ]
+        }
+    },
+    "Resources": {
+        "BastionMainLogGroup": {
+            "Type": "AWS::Logs::LogGroup"
+        },
+        "SSHMetricFilter": {
+            "Type": "AWS::Logs::MetricFilter",
+            "Properties": {
+                "LogGroupName": {
+                    "Ref": "BastionMainLogGroup"
+                },
+                "FilterPattern": "ON FROM USER PWD",
+                "MetricTransformations": [
+                    {
+                        "MetricName": "SSHCommandCount",
+                        "MetricValue": 1,
+                        "MetricNamespace": {
+                            "Fn::Join": [
+                                "/",
+                                [
+                                    "AWSQuickStart",
+                                    {
+                                        "Ref": "AWS::StackName"
+                                    }
+                                ]
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "BastionHostRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "Policies": [
+                    {
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "s3:GetObject"
+                                    ],
+                                    "Resource": {
+                                        "Fn::Sub": [
+                                            "arn:${Partition}:s3:::${QSS3BucketName}/${QSS3KeyPrefix}*",
+                                            {
+                                                "Partition": {
+                                                    "Fn::If": [
+                                                        "GovCloudCondition",
+                                                        "aws-us-gov",
+                                                        "aws"
+                                                    ]
+                                                }
+                                            }
+                                        ]
+                                    },
+                                    "Effect": "Allow"
+                                }
+                            ]
+                        },
+                        "PolicyName": "aws-quick-start-s3-policy"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "logs:CreateLogStream",
+                                        "logs:GetLogEvents",
+                                        "logs:PutLogEvents",
+                                        "logs:DescribeLogGroups",
+                                        "logs:DescribeLogStreams",
+                                        "logs:PutRetentionPolicy",
+                                        "logs:PutMetricFilter",
+                                        "logs:CreateLogGroup"
+                                    ],
+                                    "Resource": {
+                                        "Fn::Sub": [
+                                            "arn:${Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:${BastionMainLogGroup}:*",
+                                            {
+                                                "Partition": {
+                                                    "Fn::If": [
+                                                        "GovCloudCondition",
+                                                        "aws-us-gov",
+                                                        "aws"
+                                                    ]
+                                                }
+                                            }
+                                        ]
+                                    },
+                                    "Effect": "Allow"
+                                }
+                            ]
+                        },
+                        "PolicyName": "bastion-cloudwatch-logs-policy"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "ec2:AssociateAddress",
+                                        "ec2:DescribeAddresses"
+                                    ],
+                                    "Resource": [
+                                        "*"
+                                    ],
+                                    "Effect": "Allow"
+                                }
+                            ]
+                        },
+                        "PolicyName": "bastion-eip-policy"
+                    }
+                ],
+                "Path": "/",
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": [
+                                "sts:AssumeRole"
+                            ],
+                            "Principal": {
+                                "Service": [
+                                    "ec2.amazonaws.com"
+                                ]
+                            },
+                            "Effect": "Allow"
+                        }
+                    ],
+                    "Version": "2012-10-17"
+                }
+            }
+        },
+        "BastionHostProfile": {
+            "Type": "AWS::IAM::InstanceProfile",
+            "Properties": {
+                "Roles": [
+                    {
+                        "Ref": "BastionHostRole"
+                    }
+                ],
+                "Path": "/"
+            }
+        },
+        "EIP1": {
+            "Type": "AWS::EC2::EIP",
+            "Properties": {
+                "Domain": "vpc"
+            }
+        },
+        "EIP2": {
+            "Type": "AWS::EC2::EIP",
+            "Condition": "2BastionCondition",
+            "Properties": {
+                "Domain": "vpc"
+            }
+        },
+        "EIP3": {
+            "Type": "AWS::EC2::EIP",
+            "Condition": "3BastionCondition",
+            "Properties": {
+                "Domain": "vpc"
+            }
+        },
+        "EIP4": {
+            "Type": "AWS::EC2::EIP",
+            "Condition": "4BastionCondition",
+            "Properties": {
+                "Domain": "vpc"
+            }
+        },
+        "BastionAutoScalingGroup": {
+            "Type": "AWS::AutoScaling::AutoScalingGroup",
+            "Properties": {
+                "LaunchConfigurationName": {
+                    "Ref": "BastionLaunchConfiguration"
+                },
+                "VPCZoneIdentifier": [
+                    {
+                        "Ref": "PublicSubnet1ID"
+                    },
+                    {
+                        "Ref": "PublicSubnet2ID"
+                    }
+                ],
+                "MinSize": {
+                    "Ref": "NumBastionHosts"
+                },
+                "MaxSize": {
+                    "Ref": "NumBastionHosts"
+                },
+                "Cooldown": "300",
+                "DesiredCapacity": {
+                    "Ref": "NumBastionHosts"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "LinuxBastion",
+                        "PropagateAtLaunch": "true"
+                    }
+                ]
+            },
+            "CreationPolicy": {
+                "ResourceSignal": {
+                    "Count": {
+                        "Ref": "NumBastionHosts"
+                    },
+                    "Timeout": "PT30M"
+                }
+            }
+        },
+        "BastionLaunchConfiguration": {
+            "Type": "AWS::AutoScaling::LaunchConfiguration",
+            "Metadata": {
+                "AWS::CloudFormation::Authentication": {
+                    "S3AccessCreds": {
+                        "type": "S3",
+                        "roleName": {
+                            "Ref": "BastionHostRole"
+                        },
+                        "buckets": [
+                            {
+                                "Ref": "QSS3BucketName"
+                            }
+                        ]
+                    }
+                },
+                "AWS::CloudFormation::Init": {
+                    "config": {
+                        "files": {
+                            "/tmp/bastion_bootstrap.sh": {
+                                "source": {
+                                    "Fn::Sub": [
+                                        "https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}scripts/bastion_bootstrap.sh",
+                                        {
+                                            "QSS3Region": {
+                                                "Fn::If": [
+                                                    "GovCloudCondition",
+                                                    "s3-us-gov-west-1",
+                                                    "s3"
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                },
+                                "mode": "000550",
+                                "owner": "root",
+                                "group": "root",
+                                "authentication": "S3AccessCreds"
+                            }
+                        },
+                        "commands": {
+                            "b-bootstrap": {
+                                "command": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "./tmp/bastion_bootstrap.sh",
+                                            " --banner ",
+                                            {
+                                                "Ref": "BastionBanner"
+                                            },
+                                            " --enable ",
+                                            {
+                                                "Ref": "EnableBanner"
+                                            },
+                                            " --tcp-forwarding ",
+                                            {
+                                                "Ref": "EnableTCPForwarding"
+                                            },
+                                            " --x11-forwarding ",
+                                            {
+                                                "Ref": "EnableX11Forwarding"
+                                            }
+                                        ]
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "Properties": {
+                "KeyName": {
+                    "Ref": "KeyPairName"
+                },
+                "IamInstanceProfile": {
+                    "Ref": "BastionHostProfile"
+                },
+                "ImageId": {
+                    "Fn::FindInMap": [
+                        "AWSAMIRegionMap",
+                        {
+                            "Ref": "AWS::Region"
+                        },
+                        {
+                            "Fn::FindInMap": [
+                                "LinuxAMINameMap",
+                                {
+                                    "Ref": "BastionAMIOS"
+                                },
+                                "Code"
+                            ]
+                        }
+                    ]
+                },
+                "SecurityGroups": [
+                    {
+                        "Ref": "BastionSecurityGroup"
+                    }
+                ],
+                "InstanceType": {
+                    "Ref": "BastionInstanceType"
+                },
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "#!/bin/bash\n",
+                                "export PATH=$PATH:/usr/local/bin\n",
+                                "which pip &> /dev/null\n",
+                                "if [ $? -ne 0 ] ; then\n",
+                                "    echo \"PIP NOT INSTALLED\"\n",
+                                "    [ `which yum` ] && $(yum install -y epel-release; yum install -y python-pip) && echo \"PIP INSTALLED\"\n",
+                                "    [ `which apt-get` ] && apt-get -y update && apt-get -y install python-pip && echo \"PIP INSTALLED\"\n",
+                                "fi\n",
+                                "pip install --upgrade pip &> /dev/null\n",
+                                "pip install awscli --ignore-installed six &> /dev/null\n",
+                                "easy_install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz\n",
+                                "EIP_LIST=\"",
+                                {
+                                    "Ref": "EIP1"
+                                },
+                                ",",
+                                {
+                                    "Fn::If": [
+                                        "2BastionCondition",
+                                        {
+                                            "Ref": "EIP2"
+                                        },
+                                        "Null"
+                                    ]
+                                },
+                                ",",
+                                {
+                                    "Fn::If": [
+                                        "3BastionCondition",
+                                        {
+                                            "Ref": "EIP3"
+                                        },
+                                        "Null"
+                                    ]
+                                },
+                                ",",
+                                {
+                                    "Fn::If": [
+                                        "4BastionCondition",
+                                        {
+                                            "Ref": "EIP4"
+                                        },
+                                        "Null"
+                                    ]
+                                },
+                                "\"\n",
+                                "CLOUDWATCHGROUP=",
+                                {
+                                    "Ref": "BastionMainLogGroup"
+                                },
+                                "\n",
+                                "cfn-init -v --stack ",
+                                {
+                                    "Ref": "AWS::StackName"
+                                },
+                                " --resource BastionLaunchConfiguration --region ",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                "\n",
+                                "cfn-signal -e $? --stack ",
+                                {
+                                    "Ref": "AWS::StackName"
+                                },
+                                " --resource BastionAutoScalingGroup --region ",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                "\n"
+                            ]
+                        ]
+                    }
+                }
+            }
+        },
+        "BastionSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Enables SSH Access to Bastion Hosts",
+                "VpcId": {
+                    "Ref": "VPCID"
+                },
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "22",
+                        "ToPort": "22",
+                        "CidrIp": {
+                            "Ref": "RemoteAccessCIDR"
+                        }
+                    },
+                    {
+                        "IpProtocol": "icmp",
+                        "FromPort": "-1",
+                        "ToPort": "-1",
+                        "CidrIp": {
+                            "Ref": "RemoteAccessCIDR"
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "Outputs": {
+        "BastionAutoScalingGroup": {
+            "Description": "Auto Scaling Group Reference ID",
+            "Value": {
+                "Ref": "BastionAutoScalingGroup"
+            }
+        },
+        "EIP1": {
+            "Description": "Elastic IP 1 for Bastion",
+            "Value": {
+                "Ref": "EIP1"
+            }
+        },
+        "EIP2": {
+            "Condition": "2BastionCondition",
+            "Description": "Elastic IP 2 for Bastion",
+            "Value": {
+                "Ref": "EIP2"
+            }
+        },
+        "EIP3": {
+            "Condition": "3BastionCondition",
+            "Description": "Elastic IP 3 for Bastion",
+            "Value": {
+                "Ref": "EIP3"
+            }
+        },
+        "EIP4": {
+            "Condition": "4BastionCondition",
+            "Description": "Elastic IP 4 for Bastion",
+            "Value": {
+                "Ref": "EIP4"
+            }
+        },
+        "CloudWatchLogs": {
+            "Value": {
+                "Ref": "BastionMainLogGroup"
+            },
+            "Description": "CloudWatch Logs GroupName. Your SSH logs will be stored here."
+        },
+        "BastionSecurityGroupID": {
+            "Value": {
+                "Ref": "BastionSecurityGroup"
+            },
+            "Description": "Bastion Security Group ID"
+        }
+    }
+}
