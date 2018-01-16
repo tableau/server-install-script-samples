@@ -1,0 +1,451 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "AWS CloudFormation Template: Tableau Server running on Linux (CentOS).",
+
+  "Parameters" : {
+
+    "InstanceType" : {
+      "Description" : "Amazon EC2 instance type",
+      "Type" : "String",
+      "Default" : "m4.4xlarge",
+      "AllowedValues" : [ "m4.2xlarge", "m4.4xlarge", "m4.10xlarge"],
+      "ConstraintDescription" : "must be a valid EC2 instance type."
+    },
+    "TableauServerVolumeSize" : {
+      "Description" : "Size of volume for server in GB; need at least 30 GB free for server installation",
+      "Type" : "Number",
+      "MinValue" : "30",
+      "MaxValue" : "16384",
+      "Default" : "100"
+    },
+    "KeyPairName": {
+      "Description" : "Name of an existing EC2 KeyPair to enable SSH access to the instances",
+      "Type": "AWS::EC2::KeyPair::KeyName",
+      "ConstraintDescription" : "must be the name of an existing EC2 KeyPair."
+    },
+    "TableauServerInstaller" : {
+        "Description" : "S3 bucket file path for Tableau Server Installer",
+        "Default" : "https://tableau-server-10-4-linux-beta.s3.amazonaws.com/tableau-server.x86_64.rpm",
+        "Type": "String"
+    },
+    "AutomatedInstaller" : {
+        "Description" : "S3 bucket file path for Automated Installer",
+        "Default" : "https://tableau-server-10-4-linux-beta.s3.amazonaws.com/automated-installer",
+        "Type": "String"
+    },    
+    "SourceCIDR": {
+       "AllowedPattern": "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$",
+       "ConstraintDescription": "CIDR block parameter must be in the form x.x.x.x/x",
+       "Description": "The CIDR address from which you will connect to the instance",
+       "Type": "String"
+    },
+    "Username" : {
+      "Description" : "Tableau Services Manager (TSM) administrator username (cannot be 'tableau' or 'tsmagent')",
+      "Type": "String",
+      "AllowedPattern" : "[A-Za-z0-9]+",
+      "MaxLength" : "30"
+    },
+    "Password" : {
+      "Description" : "Tableau Services Manager (TSM) administrator password",
+      "Type": "String",
+      "NoEcho" : "true",
+      "MinLength" : "6"
+    },
+    "TableauServerAdminUser" : {
+      "Description" : "The name of the initial administrator for Tableau Server",
+      "Type" : "String",
+      "MinLength" : "1"
+    },
+    "TableauServerAdminPassword" : {
+      "Description" : "The password of the initial administrator for Tableau Server",
+      "Type" : "String",
+      "MinLength" : "1",
+      "NoEcho" : "true"
+    },
+    "TableauServerLicenseKey" : {
+      "Description" : "License Key (leave blank for trial)",
+      "Type" : "String"
+    },
+    "RegFirstName" : {
+      "Description" : "First Name",
+      "Type" : "String",
+      "MinLength" : "1"
+    },
+    "RegLastName" : {
+      "Description" : "Last Name",
+      "Type" : "String",
+      "MinLength" : "1"
+    },
+    "RegEmail" : {
+      "Description" : "Email",
+      "Type" : "String",
+      "MinLength" : "1"
+    },
+    "RegCompany" : {
+      "Description" : "Company",
+      "Type" : "String"
+    },
+    "RegTitle" : {
+      "Description" : "Title",
+      "Type" : "String"
+    },
+    "RegDepartment" : {
+      "Description" : "Department",
+      "Type" : "String"
+    },
+    "RegIndustry" : {
+      "Description" : "Industry",
+      "Type" : "String"
+    },
+    "RegPhone" : {
+      "Description" : "Phone",
+      "Type" : "String"
+    },
+    "RegCity" : {
+      "Description" : "City",
+      "Type" : "String"
+    },
+    "RegState" : {
+      "Description" : "State",
+      "Type" : "String"
+    },
+    "RegZip" : {
+      "Description" : "ZIP/Postal Code",
+      "Type" : "String"
+    },
+    "RegCountry" : {
+      "Description" : "Country",
+      "Type" : "String"
+    },
+    "VpcId": {
+      "Description": "The ID of the VPC into which to deploy the cluster",
+      "Type": "AWS::EC2::VPC::Id"
+    },
+    "SubnetId": {
+        "Description": "The subnet to use",
+        "Type" : "AWS::EC2::Subnet::Id"
+    },
+    "ExistingSecurityGroup" : {
+        "Description" : "Provide an existing security group or leave blank for creating a new one",
+        "Type" : "String"
+    },
+    "IPAddress" : {
+        "Description" : "Provide an EIP for the node (blank = no EIP)",
+        "Type" : "String"
+    }
+  },
+
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default":"AWS Environment and Machine Configuration" },
+          "Parameters" : [ "VpcId", "SubnetId",
+                           "InstanceType", "TableauServerVolumeSize", "KeyPairName", "SourceCIDR", "ExistingSecurityGroup", "IPAddress" ]
+        },
+        {
+          "Label" : { "default" : "Secrets" },
+          "Parameters" : [ "Username", "Password", "TableauServerAdminUser", "TableauServerAdminPassword" ]
+        },
+        {
+          "Label" : { "default" : "Registration" },
+          "Parameters" : ["TableauServerLicenseKey",
+                          "RegFirstName","RegLastName","RegEmail",
+                          "RegCompany","RegTitle","RegDepartment","RegIndustry",
+                          "RegPhone","RegCity","RegState","RegZip","RegCountry"]
+        },
+        {
+          "Label" : { "default":"Tableau Server Installation Files" },
+          "Parameters" : [ "TableauServerInstaller", "AutomatedInstaller" ]
+        }
+      ],
+
+      "ParameterLabels" : {
+        "VpcId" : { "default" : "Target VPC" },
+        "SubnetId": { "default": "Target Subnet" },
+        "InstanceType" : { "default" : "Tableau Amazon EC2 instance type" },
+        "TableauServerVolumeSize" : { "default" : "Size for server volume in GB" },
+        "KeyPairName" : { "default" : "Key Pair Name" },
+        "SourceCIDR" : { "default" : "Source CIDR for Access" },
+        "ExistingSecurityGroup": { "default": "Existing Security Group" },
+        "IPAddress": { "default": "EIP address for the node" },
+        "TableauServerInstaller" : { "default" : "Tableau Server Installer" },
+        "AutomatedInstaller" : { "default" : "Automated Installer" },
+        "Username" : { "default" : "Tableau Services Manager (TSM) administrator username" },
+        "Password" : { "default" : "Tableau Services Manager (TSM) administrator password" },
+        "TableauServerAdminUser": { "default": "Tableau Server administrator username" },
+        "TableauServerAdminPassword": { "default": "Tableau Server administrator password" },
+        "TableauServerLicenseKey": { "default": "Tableau Activation Key" },
+        "RegFirstName": { "default": "First Name" },
+        "RegLastName": { "default": "Last name" },
+        "RegEmail": { "default": "Email Address" },
+        "RegCompany": { "default": "Company" },
+        "RegTitle": { "default": "Title" },
+        "RegDepartment": { "default": "Department" },
+        "RegIndustry": { "default": "Industry" },
+        "RegPhone": { "default": "Phone" },
+        "RegCity": { "default": "City" },
+        "RegState": { "default": "State" },
+        "RegZip": { "default": "Zip/Postal Code" },
+        "RegCountry": { "default": "Country" }
+      }
+    }
+  },
+
+  "Mappings" : {
+    "AwsRegionToAMI" : {
+      "us-east-1" : { "id" : "ami-6d1c2007" },
+      "us-east-2" : { "id" : "ami-6a2d760f" },
+      "us-west-1" : { "id" : "ami-af4333cf" },
+      "us-west-2" : { "id" : "ami-d2c924b2" },
+      "ca-central-1" : { "id" : "ami-af62d0cb" },
+      "sa-east-1" : { "id" : "ami-26b93b4a" },
+      "eu-west-1" : { "id" : "ami-7abd0209" },
+      "eu-west-2" : { "id" : "ami-bb373ddf" },
+      "eu-central-1" : { "id" : "ami-9bf712f4" },
+      "ap-south-1" : { "id" : "ami-95cda6fa" },
+      "ap-southeast-1" : { "id" : "ami-f068a193" },
+      "ap-southeast-2" : { "id" : "ami-fedafc9d" },
+      "ap-northeast-1" : { "id" : "ami-eec1c380" },
+      "ap-northeast-2" : { "id" : "ami-c74789a9" }
+    }
+  },
+
+  "Conditions": {
+      "IsTrial": { "Fn::Equals": [ "", { "Ref": "TableauServerLicenseKey" }]},
+      "NoServerSecurityGroup": { "Fn::Equals": [ "", { "Ref" : "ExistingSecurityGroup" }]},
+      "HasServerSecurityGroup": { "Fn::Not": [{ "Condition" : "NoServerSecurityGroup" }]},
+      "NoElasticIP": { "Fn::Equals": [ "", { "Ref" : "IPAddress" }]},
+      "HasElasticIP": { "Fn::Not": [{ "Condition" : "NoElasticIP" }]}
+  },
+
+  "Resources" : {
+
+    "TableauServer": {
+      "Type" : "AWS::EC2::Instance",
+      "Metadata" : {
+        "AWS::CloudFormation::Init" : {
+          "config" : {
+            "packages" : {
+                "rpm" : {
+                    "epel-release" : "https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm",
+                    "postgresql-odbc": "https://tableau-server-10-4-linux-beta.s3.amazonaws.com/tableau-postgresql-odbc-9.5.3-1.x86_64.rpm"
+                },
+                "yum" : {
+                    "haveged" : [],
+                    "awscli" : []
+                }
+            },
+
+            "services" : {
+                "sysvinit" : {
+                    "haveged" : {
+                        "enabled" : "true",
+                        "ensureRunning" : "true",
+                        "haveged" : { "yum" : ["haveged"] }
+                    }
+                }
+            },
+            "files" : {
+              "/tmp/secrets.properties" : {
+                "mode": "640",
+                "content" : { "Fn::Join" : ["\n", [
+                    { "Fn::Sub" : "tsm_admin_user='${Username}'" },
+                    { "Fn::Sub" : "tsm_admin_pass='${Password}'" },
+                    { "Fn::Sub" : "tableau_server_admin_user='${TableauServerAdminUser}'" },
+                    { "Fn::Sub" : "tableau_server_admin_pass='${TableauServerAdminPassword}'" }
+                ]]}
+              },
+
+              "/tmp/config.json" : {
+                  "content" : { "Fn::Join" : ["\n", [
+                      "{\"configEntities\": {",
+                      "    \"runAsUser\": {",
+                      "        \"_type\": \"runAsUserType\",",
+                      { "Fn::Sub" : "        \"name\": \"${Username}\"" },
+                      "    },",
+                      "    \"gatewaySettings\": {",
+                      "        \"_type\": \"gatewaySettingsType\",",
+                      "        \"port\": 80,",
+                      "        \"firewallOpeningEnabled\": true,",
+                      "        \"sslRedirectEnabled\": true,",
+                      "        \"publicHost\": \"localhost\",",
+                      "        \"publicPort\": 80",
+                      "    },",
+                      "    \"identityStore\": {",
+                      "        \"_type\": \"identityStoreType\",",
+                      "        \"type\": \"local\"",
+                      "    }",
+                      "}}"
+                  ]]}
+              },
+
+              "/tmp/tableau-server.rpm": {
+                  "source": { "Ref" : "TableauServerInstaller" }
+              },
+
+              "/tmp/automated-installer" : {
+                  "mode": "550",
+                  "source": { "Ref" : "AutomatedInstaller" }
+              },
+
+              "/tmp/registration.json" : {
+                "content" : {
+                    "first_name" : {"Ref" : "RegFirstName"},
+                    "last_name" : {"Ref" : "RegLastName"},
+                    "email" : {"Ref" : "RegEmail"},
+                    "company" : { "Fn::Sub" : "${RegCompany};linux-beta" },
+                    "title" : {"Ref" : "RegTitle"},
+                    "department" : {"Ref" : "RegDepartment"},
+                    "industry" : {"Ref" : "RegIndustry"},
+                    "phone" : {"Ref" : "RegPhone"},
+                    "city" : {"Ref" : "RegCity"},
+                    "state" : {"Ref" : "RegState"},
+                    "zip" : {"Ref" : "RegZip"},
+                    "country" : {"Ref" : "RegCountry"}
+                }
+              }
+            }
+          }
+        }
+      },
+      "Properties": {
+        "SubnetId": { "Ref": "SubnetId" },
+        "ImageId" : { "Fn::FindInMap" : ["AwsRegionToAMI", { "Ref" : "AWS::Region" }, "id"] },
+        "InstanceType" : { "Ref" : "InstanceType" },
+        "SecurityGroupIds" : { "Fn::If" : [ "HasServerSecurityGroup", [{ "Ref" : "ExistingSecurityGroup" }], [ {"Ref" : "ServerSecurityGroup"} ] ]},
+        "KeyName" : {"Ref" : "KeyPairName"},
+        "BlockDeviceMappings" : [
+               {
+                  "DeviceName" : "/dev/sda1",
+                  "Ebs" : {
+                     "VolumeType" : "gp2",
+                     "VolumeSize" : { "Ref" : "TableauServerVolumeSize" }
+                  }
+               }
+        ],
+        "EbsOptimized" : true,
+        "UserData" : { "Fn::Base64" : { "Fn::Join" : ["\n", [
+            "#!/bin/bash -xe",
+
+            "# Call Init",
+            "/usr/bin/easy_install --script-dir /opt/aws/bin https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz",
+            { "Fn::Sub" : "/opt/aws/bin/cfn-init --stack '${AWS::StackName}' --resource TableauServer --region '${AWS::Region}'" },
+
+            "# Various machine configs",
+            "hostnamectl set-hostname $(hostnamectl --static)",
+            "setup_sftp() {",
+            "    source '/tmp/secrets.properties'",
+            "    useradd \"$tsm_admin_user\"",
+            "    echo $tsm_admin_pass | passwd \"$tsm_admin_user\" --stdin", "",
+            "}",
+            "setup_sftp",
+            "unset -f setup_sftp",
+
+            "# Install Tableau Server",
+            "install() {",
+            "    source '/tmp/secrets.properties'",
+            { "Fn::Join": [
+                " ",
+                [
+                    "/tmp/automated-installer",
+                    "-a $tsm_admin_user",
+                    "-f /tmp/config.json",
+                    "-r /tmp/registration.json",
+                    "-s /tmp/secrets.properties",
+                    {
+                        "Fn::If": [
+                            "IsTrial",
+                            "",
+                            {
+                                "Fn::Sub": "-k ${TableauServerLicenseKey}"
+                            }
+                        ]
+                    },
+                    "-v",
+                    "--accepteula",
+                    "--force",
+                    "/tmp/tableau-server.rpm"
+            ]]},
+            "}",
+            "install",
+            "unset -f install",
+
+            "# Signal successful completion",
+            { "Fn::Sub" : "/opt/aws/bin/cfn-signal -e $? --stack '${AWS::StackName}' --resource TableauServer --region '${AWS::Region}'" },
+
+            "# Cleanup",
+            "rm -f /tmp/config.json",
+            "rm -f /tmp/registration.json",
+            "rm -f /tmp/secrets.properties",
+            "rm -f /tmp/tableau-server.rpm",
+            "rm -f /tmp/automated-installer"
+        ]]}},
+        "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Sub": "${AWS::StackName}-cfn-tableau-server-linux"
+                        }
+                    }
+                ]
+      },
+      "CreationPolicy" : {
+        "ResourceSignal" : {
+          "Timeout" : "PT60M"
+        }
+      }
+    },
+
+    "IPAssoc" : {
+        "Type" : "AWS::EC2::EIPAssociation",
+        "Condition": "HasElasticIP",
+        "Properties" : {
+            "InstanceId" : { "Ref" : "TableauServer" },
+            "EIP" : { "Ref" : "IPAddress" }
+        }
+    },
+
+    "ServerSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Condition": "NoServerSecurityGroup",
+      "Properties" : {
+        "VpcId": { "Ref": "VpcId" },
+        "GroupDescription" : "Enable HTTP access via ports 80 and 8850, and SSH access from the provided network CIDR",
+        "SecurityGroupIngress" : [
+          {"IpProtocol" : "tcp", "FromPort" : "80", "ToPort" : "80", "CidrIp" : { "Ref" : "SourceCIDR" } },
+          {"IpProtocol" : "tcp", "FromPort" : "8850", "ToPort" : "8850", "CidrIp" : { "Ref" : "SourceCIDR" } },
+          {"IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Ref" : "SourceCIDR" } }
+        ]
+      }
+    }
+
+  },
+
+  "Outputs" : {
+        "InstanceID": {
+            "Description": "EC2 InstanceID of the instance running Tableau Server",
+            "Value": {
+                "Ref": "TableauServer"
+            }
+        },
+        "PublicIPAddress": {
+            "Description": "Public IP Address of instance running Tableau Server",
+            "Value": {
+                "Fn::GetAtt": [
+                    "TableauServer",
+                    "PublicIp"
+                ]
+            }
+        },
+      "TableauServerURL" : {
+           "Description" : "URL for the Tableau Server",
+           "Value" : { "Fn::Join" : ["", ["http://", { "Fn::GetAtt" : [ "TableauServer", "PublicDnsName" ]}, "/"]] }
+    },
+    "SSH" : {
+          "Description" : "SSH to the Tableau Server instance using the keypair you provided",
+          "Value" : { "Fn::Join" : ["", ["centos@", { "Fn::GetAtt" : [ "TableauServer", "PublicDnsName" ]} ] ] }
+    }
+  }
+}
