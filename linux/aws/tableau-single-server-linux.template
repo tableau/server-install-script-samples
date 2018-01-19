@@ -26,12 +26,12 @@
     },
     "TableauServerInstaller" : {
         "Description" : "S3 bucket file path for Tableau Server Installer",
-        "Default" : "https://tableau-server-10-4-linux-beta.s3.amazonaws.com/tableau-server.x86_64.rpm",
+        "Default" : "https://s3-us-west-2.amazonaws.com/tableau-quickstart/tableau-server.x86_64.rpm",
         "Type": "String"
     },
     "AutomatedInstaller" : {
         "Description" : "S3 bucket file path for Automated Installer",
-        "Default" : "https://tableau-server-10-4-linux-beta.s3.amazonaws.com/automated-installer",
+        "Default" : "https://s3-us-west-2.amazonaws.com/tableau-quickstart/automated-installer",
         "Type": "String"
     },    
     "SourceCIDR": {
