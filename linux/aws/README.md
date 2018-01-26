@@ -1,10 +1,10 @@
-# AWS CloudFormation Templates for Tableau Server on Linux
+# AWS CloudFormation Templates for Linux
 ----
 
 For Linux, we are providing a set of sample [AWS CloudFormation](https://aws.amazon.com/cloudformation/) templates that can be used as a basis for building your own templates for deploying Tableau Server to Amazon Web Services (AWS).
 
-* **tableau-single-server-linux.template:** A basic template used to set up a simple single-node Tableau Server on Linux CentOS.
-* **tableau_server_linux_cluster_simple.json:** A template used to set up a simple three-node Tableau Server cluster on Linux CentOS.
+* **tableau-single-server-linux.json:** A basic template used to set up a simple single-node Tableau Server on Linux CentOS.
+* **tableau-cluster-server-linux_cluster-simple.json:** A template used to set up a simple three-node Tableau Server cluster on Linux CentOS.
 
 ### Usage
 
@@ -15,10 +15,9 @@ For Linux, we are providing a set of sample [AWS CloudFormation](https://aws.ama
 5. Once the status has changed to CREATE_COMPLETE. Click on the Outputs tab and copy the PublicDNSName and/or PublicIpAddress.
 6. Verify that you can connect to Tableau Server by navigating to the TableauServerURL/LoadBalancerDNSName and logging in with the admin account that you specified.
 
-Optional for Cluster Deployment:
-----
+#### Optional for Cluster Deployment:
 
-To improve the security of your Tableau Server installation, Tableau recommends the use of SSL for protected communication with clients. Note that all examples that use SSL assume the use of AWS Certificate Manager and Amazon Route53.
+To improve the security of your Tableau Server installation, Tableau recommends the use of SSL for protected communication with clients. Note that all examples that use SSL assume the use of AWS Certificate Manager and Amazon Route53.  When launching the stack, provide the following additional information:
 
 * Provide the ARN (Amazon Resource Name) for the SSL certificate you wish to use. (See AWS Certificate Manager in the AWS Management Console.)
 * Provide the fully qualified host name (FQHN) for your new server; this MUST match the name in the SSL certificate you are using!
