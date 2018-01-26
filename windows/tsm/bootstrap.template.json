@@ -1,0 +1,6 @@
+{
+    "secretsFile": "file.json",
+    "registrationFile": "file.json",
+    "configFile": "file.json",
+    "installer": "file.exe"
+}

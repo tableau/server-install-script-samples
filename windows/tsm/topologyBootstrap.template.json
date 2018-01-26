@@ -1,0 +1,5 @@
+{
+	"type": "updateTopology",
+	"secretsFile": "file.json",
+	"configFile": "file.json"
+}
