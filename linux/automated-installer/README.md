@@ -6,7 +6,7 @@ Getting Started
 ---------------
 This directory includes a sample Bash script for performing installs of Tableau Server on Linux in an automated fashion. This script supports both single and multi-node instances of Tableau Server. We have also included sample input files to the installer script.
 
-The Tableau online help page [Automated Installation of Tableau Server](http://onlinehelp.tsi.lan/v10.5/server-linux/en-us/automated_install_linux.htm) explains how to use the automated-installer in detail. The packages subdirectory contains RPM & deb packages that install the scripts and template files as referenced in the documentation.
+The Tableau online help page [Automated Installation of Tableau Server](http://onlinehelp.tableau.com/current/server-linux/en-us/automated_install_linux.htm) explains how to use the automated-installer in detail. The packages subdirectory contains RPM & deb packages that install the scripts and template files as referenced in the documentation.
 
 Please use GitHub 'Issues' to note any bugs or make suggestions.  
 
