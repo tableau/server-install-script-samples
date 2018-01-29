@@ -22,7 +22,7 @@ This is a reference Python script to install Tableau Services Manager.
 This script targets Python version 3.5 or later. 
 
 ### Usage examples
-The script has three "modes"; _install_ _workerInstall_ and _updateTopology_; each mode can have several arguments. Since the automated installer is meant to run without user interaction, you must input all parameters into the required files that are passed to the script. Alternatively, you can also put the required parameters into the bootstrap file. You can use the file templates provided for each type of files below.
+The script has three "modes"; _install_ _workerInstall_ and _updateTopology_; each mode can have several arguments. Since the automated installer is meant to run without user interaction, you must input all parameters into the required arguments that are passed to the script. Alternatively, you can also put the required arguments into the bootstrap file. You can use the file templates provided for each type of files below.
 
 1. For installing initial node:
 
@@ -42,12 +42,13 @@ Or alternatively:
 Or alternatively:
 `python SilentInstaller.py --bootstrapFile <bootstrap file path>`
 
-*Special Note: When doing an installation on a distributed cluster, you will need to run mode1 on the initial node, mode 2 on each additional node and finally mode 3 back on the initial node to update the cluster topology as needed.*
+*Special Note: When doing an installation for a distributed cluster, you will need to run install mode on the initial node, workerInstall mode on each additional node and updateTopology mode back on the initial node to update the cluster topology as desired.*
 
 ### Script arguments
 #### _install_ mode
 The automated installer script runs the proper commands to install, activate license, configure, and start Tableau Services Manager. 
 Run SilentInstaller.py -h and SilentInstaller.py install –h to find out the most up-to-date list of options and their default values.
+
 Option|Argument|Required|Description
 ----|----------|---------|-------
 --installDir|[FILE PATH]|Optional|The Tableau installation directory. The software binaries will all live in a directory tree rooted here. _If omitted, the default directory C:\Program Files\Tableau\Tableau Server will be used for the binaries.
@@ -66,6 +67,7 @@ Option|Argument|Required|Description
 #### _workerInstall_ mode
 The automated installer script runs the proper commands to install Tableau Services Manager on the additional node. 
 Run SilentInstaller.py installWorker –h to find out the most up-to-date list of options and their default values. 
+
 Option|Argument|Required|Description
 ----|----------|---------|-------
 --installDir|[FILE PATH]|Optional|The Tableau installation directory. The software binaries will all live in a directory tree rooted here. _If omitted, the default directory C:\Program Files\Tableau\Tableau Server will be used for the binaries.
@@ -80,6 +82,7 @@ Option|Argument|Required|Description
 #### _updateTopology_ mode
 The automated installer script runs the proper commands to update the cluster topology as desired for Tableau Services Manager. 
 Run SilentInstaller.py updateTopology –h to find out the most up-to-date list of options and their default values. 
+
 Option|Argument|Required|Description
 ----|----------|---------|-------
 --secretsFile|[FILE PATH]|**Required**|Path to a .json file (relative or absolute) that describes both the credentials of the Windows account to authenticate to the Tableau Services Manager, and the username/password of the initial admin user for Tableau Server. Also the product key you would like to use to activate Tableau Server. The secrets template file contains a trial license by default.  See [Secrets File](#SecretsFile) for more information.
@@ -90,11 +93,11 @@ Option|Argument|Required|Description
 #### <a name="SecretsFile"></a> Secrets file example
 ```
 {
-	"local_admin_user":"",
-	"local_admin_pass":"",
-	"content_admin_user":"",
-	"content_admin_pass":"",
-	"product_keys":["trial"]
+    "local_admin_user":"",
+    "local_admin_pass":"",
+    "content_admin_user":"",
+    "content_admin_pass":"",
+    "product_keys":["trial"]
 }
 ```
 The _local_admin_user_ is the Windows account to authenticate to the Tableau Services Manager.
@@ -146,7 +149,7 @@ The _product_keys_ is the key used to activate Tableau Services Manager. If mult
                             }
                         ]
                     },
-					"clientfileservice": {
+                    "clientfileservice": {
                         "instances":[
                             {
                             "instanceId":"0"
