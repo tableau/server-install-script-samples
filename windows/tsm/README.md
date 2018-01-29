@@ -22,39 +22,276 @@ This is a reference Python script to install Tableau Services Manager.
 This script targets Python version 3.5 or later. 
 
 ### Usage examples
+The script has three "modes"; _install_ _workerInstall_ and _updateTopology_; each mode can have several arguments. Since the automated installer is meant to run without user interaction, you must input all parameters into the required files that are passed to the script. Alternatively, you can also put the required parameters into the bootstrap file. You can use the file templates provided for each type of files below.
+
+1. For installing initial node:
+
+`python SilentInstaller.py install --secretsFile secrets.json --configFile myconfig.json --registrationFile registration.json Setup-Tabadmin-Webapp-x64.exe`
+Or alternatively:
+`python SilentInstaller.py --bootstrapFile <bootstrap file path>`
+
+2. For installing additional nodes:
+
+`python SilentInstaller.py workerInstall --secretsFile secrets.json --nodeConfigurationFile nodeConfiguration.json Setup-Tabadmin-Webapp-x64.exe`
+Or alternatively:
+`python SilentInstaller.py --bootstrapFile <bootstrap file path>`
+
+3. For updating cluster topology: 
+
+`python SilentInstaller.py updateTopology --secretsFile secrets.json --configFile myconfig.json`
+Or alternatively:
+`python SilentInstaller.py --bootstrapFile <bootstrap file path>`
+
+*Special Note: When doing an installation on a distributed cluster, you will need to run mode1 on the initial node, mode 2 on each additional node and finally mode 3 back on the initial node to update the cluster topology as needed.*
 
 ### Script arguments
+#### _install_ mode
+The automated installer script runs the proper commands to install, activate license, configure, and start Tableau Services Manager. 
 Run SilentInstaller.py -h and SilentInstaller.py install –h to find out the most up-to-date list of options and their default values.
- 
-The script requires the following files:
-•	Secrets file. Contains the username and password used to authenticate to the Tableau Services Manager, as well as the username and password desired for the initial administrator user for Tableau Server. Also the product key you would like to use to activate Tableau Server. The secrets template file contains a trial license by default. 
-•	Registration file. Contains information about your organization to register Tableau Server.
-•	Configuration file. Contains an example configuration for the server using local authentication. 
-•	Bootstrap file. An optional json file that can specify paths to all the required files listed above (so that they don't have to be typed through the command line manually).
-The script can also take the following optional parameters:
-•  --installDir: installation location (binaries, including tsm.cmd)
-•  --dataDir: data location (service directories, logs, etc. )
-•  --controllerPort: the port on which the TSM Controller should run
-•  --coordinationserviceClientPort: ZooKeeper client port
-•  --coordinationservicePeerPort: ZooKeeper peer port
-•  --coordinationserviceLeaderPort: ZooKeeper leader port
-•  --start: whether the server should be started at the end of setup
- 
-The automated installer script runs the proper tsm commands to install, activate license, configure, and start Tableau Server. 
- 
-Since the automated installer is meant to run without user interaction, you must input all parameters into the required files that are passed to the script. You can use the file templates provided for each type of files above.
-To run the automated installer, run the following command: 
-   Python.exe SilentInstaller.py --bootstrapFile <bootstrap file path>
-Or alternatively, run the following command:
-   Python.exe SilentInstaller.py install --secretsFile <secrets file path> --registrationFile <registration file path>  --configFile <configuration file path>  <installer exe path>
+Option|Argument|Required|Description
+----|----------|---------|-------
+--installDir|[FILE PATH]|Optional|The Tableau installation directory. The software binaries will all live in a directory tree rooted here. _If omitted, the default directory C:\Program Files\Tableau\Tableau Server will be used for the binaries.
+--dataDir|[FILE PATH]|Optional|The Tableau data location. The software configuration and data will all live in a directory tree rooted here. _If omitted, the default directory C:\ProgramData\Tableau_ will be used for the configuration and data files.
+--installerLog|[FILE PATH]|Optional|Path to where the installer executable should write its log file. The directory must already exist. _If omitted, the log will be written under the user's TEMP directory._
+--configFile|[FILE PATH]|**Required***|Use|Path to a .json [Server Configuration File](#ConfigFile) (relative or absolute) describing the Tableau Server configuration. 
+--secretsFile|[FILE PATH]|**Required**|Path to a .json file (relative or absolute) that describes both the credentials of the Windows account to authenticate to the Tableau Services Manager, and the username/password of the initial admin user for Tableau Server. Also the product key you would like to use to activate Tableau Server. The secrets template file contains a trial license by default.  See [Secrets File](#SecretsFile) for more information.
+--registrationFile|[FILE PATH]|**Required**|Path to a .json file (relative or absolute) describing the Tableau Services Manager registration information. See [Server Registration File](#RegFile) for more information.
+--controllerPort|[PORT]|Optional|The port on which the TSM Controller should run
+--coordinationserviceClientPort|[PORT]|Optional|ZooKeeper client port
+--coordinationservicePeerPort|[PORT]|Optional|ZooKeeper peer port
+--coordinationserviceLeaderPort|[PORT]|Optional|ZooKeeper leader port
+--start||Optional| Whether the server should be started at the end of setup
+(installer executable)|[FILE PATH]|**Required**|The final argument to the script is simply the path, absolute or relative, to the Tableau Services Manager installer executable, acquired through usual channels such as downloaded from the Tableau Website. _This script is only supported for use with Tableau Services Manager._ 
 
-To install additional node in the cluster, run SilentInstaller.py installWorker –h to find out the most up-to-date list of options and their default values. You can run the following on each worker node: 
-   Python.exe SilentInstaller.py --bootstrapFile <worker bootstrap file path>
-Or alternatively, run the following command:
-   Python.exe SilentInstaller.py installWorker --secretsFile <secrets file path> --nodeConfigurationFile <node configuration file path>  <installer exe path>
-   Note: the node configuration file is automatically saved after installing the first node using SilentInstaller.py. You can find it under the working directory of the script.
-   
-To update cluster topology after installing all nodes in the cluster, run SilentInstaller.py updateTopology –h to find out the most up-to-date list of options and their default values. You can run the following on the first node: 
-   Python.exe SilentInstaller.py --bootstrapFile <worker bootstrap file path>
-Or alternatively, run the following command:
-   Python.exe SilentInstaller.py updateTopology --secretsFile <secrets file path> --configFile <configuration file path>
+#### _workerInstall_ mode
+The automated installer script runs the proper commands to install Tableau Services Manager on the additional node. 
+Run SilentInstaller.py installWorker –h to find out the most up-to-date list of options and their default values. 
+Option|Argument|Required|Description
+----|----------|---------|-------
+--installDir|[FILE PATH]|Optional|The Tableau installation directory. The software binaries will all live in a directory tree rooted here. _If omitted, the default directory C:\Program Files\Tableau\Tableau Server will be used for the binaries.
+--dataDir|[FILE PATH]|Optional|The Tableau data location. The software configuration and data will all live in a directory tree rooted here. _If omitted, the default directory C:\ProgramData\Tableau_ will be used for the configuration and data files.
+--installerLog|[FILE PATH]|Optional|Path to where the installer executable should write its log file. The directory must already exist. _If omitted, the log will be written under the user's TEMP directory._
+--secretsFile|[FILE PATH]|**Required**|Path to a .json file (relative or absolute) that describes both the credentials of the Windows account to authenticate to the Tableau Services Manager, and the username/password of the initial admin user for Tableau Server. Also the product key you would like to use to activate Tableau Server. The secrets template file contains a trial license by default.  See [Secrets File](#SecretsFile) for more information.
+--nodeConfigurationFile|[FILE PATH]|**Required**|Path to the node configuration file for installing the additional node. 
+(installer executable)|[FILE PATH]|**Required**|The final argument to the script is simply the path, absolute or relative, to the Tableau Services Manager installer executable, acquired through usual channels such as downloaded from the Tableau Website. _This script is only supported for use with Tableau Services Manager._ 
+
+*Special Note: The node configuration file is automatically saved after installing the first node using SilentInstaller.py. You can find it under the working directory of the script.*
+
+#### _updateTopology_ mode
+The automated installer script runs the proper commands to update the cluster topology as desired for Tableau Services Manager. 
+Run SilentInstaller.py updateTopology –h to find out the most up-to-date list of options and their default values. 
+Option|Argument|Required|Description
+----|----------|---------|-------
+--secretsFile|[FILE PATH]|**Required**|Path to a .json file (relative or absolute) that describes both the credentials of the Windows account to authenticate to the Tableau Services Manager, and the username/password of the initial admin user for Tableau Server. Also the product key you would like to use to activate Tableau Server. The secrets template file contains a trial license by default.  See [Secrets File](#SecretsFile) for more information.
+--configFile|[FILE PATH]|**Required***|Use|Path to a .json [Server Topology File](#ConfigFile) (relative or absolute) describing the Tableau Server topology to update to. 
+
+### Input File Samples 
+
+#### <a name="SecretsFile"></a> Secrets file example
+```
+{
+	"local_admin_user":"",
+	"local_admin_pass":"",
+	"content_admin_user":"",
+	"content_admin_pass":"",
+	"product_keys":["trial"]
+}
+```
+The _local_admin_user_ is the Windows account to authenticate to the Tableau Services Manager.
+The _content_admin_user_ is the initial administrative user, who acts as a superuser for all of Tableau Server with respect to creating and managing users, sites, etc. In the case of non _install_ mode, these credentials are ignored because the initial admin user has already been created.
+The _product_keys_ is the key used to activate Tableau Services Manager. If multiple keys are specified, they will be activated one by one. In the case of non _install_ mode, these keys are ignored because the licenses have already been activated.
+
+#### <a name="ConfigFile"></a> Server Configuration file example
+```
+---
+```
+{
+   "configEntities":{
+      "runAsUser":{
+         "_type":"runAsUserType",
+         "name":"NT AUTHORITY\\NetworkService"
+      },
+      "gatewaySettings":{
+         "_type":"gatewaySettingsType",
+         "port":80,
+         "firewallOpeningEnabled":true,
+         "sslRedirectEnabled":true,
+         "publicHost":"****replace me****",
+         "publicPort":80,
+         "sslEnabled":false,
+         "sslPort":443
+      },
+      "identityStore":{
+         "_type":"identityStoreType",
+         "type":"local",
+         "domain":"****Domain Name Here****",
+         "nickname":"****Domain Nickname Here****"
+      }
+   },
+    "topologyVersion":{
+        "nodes":{
+            "****insert nodeId (lowercase) here****": {
+                "services": {
+                    "filestore": {
+                        "instances":[
+                            {
+                            "instanceId":"0"
+                            }
+                        ]
+                    },
+                    "tabadmincontroller": {
+                        "instances":[
+                            {
+                            "instanceId":"0"
+                            }
+                        ]
+                    },
+					"clientfileservice": {
+                        "instances":[
+                            {
+                            "instanceId":"0"
+                            }
+                        ]
+                    },
+                    "dataserver": {
+                        "instances":[
+                            {
+                            "instanceId":"0"
+                            },
+                            {
+                            "instanceId":"1"
+                            }
+                        ]
+                    },
+                    "cacheserver": {
+                        "instances":[
+                            {
+                            "instanceId":"0"
+                            },
+                            {
+                            "instanceId":"1"
+                            }
+                        ]
+                    },
+                    "vizqlserver": {
+                        "instances":[
+                            {
+                            "instanceId":"0"
+                            },
+                            {
+                            "instanceId":"1"
+                            }
+                        ]
+                    },
+                    "backgrounder": {
+                        "instances":[
+                            {
+                            "instanceId":"0"
+                            },
+                            {
+                            "instanceId":"1"
+                            }
+                        ]
+                    },
+                    "appzookeeper": {
+                        "instances":[
+                            {
+                            "instanceId":"0"
+                            }
+                        ]
+                    },
+                    "pgsql": {
+                        "instances":[
+                            {
+                            "instanceId":"0"
+                            }
+                        ]
+                    },
+                    "dataengine": {
+                        "instances":[
+                            {
+                            "instanceId":"0"
+                            }
+                        ]
+                    },
+                    "licenseservice": {
+                        "instances":[
+                            {
+                            "instanceId":"0"
+                            }
+                        ]
+                    },
+                    "searchserver": {
+                        "instances":[
+                            {
+                            "instanceId":"0"
+                            }
+                        ]
+                    },
+                    "clustercontroller": {
+                        "instances":[
+                            {
+                            "instanceId":"0"
+                            }
+                        ]
+                    },
+                    "tabsvc": {
+                        "instances":[
+                            {
+                            "instanceId":"0"
+                            }
+                        ]
+                    },
+                    "vizportal": {
+                        "instances":[
+                            {
+                            "instanceId":"0"
+                            }
+                        ]
+                    },
+                    "tabadminagent": {
+                        "instances":[
+                            {
+                            "instanceId":"0"
+                            }
+                        ]
+                    },
+                    "clientfileservice": {
+                        "instances":[
+                            {
+                            "instanceId":"0"
+                            }
+                        ]
+                    },
+                    "gateway": {
+                        "instances":[
+                            {
+                            "instanceId":"0"
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    }
+}
+
+#### <a name="RegFile"></a> Server registration file example
+```
+{
+    "first_name" : "John",
+    "last_name" : "Smith",
+    "email" : "john.smith@example.com",
+    "company" : "Example, Inc",
+    "title" : "Head Cat Herder",
+    "department" : "Engineering",
+    "industry" : "Finance",
+    "phone" : "123-555-1212",
+    "city" : "Kirkland",
+    "state" : "WA",
+    "zip" : "98034",
+    "country" : "United States"
+}
+```
+
+### Known Issues/Troubleshooting
