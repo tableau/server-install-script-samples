@@ -54,7 +54,7 @@ Option|Argument|Required|Description
 --installDir|[FILE PATH]|Optional|The Tableau installation directory. The software binaries will all live in a directory tree rooted here. _If omitted, the default directory C:\Program Files\Tableau\Tableau Server will be used for the binaries.
 --dataDir|[FILE PATH]|Optional|The Tableau data location. The software configuration and data will all live in a directory tree rooted here. _If omitted, the default directory C:\ProgramData\Tableau_ will be used for the configuration and data files.
 --installerLog|[FILE PATH]|Optional|Path to where the installer executable should write its log file. The directory must already exist. _If omitted, the log will be written under the user's TEMP directory._
---configFile|[FILE PATH]|**Required**|Use|Path to a .json [Server Configuration File](#ConfigFile) (relative or absolute) describing the Tableau Server configuration. 
+--configFile|[FILE PATH]|**Required**| Path to a .json [Server Configuration File](#ConfigFile) (relative or absolute) describing the Tableau Server configuration. 
 --secretsFile|[FILE PATH]|**Required**|Path to a .json file (relative or absolute) that describes both the credentials of the Windows account to authenticate to the Tableau Services Manager, and the username/password of the initial admin user for Tableau Server. Also the product key you would like to use to activate Tableau Server. The secrets template file contains a trial license by default.  See [Secrets File](#SecretsFile) for more information.
 --registrationFile|[FILE PATH]|**Required**|Path to a .json file (relative or absolute) describing the Tableau Services Manager registration information. See [Server Registration File](#RegFile) for more information.
 --controllerPort|[PORT]|Optional|The port on which the TSM Controller should run
@@ -86,7 +86,7 @@ Run SilentInstaller.py updateTopology –h to find out the most up-to-date list 
 Option|Argument|Required|Description
 ----|----------|---------|-------
 --secretsFile|[FILE PATH]|**Required**|Path to a .json file (relative or absolute) that describes both the credentials of the Windows account to authenticate to the Tableau Services Manager, and the username/password of the initial admin user for Tableau Server. Also the product key you would like to use to activate Tableau Server. The secrets template file contains a trial license by default.  See [Secrets File](#SecretsFile) for more information.
---configFile|[FILE PATH]|**Required**|Use|Path to a .json [Server Topology File](#ConfigFile) (relative or absolute) describing the Tableau Server topology to update to. 
+--configFile|[FILE PATH]|**Required**|Path to a .json [Server Topology File](#ConfigFile) (relative or absolute) describing the Tableau Server topology to update to. Only the topologyVersion part of the file will be applied, other configurations will be ignored in this mode. 
 
 ### Input File Samples 
 
