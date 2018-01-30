@@ -67,30 +67,30 @@
           "Default" : "100"
       },
       "Username" : {
-          "Description" : "TSM admin user name (cannot be 'tableau')",
+          "Description" : "Tableau Server Manager (TSM) administrator user name (cannot be 'tableau' or 'tsmagent')",
           "Type": "String",
           "AllowedPattern" : "[A-Za-z0-9]+",
           "MaxLength" : "30"
       },
       "Password" : {
-          "Description" : "TSM admin user password",
+          "Description" : "Tableau Server Manager (TSM) administrator password",
           "Type": "String",
           "MinLength" : "6",
           "NoEcho" : "true"
       },
       "TableauServerAdminUser" : {
-          "Description" : "The name of the initial Admin user for Tableau server",
+          "Description" : "Tableau Server administrator user name",
           "Type" : "String",
           "MinLength" : "1"
       },
       "TableauServerAdminPassword" : {
-          "Description" : "The password for the initial Admin user for Tableau server",
+          "Description" : "Tableau Server administrator password",
           "Type" : "String",
           "MinLength" : "1",
           "NoEcho" : "true"
       },
       "TableauServerLicenseKey" : {
-          "Description" : "License Key",
+          "Description" : "Tableau Server license key",
           "Type" : "String",
           "MinLength" : "1"
       },
@@ -163,7 +163,7 @@
           "Type" : "String"
       },
       "IPAddress" : {
-          "Description" : "Provide an EIP for the Adam node (blank = no EIP)",
+          "Description" : "Provide an EIP for the initial node (blank = no EIP)",
           "Type" : "String"
       }
   },
@@ -208,15 +208,15 @@
         "AWSHostedZoneID": { "default": "DNS Zone ID" },
         "AWSPublicFQDN": { "default": "Full DNS Name for Cluster" },
         "ExistingSecurityGroup": { "default": "Existing Security Group" },
-        "IPAddress": { "default": "EIP address for Adam node" },
+        "IPAddress": { "default": "EIP address for initial node" },
 
         "TableauServerInstaller" : { "default" : "Tableau Server Installer" },
         "AutomatedInstaller" : { "default" : "Automated Installer" },
 
-        "Username" : { "default" : "TSM admin user name" },
-        "Password" : { "default" : "TSM admin user password" },
-        "TableauServerAdminUser": { "default": "Tableau Server admin username" },
-        "TableauServerAdminPassword": { "default": "Tableau Server admin password" },
+        "Username" : { "default" : "Tableau Services Manager (TSM) administrator user name" },
+        "Password" : { "default" : "Tableau Services Manager (TSM) administrator password" },
+        "TableauServerAdminUser": { "default": "Tableau Server administrator username" },
+        "TableauServerAdminPassword": { "default": "Tableau Server administrator password" },
 
         "TableauServerLicenseKey": { "default": "Tableau Activation Key" },
         "RegFirstName": { "default": "First Name" },
