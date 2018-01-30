@@ -40,7 +40,7 @@
             "Type": "String"
         },
         "Username" : {
-            "Description" : "Tableau Services Manager (TSM) administrator username (cannot be 'tableau' or 'tsmagent')",
+            "Description" : "Tableau Services Manager (TSM) administrator username (cannot be 'admin', 'tableau' or 'tsmagent')",
             "Type": "String",
             "AllowedPattern" : "[A-Za-z0-9]+",
             "MaxLength" : "30"

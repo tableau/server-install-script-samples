@@ -90,18 +90,17 @@ The _content_admin_user_ is the initial administrative user, who acts as a super
 ```
 ---
 config.version: 15
-vizqlserver.data_refresh: 6
-worker0.backgrounder.procs: 3
-worker0.cacheserver.procs: 3
+worker0.backgrounder.procs: 2
+worker0.cacheserver.procs: 1
 worker0.dataengine.procs: 2
-worker0.dataserver.procs: 3
-worker0.gateway.port: 88
-worker0.vizportal.procs: 4
-worker0.vizqlserver.procs: 3
-storage.monitoring.critical_percent: 12
+worker0.dataserver.procs: 1
+worker0.gateway.port: 80
+worker0.vizportal.procs: 1
+worker0.vizqlserver.procs: 2
+storage.monitoring.critical_percent: 20
 storage.monitoring.email_enabled: true
-storage.monitoring.email_interval_min: 65
-storage.monitoring.warning_percent: 22
+storage.monitoring.email_interval_min: 30
+storage.monitoring.warning_percent: 30
 subscriptions.enabled: true
 svcmonitor.notification.smtp.canonical_url: http://mylinkurl.example.com
 svcmonitor.notification.smtp.enabled: true
@@ -110,7 +109,7 @@ svcmonitor.notification.smtp.password: smtppassword
 svcmonitor.notification.smtp.send_account: smtpuser
 svcmonitor.notification.smtp.server: mail.example.com
 svcmonitor.notification.smtp.target_addresses: heeeeelp@example.com
-vizqlserver.data_refresh: 6
+vizqlserver.data_refresh: 20
 service.init.state: start
 ```
 
