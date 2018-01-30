@@ -1,0 +1,6 @@
+{
+    "type": "installWorker",
+    "secretsFile": "file.json",
+    "nodeConfigurationFile": "file.json",
+    "installer": "file.exe"
+}
