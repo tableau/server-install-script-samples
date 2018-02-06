@@ -23,16 +23,6 @@
             "Type": "AWS::EC2::KeyPair::KeyName",
             "ConstraintDescription" : "must be the name of an existing EC2 KeyPair."
         },
-        "TableauServerInstaller" : {
-            "Description" : "S3 bucket file path for Tableau Server Installer",
-            "Default" : "https://s3-us-west-2.amazonaws.com/tableau-quickstart/tableau-server.x86_64.rpm",
-            "Type": "String"
-        },
-        "AutomatedInstaller" : {
-            "Description" : "S3 bucket file path for Automated Installer",
-            "Default" : "https://s3-us-west-2.amazonaws.com/tableau-quickstart/automated-installer",
-            "Type": "String"
-        },
         "SourceCIDR": {
             "AllowedPattern": "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$",
             "ConstraintDescription": "CIDR block parameter must be in the form x.x.x.x/x",
@@ -117,14 +107,6 @@
             "Description" : "Country",
             "Type" : "String"
         },
-        "VpcId": {
-            "Description": "The ID of the VPC into which to deploy the cluster",
-            "Type": "AWS::EC2::VPC::Id"
-        },
-        "SubnetId": {
-            "Description": "The subnet to use",
-            "Type" : "AWS::EC2::Subnet::Id"
-        },
         "ExistingSecurityGroup" : {
             "Description" : "Provide an existing security group or leave blank for creating a new one",
             "Type" : "String"
@@ -140,8 +122,7 @@
             "ParameterGroups" : [
                 {
                     "Label" : { "default":"AWS Environment and Machine Configuration" },
-                    "Parameters" : [ "VpcId", "SubnetId",
-                                     "InstanceType", "TableauServerVolumeSize", "KeyPairName", "SourceCIDR", "ExistingSecurityGroup", "IPAddress" ]
+                    "Parameters" : [ "InstanceType", "TableauServerVolumeSize", "KeyPairName", "SourceCIDR", "ExistingSecurityGroup", "IPAddress" ]
                 },
                 {
                     "Label" : { "default" : "Secrets" },
@@ -153,24 +134,16 @@
                                     "RegFirstName","RegLastName","RegEmail",
                                     "RegCompany","RegTitle","RegDepartment","RegIndustry",
                                     "RegPhone","RegCity","RegState","RegZip","RegCountry"]
-                },
-                {
-                    "Label" : { "default":"Tableau Server Installation Files" },
-                    "Parameters" : [ "TableauServerInstaller", "AutomatedInstaller" ]
                 }
             ],
 
             "ParameterLabels" : {
-                "VpcId" : { "default" : "Target VPC" },
-                "SubnetId": { "default": "Target Subnet" },
                 "InstanceType" : { "default" : "Tableau Amazon EC2 instance type" },
                 "TableauServerVolumeSize" : { "default" : "Size for server volume in GB" },
                 "KeyPairName" : { "default" : "Key Pair Name" },
                 "SourceCIDR" : { "default" : "Source CIDR for Access" },
                 "ExistingSecurityGroup": { "default": "Existing Security Group" },
                 "IPAddress": { "default": "EIP address for the node" },
-                "TableauServerInstaller" : { "default" : "Tableau Server Installer" },
-                "AutomatedInstaller" : { "default" : "Automated Installer" },
                 "Username" : { "default" : "Tableau Services Manager (TSM) administrator username" },
                 "Password" : { "default" : "Tableau Services Manager (TSM) administrator password" },
                 "TableauServerAdminUser": { "default": "Tableau Server administrator username" },
@@ -208,6 +181,12 @@
             "ap-southeast-2" : { "id" : "ami-fedafc9d" },
             "ap-northeast-1" : { "id" : "ami-eec1c380" },
             "ap-northeast-2" : { "id" : "ami-c74789a9" }
+        },
+        "DefaultConfiguration": {
+            "InstallationConfig": {
+                "TableauServerInstaller": "https://s3-us-west-2.amazonaws.com/tableau-quickstart/tableau-server.x86_64.rpm",
+                "AutomatedInstaller": "https://s3-us-west-2.amazonaws.com/tableau-quickstart/automated-installer"
+            }
         }
     },
 
@@ -267,11 +246,23 @@
                                 ]]}
                             },
                             "/tmp/tableau-server.rpm": {
-                                "source": { "Ref" : "TableauServerInstaller" }
+                                "source": {
+                                    "Fn::FindInMap": [
+                                        "DefaultConfiguration",
+                                        "InstallationConfig",
+                                        "TableauServerInstaller"
+                                    ]
+                                }
                             },
                             "/tmp/automated-installer" : {
                                 "mode": "550",
-                                "source": { "Ref" : "AutomatedInstaller" }
+                                "source": {
+                                    "Fn::FindInMap": [
+                                        "DefaultConfiguration",
+                                        "InstallationConfig",
+                                        "AutomatedInstaller"
+                                    ]
+                                }
                             },
                             "/tmp/registration.json" : {
                                 "content" : {
@@ -294,7 +285,6 @@
                 }
             },
             "Properties": {
-                "SubnetId": { "Ref": "SubnetId" },
                 "ImageId" : { "Fn::FindInMap" : ["AwsRegionToAMI", { "Ref" : "AWS::Region" }, "id"] },
                 "InstanceType" : { "Ref" : "InstanceType" },
                 "SecurityGroupIds" : { "Fn::If" : [ "HasServerSecurityGroup", [{ "Ref" : "ExistingSecurityGroup" }], [ {"Ref" : "ServerSecurityGroup"} ] ]},
@@ -390,7 +380,6 @@
             "Type" : "AWS::EC2::SecurityGroup",
             "Condition": "NoServerSecurityGroup",
             "Properties" : {
-                "VpcId": { "Ref": "VpcId" },
                 "GroupDescription" : "Enable HTTP access via ports 80 and HTTPS access on port 8850, and SSH access from the provided network CIDR",
                 "SecurityGroupIngress" : [
                     {"IpProtocol" : "tcp", "FromPort" : "80", "ToPort" : "80", "CidrIp" : { "Ref" : "SourceCIDR" } },
