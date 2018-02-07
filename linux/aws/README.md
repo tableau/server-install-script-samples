@@ -1,10 +1,15 @@
 # AWS CloudFormation Templates for Linux
 ----
 
-For Linux, we are providing a set of sample [AWS CloudFormation](https://aws.amazon.com/cloudformation/) templates that can be used as a basis for building your own templates for deploying Tableau Server to Amazon Web Services (AWS).
+For Linux, we are providing a set of sample [AWS CloudFormation](https://aws.amazon.com/cloudformation/) templates that can be used as a basis for building your own templates for deploying a fully functional Tableau Server to Amazon Web Services (AWS), following best practices from AWS and Tableau Software.  This repository contains AWS CloudFormation templates to automatically deploy a standalone or cluster (distributed) architecture for Tableau Server into your AWS account.
 
+For detailed information about deploying Tableau Server on AWS using these templates, view the [AWS Cloud deployment guide](https://onlinehelp.tableau.com/v10.5/offline/en-us/tableau-server-on-the-aws-cloud_linux.pdf). 
+
+### Standalone Templates
 * **tableau-single-server-centos.json** is a basic template used to set up a single-node Tableau Server on Linux CentOS.
 * **tableau-single-server-ubuntu.json** is a basic template used to set up a single-node Tableau Server on Linux Ubuntu.
+
+### Cluster Templates
 * **tableau-cluster-server-linux-simple.json** is a template used to set up a simple three-node Tableau Server cluster on Linux CentOS.
 * **tableau-cluster-server-linux-existing-vpc.json** is a template for an advanced setup of a three-node Tableau Server cluster on Linux CentOS or Ubuntu into an existing VPC with 3 private subnets.
 
