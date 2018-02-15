@@ -62,23 +62,6 @@
           "Description": "Tableau Server portal will be reachable at this address (blank = no DNS)",
           "Type": "String"
       },
-      "TableauServerInstaller" : {
-          "Description" : "S3 bucket file path for Tableau Server Installer",
-          "Default" : "https://s3-us-west-2.amazonaws.com/tableau-quickstart/tableau-server.x86_64.rpm",
-          "Type": "String"
-      },
-      "AutomatedInstaller" : {
-          "Description" : "S3 bucket file path for Automated Installer",
-          "Default" : "https://s3-us-west-2.amazonaws.com/tableau-quickstart/automated-installer",
-          "Type": "String"
-      },
-      "TableauServerVolumeSize" : {
-          "Description" : "Size of volume for server in GB; need at least 30 GB free for server installation",
-          "Type" : "Number",
-          "MinValue" : "30",
-          "MaxValue" : "16384",
-          "Default" : "100"
-      },
       "Username" : {
           "Description" : "Tableau Services Manager (TSM) administrator username (cannot be 'tableau' or 'tsmagent')",
           "Type": "String",
@@ -187,7 +170,7 @@
         {
           "Label" : { "default":"AWS Environment and Machine Configuration" },
           "Parameters" : [ "VpcId", "PrivateSubnetIds", "PublicSubnetIds",
-                           "InstanceType", "WorkerCount", "TableauServerVolumeSize", "KeyPairName", "AMIOS", "SourceCIDR", "ExistingSecurityGroup", "IPAddress" ]
+                           "InstanceType", "WorkerCount", "KeyPairName", "AMIOS", "SourceCIDR", "ExistingSecurityGroup", "IPAddress" ]
         },
         {
           "Label": { "default": "Server DNS configuration" },
@@ -203,10 +186,6 @@
                           "RegFirstName","RegLastName","RegEmail",
                           "RegCompany","RegTitle","RegDepartment","RegIndustry",
                           "RegPhone","RegCity","RegState","RegZip","RegCountry"]
-        },
-        {
-          "Label" : { "default":"Tableau Server Installation Files" },
-          "Parameters" : [ "TableauServerInstaller", "AutomatedInstaller" ]
         }
       ],
       "ParameterLabels" : {
@@ -215,7 +194,6 @@
         "PublicSubnetIds": { "default": "Target Public Subnets" },
         "InstanceType" : { "default" : "Amazon EC2 instance type" },
         "WorkerCount" : { "default" : "Number of additional Tableau Server instances" },
-        "TableauServerVolumeSize" : { "default" : "Size for server volume in GB" },
         "KeyPairName" : { "default" : "Key Pair Name" },
         "AMIOS" : { "default" : "AMI Operating System" },
         "SourceCIDR" : { "default" : "Source CIDR for Access" },
@@ -224,9 +202,6 @@
         "AWSPublicFQDN": { "default": "Full DNS Name for Cluster" },
         "ExistingSecurityGroup": { "default": "Existing Security Group" },
         "IPAddress": { "default": "EIP address for initial node" },
-
-        "TableauServerInstaller" : { "default" : "Tableau Server Installer" },
-        "AutomatedInstaller" : { "default" : "Automated Installer" },
 
         "Username" : { "default" : "Tableau Services Manager (TSM) administrator username" },
         "Password" : { "default" : "Tableau Services Manager (TSM) administrator password" },
@@ -271,7 +246,7 @@
           },
           "us-east-2" : {
               "CENTOS7HVM" : "ami-6a2d760f",
-              "US1604HVM" : " ami-b84b62dd"
+              "US1604HVM" : "ami-b84b62dd"
           },
           "us-west-1" : {
               "CENTOS7HVM" : "ami-af4333cf",
@@ -328,6 +303,16 @@
           },
           "Ubuntu-Server-16.04-LTS-HVM": {
               "Code": "US1604HVM"
+          }
+      },
+      "DefaultConfiguration": {
+          "InstallationConfig": {
+              "TableauServerInstallerOnCentos": "https://s3-us-west-2.amazonaws.com/tableau-quickstart/tableau-server.x86_64.rpm",
+              "TableauServerInstallerOnUbuntu": "https://s3-us-west-2.amazonaws.com/tableau-quickstart/tableau-server_amd64.deb",
+              "AutomatedInstaller": "https://s3-us-west-2.amazonaws.com/tableau-quickstart/automated-installer"
+          },
+          "MachineConfiguration": {
+              "SystemVolumeSize": 100
           }
       }
   },
@@ -629,12 +614,36 @@
                         },
 
                         "/tmp/tableau-server": {
-                            "source": { "Ref" : "TableauServerInstaller" }
+                            "source": {
+                                "Fn::If": [
+                                    "IsCentos",
+                                    {
+                                        "Fn::FindInMap": [
+                                            "DefaultConfiguration",
+                                            "InstallationConfig",
+                                            "TableauServerInstallerOnCentos"
+                                        ]
+                                    },
+                                    {
+                                        "Fn::FindInMap": [
+                                            "DefaultConfiguration",
+                                            "InstallationConfig",
+                                            "TableauServerInstallerOnUbuntu"
+                                        ]
+                                    }
+                                ]
+                            }
                         },
 
                         "/tmp/automated-installer" : {
                             "mode": "550",
-                            "source": { "Ref" : "AutomatedInstaller" }
+                            "source": {
+                                "Fn::FindInMap": [
+                                    "DefaultConfiguration",
+                                    "InstallationConfig",
+                                    "AutomatedInstaller"
+                                ]
+                            }
                         },
 
                         "/tmp/workers.sh" : {
@@ -754,7 +763,13 @@
                   "DeviceName" : "/dev/sda1",
                   "Ebs" : {
                       "VolumeType" : "gp2",
-                      "VolumeSize" : {"Ref" : "TableauServerVolumeSize"}
+                      "VolumeSize" : {
+                          "Fn::FindInMap": [
+                              "DefaultConfiguration",
+                              "MachineConfiguration",
+                              "SystemVolumeSize"
+                          ]
+                      }
                   }
               }
           ],
@@ -902,12 +917,36 @@
                 "config" : {
                     "files" : {
                         "/tmp/tableau-server": {
-                            "source": { "Ref" : "TableauServerInstaller" }
+                            "source": {
+                                "Fn::If": [
+                                    "IsCentos",
+                                    {
+                                        "Fn::FindInMap": [
+                                            "DefaultConfiguration",
+                                            "InstallationConfig",
+                                            "TableauServerInstallerOnCentos"
+                                        ]
+                                    },
+                                    {
+                                        "Fn::FindInMap": [
+                                            "DefaultConfiguration",
+                                            "InstallationConfig",
+                                            "TableauServerInstallerOnUbuntu"
+                                        ]
+                                    }
+                                ]
+                            }
                         },
 
                         "/tmp/automated-installer" : {
                             "mode": "550",
-                            "source": { "Ref" : "AutomatedInstaller" }
+                            "source": {
+                                "Fn::FindInMap": [
+                                    "DefaultConfiguration",
+                                    "InstallationConfig",
+                                    "AutomatedInstaller"
+                                ]
+                            }
                         },
 
                         "/tmp/secrets.properties" : {
@@ -950,7 +989,13 @@
                   "DeviceName" : "/dev/sda1",
                   "Ebs" : {
                       "VolumeType" : "gp2",
-                      "VolumeSize" : {"Ref" : "TableauServerVolumeSize"}
+                      "VolumeSize" : {
+                          "Fn::FindInMap": [
+                              "DefaultConfiguration",
+                              "MachineConfiguration",
+                              "SystemVolumeSize"
+                          ]
+                      }
                   }
               }
           ],
