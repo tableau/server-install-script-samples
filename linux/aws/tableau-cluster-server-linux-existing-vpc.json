@@ -240,62 +240,66 @@
 
   "Mappings" : {
       "AwsRegionToAMI" : {
-          "us-east-1" : {
-              "CENTOS7HVM" : "ami-6d1c2007",
-              "US1604HVM" : "ami-08c35d72"
-          },
-          "us-east-2" : {
-              "CENTOS7HVM" : "ami-6a2d760f",
-              "US1604HVM" : "ami-b84b62dd"
-          },
-          "us-west-1" : {
-              "CENTOS7HVM" : "ami-af4333cf",
-              "US1604HVM" : "ami-a089b2c0"
-          },
-          "us-west-2" : {
-              "CENTOS7HVM" : "ami-d2c924b2",
-              "US1604HVM" : "ami-4a4b9232"
-          },
-          "ca-central-1" : {
-              "CENTOS7HVM" : "ami-af62d0cb",
-              "US1604HVM" : "ami-5541fa31"
-          },
-          "sa-east-1" : {
-              "CENTOS7HVM" : "ami-26b93b4a",
-              "US1604HVM" : "ami-81a1e5ed"
-          },
-          "eu-west-1" : {
-              "CENTOS7HVM" : "ami-7abd0209",
-              "US1604HVM" : "ami-f7e8558e"
-          },
-          "eu-west-2" : {
-              "CENTOS7HVM" : "ami-bb373ddf",
-              "US1604HVM" : "ami-ce736daa"
-          },
-          "eu-central-1" : {
-              "CENTOS7HVM" : "ami-9bf712f4",
-              "US1604HVM" : "ami-f4de519b"
-          },
-          "ap-south-1" : {
-              "CENTOS7HVM" : "ami-95cda6fa",
-              "US1604HVM" : ""
-          },
-          "ap-southeast-1" : {
-              "CENTOS7HVM" : "ami-f068a193",
-              "US1604HVM" : "ami-54b3e137"
-          },
-          "ap-southeast-2" : {
-              "CENTOS7HVM" : "ami-fedafc9d",
-              "US1604HVM" : "ami-c10ffaa3"
-          },
-          "ap-northeast-1" : {
-              "CENTOS7HVM" : "ami-eec1c380",
-              "US1604HVM" : " ami-09cb706f"
-          },
-          "ap-northeast-2" : {
-              "CENTOS7HVM" : "ami-c74789a9",
-              "US1604HVM" : "ami-d21fb8bc"
-          }
+            "AMI": {
+                "CENTOS7HVM": "CentOS Linux 7 x86_64 HVM EBS 1801_01-b7ee8a69-ee97-4a49-9e68-afaee216db2e-ami-0a537770.4",
+                "US1604HVM": "ubuntu/images/hvm-ssd/ubuntu-xenial-16.04-amd64-server-20180306"
+            },
+            "ap-northeast-1": {
+                "CENTOS7HVM": "ami-25bd2743",
+                "US1604HVM": "ami-0d74386b"
+            },
+            "ap-northeast-2": {
+                "CENTOS7HVM": "ami-7248e81c",
+                "US1604HVM": "ami-a414b9ca"
+            },
+            "ap-south-1": {
+                "CENTOS7HVM": "ami-5d99ce32",
+                "US1604HVM": "ami-0189d76e"
+            },
+            "ap-southeast-1": {
+                "CENTOS7HVM": "ami-d2fa88ae",
+                "US1604HVM": "ami-52d4802e"
+            },
+            "ap-southeast-2": {
+                "CENTOS7HVM": "ami-b6bb47d4",
+                "US1604HVM": "ami-d38a4ab1"
+            },
+            "ca-central-1": {
+                "CENTOS7HVM": "ami-dcad28b8",
+                "US1604HVM": "ami-ae55d2ca"
+            },
+            "eu-central-1": {
+                "CENTOS7HVM": "ami-337be65c",
+                "US1604HVM": "ami-7c412f13"
+            },
+            "eu-west-1": {
+                "CENTOS7HVM": "ami-6e28b517",
+                "US1604HVM": "ami-f90a4880"
+            },
+            "eu-west-2": {
+                "CENTOS7HVM": "ami-ee6a718a",
+                "US1604HVM": "ami-f4f21593"
+            },
+            "sa-east-1": {
+                "CENTOS7HVM": "ami-f9adef95",
+                "US1604HVM": "ami-423d772e"
+            },
+            "us-east-1": {
+                "CENTOS7HVM": "ami-4bf3d731",
+                "US1604HVM": "ami-43a15f3e"
+            },
+            "us-east-2": {
+                "CENTOS7HVM": "ami-e1496384",
+                "US1604HVM": "ami-916f59f4"
+            },
+            "us-west-1": {
+                "CENTOS7HVM": "ami-65e0e305",
+                "US1604HVM": "ami-925144f2"
+            },
+            "us-west-2": {
+                "CENTOS7HVM": "ami-a042f4d8",
+                "US1604HVM": "ami-4e79ed36"
+            }
       },
       "LinuxAMINameMap": {
           "CentOS-7-HVM": {

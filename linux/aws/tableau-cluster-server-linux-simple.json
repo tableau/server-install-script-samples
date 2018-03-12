@@ -249,20 +249,23 @@
 
   "Mappings" : {
     "AwsRegionToAMI" : {
-      "us-east-1" : { "id" : "ami-6d1c2007" },
-      "us-east-2" : { "id" : "ami-6a2d760f" },
-      "us-west-1" : { "id" : "ami-af4333cf" },
-      "us-west-2" : { "id" : "ami-d2c924b2" },
-      "ca-central-1" : { "id" : "ami-af62d0cb" },
-      "sa-east-1" : { "id" : "ami-26b93b4a" },
-      "eu-west-1" : { "id" : "ami-7abd0209" },
-      "eu-west-2" : { "id" : "ami-bb373ddf" },
-      "eu-central-1" : { "id" : "ami-9bf712f4" },
-      "ap-south-1" : { "id" : "ami-95cda6fa" },
-      "ap-southeast-1" : { "id" : "ami-f068a193" },
-      "ap-southeast-2" : { "id" : "ami-fedafc9d" },
-      "ap-northeast-1" : { "id" : "ami-eec1c380" },
-      "ap-northeast-2" : { "id" : "ami-c74789a9" }
+      "AMI": {
+        "CENTOS7HVM": "CentOS Linux 7 x86_64 HVM EBS 1801_01-b7ee8a69-ee97-4a49-9e68-afaee216db2e-ami-0a537770.4"
+      },
+      "us-east-1" : { "id" : "ami-4bf3d731" },
+      "us-east-2" : { "id" : "ami-e1496384" },
+      "us-west-1" : { "id" : "ami-65e0e305" },
+      "us-west-2" : { "id" : "ami-a042f4d8" },
+      "ca-central-1" : { "id" : "ami-dcad28b8" },
+      "sa-east-1" : { "id" : "ami-f9adef95" },
+      "eu-west-1" : { "id" : "ami-6e28b517" },
+      "eu-west-2" : { "id" : "ami-ee6a718a" },
+      "eu-central-1" : { "id" : "ami-337be65c" },
+      "ap-south-1" : { "id" : "ami-5d99ce32" },
+      "ap-southeast-1" : { "id" : "ami-d2fa88ae" },
+      "ap-southeast-2" : { "id" : "ami-b6bb47d4" },
+      "ap-northeast-1" : { "id" : "ami-25bd2743" },
+      "ap-northeast-2" : { "id" : "ami-7248e81c" }
     }
   },
 
