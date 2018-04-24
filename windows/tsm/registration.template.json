@@ -1,15 +1,15 @@
 {
+  "first_name" : "[value]",
+  "last_name" : "[value]",
+  "email" : "[value]",
+  "company" : "[value]",
+  "title" : "[value]",
+  "department" : "[value]",
+  "industry" : "[value]",
+  "phone" : "[value]",
+  "city" : "[value]",
+  "state" : "[value]",
   "zip" : "[value]",
   "country" : "[value]",
-  "city" : "[value]",
-  "last_name" : "[value]",
-  "industry" : "[value]",
-  "eula" : "[value]",
-  "title" : "[value]",
-  "phone" : "[value]",
-  "company" : "[value]",
-  "state" : "[value]",
-  "department" : "[value]",
-  "first_name" : "[value]",
-  "email" : "[value]"
+  "eula" : "[value]"
 }
