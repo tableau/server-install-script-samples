@@ -20,6 +20,7 @@ class Options(object):
         'coordinationserviceClientPort': None,
         'coordinationservicePeerPort': None,
         'coordinationserviceLeaderPort': None,
+        'licenseserviceVendorDaemonPort': None,
         'agentFileTransferPort': None,
         'portRangeMin': None,
         'portRangeMax': None,
@@ -137,6 +138,7 @@ def make_cmd_line_parser():
     optional_flags.add_argument('--coordinationserviceClientPort', help='ZooKeeper client port', default=Options.defaults['coordinationserviceClientPort'])
     optional_flags.add_argument('--coordinationservicePeerPort', help='ZooKeeper peer port', default=Options.defaults['coordinationservicePeerPort'])
     optional_flags.add_argument('--coordinationserviceLeaderPort', help='ZooKeeper leader port', default=Options.defaults['coordinationserviceLeaderPort'])
+    optional_flags.add_argument('--licenseserviceVendorDaemonPort', help='License Service vendor daemon port', default=Options.defaults['licenseserviceVendorDaemonPort'])
     optional_flags.add_argument('--agentFileTransferPort', help='Tabadmin Agent file transfer port', default=Options.defaults['agentFileTransferPort'])
     optional_flags.add_argument('--portRangeMin', help='Port range min', default=Options.defaults['portRangeMin'])
     optional_flags.add_argument('--portRangeMax', help='Port range max', default=Options.defaults['portRangeMax'])
@@ -257,6 +259,9 @@ def run_inno_installer(options):
 
     if options.coordinationserviceLeaderPort is not None:
         inno_installer_args.append('/COORDINATIONSERVICELEADERPORT=' + options.coordinationserviceLeaderPort)
+
+    if options.licenseserviceVendorDaemonPort is not None:
+        inno_installer_args.append('/LICENSESERVICEVENDORDAEMONPORT=' + options.licenseserviceVendorDaemonPort)
 
     if options.agentFileTransferPort is not None:
         inno_installer_args.append('/AGENTFILETRANSFERPORT=' + options.agentFileTransferPort)
@@ -406,15 +411,15 @@ def run_setup(options, secrets, package_version):
         print('Node configuration file saved.')
     run_tsm_command(tsm_path, secrets, ['settings', 'import', '--config-only', '-f', options.configFile], port)
     print('Configuration settings imported')
-    run_tsm_command(tsm_path, secrets, ['pending-changes', 'apply', '--restart', '--ignore-warnings'], port)
+    run_tsm_command(tsm_path, secrets, ['pending-changes', 'apply', '--ignore-prompt', '--ignore-warnings'], port)
     print('Configuration applied')
     run_tsm_command(tsm_path, secrets, ['initialize', '--request-timeout', '1800'], port)
     print('Initialization completed')
     get_nodes_and_apply_topology(options.configFile, tsm_path, secrets, port)
-    run_tsm_command(tsm_path, secrets, ['pending-changes', 'apply', '--restart', '--ignore-warnings'], port)
+    run_tsm_command(tsm_path, secrets, ['pending-changes', 'apply', '--ignore-prompt', '--ignore-warnings'], port)
     print('Topology applied')
     if options.start == 'yes':
-        run_tsm_command(tsm_path, secrets, ['start', '--request-timeout', '900'], port)
+        run_tsm_command(tsm_path, secrets, ['start', '--request-timeout', '1800'], port)
         print('Server is installed and running')
         run_tabcmd_command(tabcmd_path, ['initialuser', '--server', 'localhost:'+str(getGatewayPort(options.configFile)), '--username', secrets['content_admin_user'], '--password', secrets['content_admin_pass']])
         print('Initial admin created')
@@ -478,7 +483,7 @@ def get_nodes_and_apply_topology(config_file, tsm_path, secrets, port, apply_and
         run_tsm_command(tsm_path, secrets, ['settings', 'import', '--topology-only', '-f', config_file], port)
         print('Topology applied')
         if apply_and_restart:
-            run_tsm_command(tsm_path, secrets, ['pending-changes', 'apply', '--restart', '--ignore-warnings'], port)
+            run_tsm_command(tsm_path, secrets, ['pending-changes', 'apply', '--ignore-prompt', '--ignore-warnings'], port)
             print('Topology change has been applied.')
             for node in actual_nodes - expected_nodes:
                 # nodes not listed in topology will be removed for consistency
