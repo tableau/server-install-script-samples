@@ -5,7 +5,7 @@
 
   "Parameters" : {
       "InstanceType" : {
-          "Description" : "Amazon EC2 instance type",
+          "Description" : "Server EC2 instance type",
           "Type" : "String",
           "Default" : "m4.4xlarge",
           "AllowedValues" : ["m4.2xlarge", "m4.4xlarge", "m4.10xlarge"],
@@ -15,15 +15,11 @@
           "Description" : "Number of (additional) worker nodes",
           "Type" : "Number",
           "Default" : "2",
-          "MinValue" : "2",
+          "MinValue" : "1",
           "MaxValue" : "30"
       },
-      "PrivateSubnetIds": {
-          "Description": "The private subnets to use",
-          "Type" : "List<AWS::EC2::Subnet::Id>"
-      },
-      "PublicSubnetIds": {
-          "Description": "The public subnets to use",
+      "SubnetIds": {
+          "Description": "The subnets to use",
           "Type" : "List<AWS::EC2::Subnet::Id>"
       },
       "KeyPairName": {
@@ -71,24 +67,24 @@
           "Default" : "100"
       },
       "Username" : {
-          "Description" : "Tableau Services Manager (TSM) administrator username (cannot be 'tableau' or 'tsmagent')",
+          "Description" : "TSM admin user name (cannot be 'tableau')",
           "Type": "String",
           "AllowedPattern" : "[A-Za-z0-9]+",
           "MaxLength" : "30"
       },
       "Password" : {
-          "Description" : "Tableau Services Manager (TSM) administrator password",
+          "Description" : "TSM admin user password",
           "Type": "String",
           "MinLength" : "6",
           "NoEcho" : "true"
       },
       "TableauServerAdminUser" : {
-          "Description" : "The name of the initial administrator for Tableau Server",
+          "Description" : "The name of the initial Admin user for Tableau server",
           "Type" : "String",
           "MinLength" : "1"
       },
       "TableauServerAdminPassword" : {
-          "Description" : "The password of the initial administrator for Tableau Server",
+          "Description" : "The password for the initial Admin user for Tableau server",
           "Type" : "String",
           "MinLength" : "1",
           "NoEcho" : "true"
@@ -167,7 +163,7 @@
           "Type" : "String"
       },
       "IPAddress" : {
-          "Description" : "Provide an Elastic IP address (EIP) for the initial node (blank = no EIP)",
+          "Description" : "Provide an EIP for the Adam node (blank = no EIP)",
           "Type" : "String"
       }
   },
@@ -177,7 +173,7 @@
       "ParameterGroups" : [
         {
           "Label" : { "default":"AWS Environment and Machine Configuration" },
-          "Parameters" : [ "VpcId", "PrivateSubnetIds", "PublicSubnetIds",
+          "Parameters" : [ "VpcId", "SubnetIds",
                            "InstanceType", "WorkerCount", "TableauServerVolumeSize", "KeyPairName", "SourceCIDR", "ExistingSecurityGroup", "IPAddress" ]
         },
         {
@@ -202,10 +198,9 @@
       ],
       "ParameterLabels" : {
         "VpcId" : { "default" : "Target VPC" },
-        "PrivateSubnetIds": { "default": "Target Private Subnets" },
-        "PublicSubnetIds": { "default": "Target Public Subnets" },
-        "InstanceType" : { "default" : "Amazon EC2 instance type" },
-        "WorkerCount" : { "default" : "Number of additional Tableau Server instances" },
+        "SubnetIds": { "default": "Target Subnets" },
+        "InstanceType" : { "default" : "Tableau Server EC2 Instance Type" },
+        "WorkerCount" : { "default" : "Number of Tableau Server worker instances" },
         "TableauServerVolumeSize" : { "default" : "Size for server volume in GB" },
         "KeyPairName" : { "default" : "Key Pair Name" },
         "SourceCIDR" : { "default" : "Source CIDR for Access" },
@@ -213,15 +208,15 @@
         "AWSHostedZoneID": { "default": "DNS Zone ID" },
         "AWSPublicFQDN": { "default": "Full DNS Name for Cluster" },
         "ExistingSecurityGroup": { "default": "Existing Security Group" },
-        "IPAddress": { "default": "EIP address for initial node" },
+        "IPAddress": { "default": "EIP address for Adam node" },
 
         "TableauServerInstaller" : { "default" : "Tableau Server Installer" },
         "AutomatedInstaller" : { "default" : "Automated Installer" },
 
-        "Username" : { "default" : "Tableau Services Manager (TSM) administrator username" },
-        "Password" : { "default" : "Tableau Services Manager (TSM) administrator password" },
-        "TableauServerAdminUser": { "default": "Tableau Server administrator username" },
-        "TableauServerAdminPassword": { "default": "Tableau Server administrator password" },
+        "Username" : { "default" : "TSM admin user name" },
+        "Password" : { "default" : "TSM admin user password" },
+        "TableauServerAdminUser": { "default": "Tableau Server admin username" },
+        "TableauServerAdminPassword": { "default": "Tableau Server admin password" },
 
         "TableauServerLicenseKey": { "default": "Tableau Activation Key" },
         "RegFirstName": { "default": "First Name" },
@@ -507,7 +502,7 @@
         ],
         "Properties": {
           "Scheme": "internet-facing",
-          "Subnets": { "Fn::Split" : [ ",", { "Fn::Join" : [",", { "Ref": "PublicSubnetIds" } ] } ] },
+          "Subnets": { "Fn::Split" : [ ",", { "Fn::Join" : [",", { "Ref": "SubnetIds" } ] } ] },
           "SecurityGroups": [ { "Ref": "LoadBalancerSecurityGroup" } ],
           "Listeners": [
             {
@@ -689,7 +684,7 @@
             }
         },
         "Properties": {
-          "SubnetId": { "Fn::Select" : [ "0", { "Ref": "PrivateSubnetIds" } ] },
+          "SubnetId": { "Fn::Select" : [ "0", { "Ref": "SubnetIds" } ] },
           "ImageId" : { "Fn::FindInMap" : ["AwsRegionToAMI", { "Ref" : "AWS::Region" }, "id"] },
           "InstanceType" : { "Ref" : "InstanceType" },
           "SecurityGroupIds" : { "Fn::If" : [ "HasServerSecurityGroup", [{ "Ref" : "ExistingSecurityGroup" }], [ {"Ref" : "ServerSecurityGroup"} ] ]},
@@ -802,7 +797,7 @@
       "WorkerGroup" : {
           "Type" : "AWS::AutoScaling::AutoScalingGroup",
           "Properties" : {
-              "VPCZoneIdentifier" : { "Ref": "PrivateSubnetIds" },
+              "VPCZoneIdentifier" : { "Ref": "SubnetIds" },
               "LaunchConfigurationName" : { "Ref" : "WorkerLaunchConfig" },
               "MinSize" : { "Ref" : "WorkerCount" },
               "MaxSize" : { "Ref" : "WorkerCount" },
@@ -930,7 +925,11 @@
     "Outputs" : {
         "LoadBalancerDNSName" : {
             "Description" : "Direct DNS name of load balancer",
-            "Value" : { "Fn::GetAtt" : [ "ServerLoadBalancer", "DNSName" ]}
+            "Value" : {
+                "Fn::Join" : ["", [
+                    { "Fn::If" : [ "HasSSLCertificate", "https://", "http://" ]},
+                    { "Fn::GetAtt" : [ "ServerLoadBalancer", "DNSName" ]}, "/" ]
+            ]}
         },
         "PrimaryServer" : {
             "Description" : "Primary server address",
@@ -938,18 +937,12 @@
         },
         "TableauServerURL": {
             "Description": "Public DNS name to reach cluster",
+            "Condition": "CreateDNSEntry",
             "Value": {
                 "Fn::Join" : ["", [
                     { "Fn::If" : [ "HasSSLCertificate", "https://", "http://" ]},
-                    { "Fn::If": [ "CreateDNSEntry", { "Ref": "AWSPublicFQDN" }, { "Fn::GetAtt" : [ "ServerLoadBalancer", "DNSName" ]}]},
-                    "/" ]]
-            }
-        },
-        "SecurityGroup": {
-            "Description": "The security group the instances belong to",
-            "Value": {
-                "Ref": "ServerSecurityGroup"
-            }
+                    { "Ref": "AWSPublicFQDN" }, "/"]
+            ]}
         }
     }
 }
