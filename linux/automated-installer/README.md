@@ -6,7 +6,7 @@ Getting Started
 ---------------
 This directory includes a sample Bash script for performing installs of Tableau Server on Linux in an automated fashion. This script supports both single and multi-node instances of Tableau Server. We have also included sample input files to the installer script.
 
-The Tableau online help page [Automated Installation of Tableau Server](http://onlinehelp.tableau.com/current/server-linux/en-us/automated_install_linux.htm) explains how to use the automated-installer in detail. The packages subdirectory contains RPM & deb packages that install the scripts and template files as referenced in the documentation.
+The Tableau online help page [Automated Installation of Tableau Server](https://onlinehelp.tableau.com/current/server-linux/en-us/automated_install_linux.htm) explains how to use the automated-installer in detail. The packages subdirectory contains RPM & deb packages that install the scripts and template files as referenced in the documentation.
 
 Please use GitHub 'Issues' to note any bugs or make suggestions.  
 
@@ -88,18 +88,12 @@ Many command line options mirror the options provided by `initialize-tsm` becaus
     --unprivileged-user=<value>             Name of the unprivileged account to run Tableau Server.
                                             When not set, the initialize-tsm script uses its default value.
 
-    --privileged-user=<value>               Name of the privileged account to run Tableau Services Manager.
-                                            When not set, the initialize-tsm script uses its default value.
-
-    --server-authorized-group=<value>       Name of the group that allows authorization to Tableau Server.
-                                            When not set, the initialize-tsm script uses its default value.
-
     --tsm-authorized-group=<value>          Name of the group(s) granted authorization to access Tableau Services Manager.
                                             When not set, the initialize-tsm script uses its default value.
 
-    --disable-account-creation              Do not create groups or user accounts. This option will prevent any calls to useradd
+    --disable-account-creation              Do not create groups or the user account. This option will prevent any calls to useradd
                                             or usermod (no users or groups will be created/edited). However, the values in: unprivileged-user,
-                                            privileged-user, server-authorized-group, and tsm-authorized-group will still be passed
+                                            privileged-user and tsm-authorized-group will still be passed
                                             through for system configuration.
 
     --debug                                 Print each command as it is run for debugging purposes. Produces extensive
@@ -109,4 +103,4 @@ Many command line options mirror the options provided by `initialize-tsm` becaus
 ### Known Issues/Troubleshooting
 
 * If automated-installer is not working properly in your environment, you can use the `--debug` option to echo every command run to stdout, which can be helpful in tracking down the issue.
-* For additional troubleshotting tips for Tableau Server on Linux , See [Troubleshooting](http://onlinehelp.tsi.lan/v10.5/server-linux/en-us/trouble.htm)
+* For additional troubleshotting tips for Tableau Server on Linux , See [Troubleshooting](https://onlinehelp.tableau.com/current/server-linux/en-us/trouble.htm)
