@@ -1,12 +1,12 @@
-# Windows scripts for Tableau Services Manager
+# Windows scripts for Tableau Services Manager (TSM)
 [![Community Supported](https://img.shields.io/badge/Support%20Level-Community%20Supported-457387.svg)](https://www.tableau.com/support-levels-it-and-developer-tools)
 ----
 
 This subfolder contains scripts and samples that can be used for automating the installation of Tableau Server on Windows using Tableau Services Manager starting from 2018.2 release.
 
-[automated-installer](automated-installer/)
+[SilentInstaller](SilentInstaller/)
 -------------------
-automated-installer is a script for installing the Tableau Server package, initializing TSM, and the initializing Tableau Server on Windows.  After successful completion, Tableau Server is ready for use.
+SilentInstaller is a script for installing Tableau Services Manager, initializing TSM, and starting Tableau Server on Windows.  After successful completion, Tableau Server is ready for use.
 
 [AWS CloudFormation Templates](aws/)
 ------------------------
