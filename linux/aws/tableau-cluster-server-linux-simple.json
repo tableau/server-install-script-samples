@@ -557,7 +557,7 @@
                     "packages" : {
                         "rpm" : {
                             "epel-release" : "https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm",
-                            "postgresql-odbc": "https://tableau-server-10-4-linux-beta.s3.amazonaws.com/tableau-postgresql-odbc-9.5.3-1.x86_64.rpm"
+                            "postgresql-odbc": "https://s3-us-west-2.amazonaws.com/tableau-quickstart/tableau-postgresql-odbc-9.5.3-1.x86_64.rpm"
                         },
                         "yum" : {
                             "haveged" : [],
@@ -671,7 +671,7 @@
                                 "first_name" : {"Ref" : "RegFirstName"},
                                 "last_name" : {"Ref" : "RegLastName"},
                                 "email" : {"Ref" : "RegEmail"},
-                                "company" : { "Fn::Sub" : "${RegCompany};linux-beta" },
+                                "company" : { "Fn::Sub" : "${RegCompany};AWSQuickStart" },
                                 "title" : {"Ref" : "RegTitle"},
                                 "department" : {"Ref" : "RegDepartment"},
                                 "industry" : {"Ref" : "RegIndustry"},
@@ -816,7 +816,7 @@
                     "packages" : {
                         "rpm" : {
                             "epel-release" : "https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm",
-                            "postgresql-odbc": "https://tableau-server-10-4-linux-beta.s3.amazonaws.com/tableau-postgresql-odbc-9.5.3-1.x86_64.rpm"
+                            "postgresql-odbc": "https://s3-us-west-2.amazonaws.com/tableau-quickstart/tableau-postgresql-odbc-9.5.3-1.x86_64.rpm"
                         },
                         "yum" : {
                             "haveged" : [],
