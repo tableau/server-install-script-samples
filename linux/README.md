@@ -8,6 +8,6 @@ This subfolder contains scripts and samples that can be used for automating the 
 -------------------
 automated-installer is a script for installing the Tableau Server package, initializing TSM, and initializing Tableau Server on Linux. After successful completion, Tableau Server is ready for use.
 
-[AWS CloudFormation Templates](aws/)
+AWS CloudFormation Templates
 ------------------------
-Contains sample AWS CloudFormation templates for deploying Tableau Server to Amazon Web Services (AWS).
+For reference implementations of automating the deployment of Tableau Server to AWS using [AWS CloudFormation](https://aws.amazon.com/cloudformation/), please see the [Tableau Server on AWS Quick Start](https://aws.amazon.com/quickstart/architecture/tableau-server/).
