@@ -1,6 +1,6 @@
 {
     "AWSTemplateFormatVersion": "2010-09-09",
-    "Description": "AWS QuickStart Template for Tableau Server running on Windows QS(0040)",
+    "Description": "CloudFormation Template for TSM-based Tableau Server on Windows",
     "Parameters": {
         "InstanceType" : {
             "Description" : "Amazon EC2 instance type",
@@ -346,7 +346,7 @@
                                                 {
                                                     "Ref": "RegCompany"
                                                 },
-                                                "AWSQuickStart"
+                                                "AWSQuickStart-WinBeta"
                                             ]
                                         ]
                                     },
