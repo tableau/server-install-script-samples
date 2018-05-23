@@ -244,6 +244,7 @@ def run_inno_installer(options):
     inno_installer_args = [
         '/VERYSILENT',          # No progress GUI, message boxes still possible
         '/SUPPRESSMSGBOXES',    # No message boxes. Only has an effect when combined with '/SILENT' or '/VERYSILENT'.
+        '/ACCEPTEULA',
         '/LOG=' + inno_log_file_full_path,
         '/DIR=' + options.installDir,
         '/DATADIR=' + options.dataDir,
@@ -313,6 +314,7 @@ def run_worker_installer(options, secrets):
     worker_installer_args = [
         '/VERYSILENT',          # No progress GUI, message boxes still possible
         '/SUPPRESSMSGBOXES',    # No message boxes. Only has an effect when combined with '/SILENT' or '/VERYSILENT'.
+        '/ACCEPTEULA',
         '/LOG=' + worker_log_file_full_path,
         '/DIR=' + options.installDir,
         '/DATADIR=' + options.dataDir,
@@ -413,7 +415,7 @@ def run_setup(options, secrets, package_version):
     print('Configuration settings imported')
     run_tsm_command(tsm_path, secrets, ['pending-changes', 'apply', '--ignore-prompt', '--ignore-warnings'], port)
     print('Configuration applied')
-    run_tsm_command(tsm_path, secrets, ['initialize', '--request-timeout', '1800'], port)
+    run_tsm_command(tsm_path, secrets, ['initialize', '--request-timeout', '7200'], port)
     print('Initialization completed')
     get_nodes_and_apply_topology(options.configFile, tsm_path, secrets, port)
     run_tsm_command(tsm_path, secrets, ['pending-changes', 'apply', '--ignore-prompt', '--ignore-warnings'], port)
