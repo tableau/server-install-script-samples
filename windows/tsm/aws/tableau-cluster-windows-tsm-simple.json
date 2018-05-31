@@ -31,7 +31,8 @@
         "Description" : "Tableau Services Manager (TSM) administrator password",
         "Type": "String",
         "NoEcho" : "true",
-        "MinLength" : "6"
+        "AllowedPattern" : "^(?=[a-zA-Z0-9#@$?!]{8,}$)(?=.*?[a-z])(?=.*?[A-Z])(?=.*?[0-9]).*",
+        "MinLength" : "8"
     },
     "TableauServerAdminUser" : {
       "Description" : "The name of the initial Admin user for Tableau server",
@@ -735,7 +736,8 @@
                                             "user",
                                             {"Fn::Sub": "${Username}"},
                                             {"Fn::Sub": "${Password}"},
-                                             "/add"
+                                             "/add",
+                                             "/y"
                                         ]
                                     ]
                                  },
@@ -751,7 +753,8 @@
                                             "localgroup",
                                             "Administrators",
                                             {"Fn::Sub": "${Username}"},
-                                             "/add"
+                                             "/add",
+                                             "/y"
                                         ]
                                     ]
                                 },
@@ -965,7 +968,8 @@
                                             "user",
                                             {"Fn::Sub": "${Username}"},
                                             {"Fn::Sub": "${Password}"},
-                                             "/add"
+                                             "/add",
+                                             "/y"
                                         ]
                                     ]
                                  },
@@ -981,7 +985,8 @@
                                             "localgroup",
                                             "Administrators",
                                             {"Fn::Sub": "${Username}"},
-                                             "/add"
+                                             "/add",
+                                             "/y"
                                         ]
                                     ]
                                 },
@@ -1213,7 +1218,8 @@
                                             "user",
                                             {"Fn::Sub": "${Username}"},
                                             {"Fn::Sub": "${Password}"},
-                                             "/add"
+                                             "/add",
+                                             "/y"
                                         ]
                                     ]
                                  },
@@ -1229,7 +1235,8 @@
                                             "localgroup",
                                             "Administrators",
                                             {"Fn::Sub": "${Username}"},
-                                             "/add"
+                                             "/add",
+                                             "/y"
                                         ]
                                     ]
                                 },
