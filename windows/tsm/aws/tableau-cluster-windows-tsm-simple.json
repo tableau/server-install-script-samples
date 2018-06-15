@@ -50,6 +50,15 @@
       "Type" : "String",
       "MinLength" : "1"
     },
+	"AcceptEULA": {
+            "AllowedPattern": "Yes",
+            "AllowedValues": [
+                "Yes",
+                "No"
+            ],
+            "Description": "View the EULA at the Link: https://www.tableau.com/eula",
+            "Type": "String"
+    },
     "RegFirstName" : {
       "Description" : "First Name",
       "Type" : "String",
@@ -120,7 +129,7 @@
         },
         {
             "Label" : { "default" : "Registration" },
-            "Parameters" : ["TableauServerLicenseKey", "RegFirstName","RegLastName","RegEmail",
+            "Parameters" : ["TableauServerLicenseKey","AcceptEULA","RegFirstName","RegLastName","RegEmail",
                             "RegCompany","RegTitle","RegDepartment","RegIndustry",
                             "RegPhone","RegCity","RegState","RegZip","RegCountry"]
         }
@@ -150,6 +159,9 @@
         "TableauServerLicenseKey": {
             "default": "Tableau Activation Key"
         },
+        "AcceptEULA": { 
+		     "default": "Accept Tableau End User License Agreement" 
+	    },
         "RegFirstName": {
             "default": "First Name"
         },
