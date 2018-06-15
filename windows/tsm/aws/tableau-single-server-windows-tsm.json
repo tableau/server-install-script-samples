@@ -30,7 +30,7 @@
             "Description" : "Tableau Services Manager (TSM) administrator password",
             "Type": "String",
             "NoEcho" : "true",
-			"AllowedPattern" : "^(?=[a-zA-Z0-9#@$?!]{8,}$)(?=.*?[a-z])(?=.*?[A-Z])(?=.*?[0-9]).*",
+            "AllowedPattern" : "^(?=[a-zA-Z0-9#@$?!]{8,}$)(?=.*?[a-z])(?=.*?[A-Z])(?=.*?[0-9]).*",
             "MinLength" : "8"
         },
         "TableauServerAdminUser" : {
@@ -46,6 +46,15 @@
         },
         "TableauServerLicenseKey": {
             "Description": "License Key (leave blank for trial)",
+            "Type": "String"
+        },
+        "AcceptEULA": {
+            "AllowedPattern": "Yes",
+            "AllowedValues": [
+                "Yes",
+                "No"
+            ],
+            "Description": "View the EULA at the Link: https://www.tableau.com/eula",
             "Type": "String"
         },
         "RegFirstName" : {
@@ -148,6 +157,7 @@
                 "TableauServerAdminUser": { "default": "Tableau Server administrator username" },
                 "TableauServerAdminPassword": { "default": "Tableau Server administrator password" },
                 "TableauServerLicenseKey": { "default": "Tableau Activation Key" },
+                "AcceptEULA": { "default": "Accept Tableau End User License Agreement" },
                 "RegFirstName": { "default": "First Name" },
                 "RegLastName": { "default": "Last name" },
                 "RegEmail": { "default": "Email Address" },
@@ -452,7 +462,7 @@
                                             {"Fn::Sub": "${Username}"},
                                             {"Fn::Sub": "${Password}"},
                                              "/add",
-											 "/y"
+                                             "/y"
                                         ]
                                     ]
                                  },
@@ -469,7 +479,7 @@
                                             "Administrators",
                                             {"Fn::Sub": "${Username}"},
                                              "/add",
-											 "/y"
+                                             "/y"
                                         ]
                                     ]
                                 },
