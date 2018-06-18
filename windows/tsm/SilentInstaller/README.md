@@ -6,7 +6,7 @@ The Tableau Services Manager on Windows uses a web UI approach to installing and
 
 We are providing some reference implementations to show users and organizations how they can automate deployment of Tableau Server on Windows, using scripts to prepare the installation and run the installer executable with appropriate command-line arguments.  
 
-See also [Automated Installation of Tableau Services Manager]() for general documentation regarding these scripts.
+See also [Automated Installation of Tableau Services Manager](https://onlinehelp.tableau.com/current/server/en-us/automated_install_windows.htm) for general documentation regarding these scripts.
 
 Please use 'Issues' to note any bugs or make suggestions.  
 
