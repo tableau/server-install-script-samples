@@ -8,18 +8,16 @@ print() {
   fi
 }
 
-error() {
-  echo ""
-  echo "  $@" >&2
-  echo ""
+errcho() {
+  echo "$@" >&2
 }
 
 show_short_help() {
-  error "Run '$(basename $0) -h' to see the full list of available options."
+  errcho "Run '$(basename $0) -h' to see the full list of available options."
 }
 
 error_with_no_value_specified() {
-  error "Command line option: '--${1}' must have an assigned value, if specified."
+  errcho "Command line option: '--${1}' must have an assigned value, if specified."
   show_short_help
 }
 
@@ -86,6 +84,8 @@ show_help() {
 
     -m coordinationservice-leader-port      Leader port for the coordination service
 
+    -t licenseservice-vendordaemon-port     Vendor daemon port for the licensing service
+
     -n agent-filetransfer-port              Filetransfer port for the agent service
 
     -o controller-port                      Https port for the controller service
@@ -120,48 +120,48 @@ EOM
 }
 
 print_accept_eula_required_error_and_exit() {
-  echo "" >&2
-  echo "You must accept the EULA to install Tableau Server." >&2
-  echo "Pass the '--accepteula' flag to indicate that that you" >&2
-  echo "accept Tableau's End User License Agreement." >&2
+  errcho ""
+  errcho "You must accept the EULA to install Tableau Server."
+  errcho "Pass the '--accepteula' flag to indicate that that you"
+  errcho "accept Tableau's End User License Agreement."
   exit 1
 }
 
 print_secrets_file_error_and_exit() {
-  echo "$1" >&2
-  echo "The secrets file configures administrative users and passwords." >&2
-  echo "Specify the secrets file using '-s secrets-file' argument." >&2
-  echo "You may use the '${TEMPLATE_SECRETS_FILE}' file as a template." >&2
+  errcho "$1"
+  errcho "The secrets file configures administrative users and passwords."
+  errcho "Specify the secrets file using '-s secrets-file' argument."
+  errcho "You may use the '${TEMPLATE_SECRETS_FILE}' file as a template."
   exit 1
 }
 
 print_registration_file_error_and_exit() {
-  echo "$1" >&2
-  echo "The registration file provides the user and organization information for registering Tableau Server." >&2
-  echo "Specify the registration file using '-r registration-file' argument." >&2
-  echo "You may use the '${TEMPLATE_REGISTRATION_FILE}' file as a template." >&2
+  errcho "$1"
+  errcho "The registration file provides the user and organization information for registering Tableau Server."
+  errcho "Specify the registration file using '-r registration-file' argument."
+  errcho "You may use the '${TEMPLATE_REGISTRATION_FILE}' file as a template."
   exit 1
 }
 
 print_config_file_error_and_exit() {
-  echo "$1" >&2
-  echo "The configuration and topology file provides the initial configuration and topology of your Tableau Server." >&2
-  echo "Specify the configuration and topology file using '-f config-file' argument." >&2
-  echo "You may use the '${DEFAULT_CONFIG_FILE}' file as a template." >&2
+  errcho "$1"
+  errcho "The configuration and topology file provides the initial configuration and topology of your Tableau Server."
+  errcho "Specify the configuration and topology file using '-f config-file' argument."
+  errcho "You may use the '${DEFAULT_CONFIG_FILE}' file as a template."
   exit 1
 }
 
 print_secret_missing_error_and_exit() {
-  echo "$1" >&2
-  echo "Set the value in the secrets file and specify the file using the -s option." >&2
-  echo "The secrets file configures administrative users and passwords." >&2
-  echo "You may use the '${TEMPLATE_SECRETS_FILE}' file as a template." >&2
+  errcho "$1"
+  errcho "Set the value in the secrets file and specify the file using the -s option."
+  errcho "The secrets file configures administrative users and passwords."
+  errcho "You may use the '${TEMPLATE_SECRETS_FILE}' file as a template."
   exit 1
 }
 
 print_package_file_error_and_exit() {
-  echo "$1" >&2
-  echo "Provide the package file (rpm or deb) as last argument." >&2
+  errcho "$1"
+  errcho "Provide the package file (rpm or deb) as last argument."
   exit 1
 }
 
@@ -178,7 +178,7 @@ interactive_secrets() {
 
 check_arguments() {
 
-  [ ${EUID} -ne 0 ] && { echo -e "This script must be run as root. Canceling.\n" >&2; show_help; exit 1; }
+  [ ${EUID} -ne 0 ] && { errcho -e "This script must be run as root. Canceling.\n"; show_help; exit 1; }
 
   if [ $# -lt 1 ]; then
     show_help
@@ -186,7 +186,7 @@ check_arguments() {
   fi
 
   OPTIND=1 # Reset for getopts (-: to allow long options)
-  while getopts "c:d:k:s:f:r:a:b:vgh-:i:e:m:n:o:l:x:" opt; do
+  while getopts "c:d:k:s:f:r:a:b:vgh-:i:e:m:t:n:o:l:x:" opt; do
     case "$opt" in
       c)
         config_name="${OPTARG}"
@@ -226,6 +226,9 @@ check_arguments() {
         ;;
       m)
         zk_leader_port="${OPTARG}"
+        ;;
+      t)
+        license_vd_port="${OPTARG}"
         ;;
       n)
         agent_ft_port="${OPTARG}"
@@ -313,30 +316,29 @@ check_arguments() {
            version_string=$(dpkg-deb -f $package_file Package | sed -e "s/tableau-server-//")
            ;;
     *    ) print_package_file_error_and_exit "Unknown package file extension for ${package_file}; this script supports rpm and deb files."
-           exit 1
            ;;
   esac
   shift
 
   readonly install_dir="/opt/tableau/tableau_server"
 
-  [ -z "${accept_eula_arg}" ] && { print_accept_eula_required_error_and_exit; }
-  [ -z "${secrets_file}" ] && { print_secrets_file_error_and_exit "Specify the secrets file using -s. Canceling."; }
-  [ -z "${config_file}" ] && { print_config_file_error_and_exit "Specify the configuration and topology json file using -f. Canceling."; }
-  [ -z "${registration_file}" ] && { print_registration_file_error_and_exit "Specify the registration file using -r. Canceling."; }
+  [ -z "${accept_eula_arg}" ] && print_accept_eula_required_error_and_exit
+  [ -z "${secrets_file}" ] && print_secrets_file_error_and_exit "Specify the secrets file using -s. Canceling."
+  [ -z "${config_file}" ] && print_config_file_error_and_exit "Specify the configuration and topology json file using -f. Canceling."
+  [ -z "${registration_file}" ] && print_registration_file_error_and_exit "Specify the registration file using -r. Canceling."
 
-  [ ! -e "${secrets_file}" ] && { print_secrets_file_error_and_exit "Secrets file ${secrets_file} not found. Canceling."; }
+  [ ! -e "${secrets_file}" ] && print_secrets_file_error_and_exit "Secrets file ${secrets_file} not found. Canceling."
   source "${secrets_file}"
 
-  [ ! -e "${config_file}" ] && { print_config_file_error_and_exit "Configuration and topology file ${config_file} not found. Canceling."; }
-  [ ! -e "${registration_file}" ] && { print_registration_file_error_and_exit "Registration file ${registration_file} not found. Canceling."; }
+  [ ! -e "${config_file}" ] && print_config_file_error_and_exit "Configuration and topology file ${config_file} not found. Canceling."
+  [ ! -e "${registration_file}" ] && print_registration_file_error_and_exit "Registration file ${registration_file} not found. Canceling."
 
-  [ -z "${tsm_admin_pass}" -o -z "${tableau_server_admin_pass}" ] && { interactive_secrets; }
+  [ -z "${tsm_admin_pass}" -o -z "${tableau_server_admin_pass}" ] && interactive_secrets
 
-  [ -z "${tsm_admin_user}" ] && { print_secret_missing_error_and_exit "No value specified for 'tsm_admin_user'. Canceling."; }
-  [ -z "${tsm_admin_pass}" ] && { print_secret_missing_error_and_exit "No value specified for 'tsm_admin_pass'. Canceling." >&2; exit 1; }
-  [ -z "${tableau_server_admin_user}" ] && { print_secret_missing_error_and_exit "No value specified for 'tableau_server_admin_user'. Canceling." >&2; exit 1; }
-  [ -z "${tableau_server_admin_pass}" ] && { print_secret_missing_error_and_exit "No value specified for 'tableau_server_admin_pass'. Canceling." >&2; exit 1; }
+  [ -z "${tsm_admin_user}" ] && print_secret_missing_error_and_exit "No value specified for 'tsm_admin_user'. Canceling."
+  [ -z "${tsm_admin_pass}" ] && print_secret_missing_error_and_exit "No value specified for 'tsm_admin_pass'. Canceling."
+  [ -z "${tableau_server_admin_user}" ] && print_secret_missing_error_and_exit "No value specified for 'tableau_server_admin_user'. Canceling."
+  [ -z "${tableau_server_admin_pass}" ] && print_secret_missing_error_and_exit "No value specified for 'tableau_server_admin_pass'. Canceling."
 
   return 0
 }
@@ -350,7 +352,8 @@ find_running_username() {
     # run by sudo, $USER will be root, which we don't want to run commands as.
     running_username=$(/usr/bin/printenv SUDO_USER || logname 2>/dev/null || /usr/bin/printenv USER || echo "") # final echo ensures failure exit code doesn't cause script to exit
     if [ -z "${running_username}" ]; then
-      echo -e "Unable to determine which user is running this script (this is unusual). Canceling.\n" >&2
+      errcho "Unable to determine which user is running this script (this is unusual). Canceling."
+      errcho ""
       exit 1
     fi
   fi
@@ -365,7 +368,6 @@ run_install() {
            run_gdebi_install
            ;;
     *    ) print_package_file_error_and_exit "Unknown package file extension for ${package_file}; this script supports rpm and deb files."
-           exit 1
            ;;
   esac
 }
@@ -403,6 +405,7 @@ run_initialize_tsm() {
   [ ${zk_client_port} -ne 0                     ] && initialize_tsm_cmd+=("-i" ${zk_client_port})
   [ ${zk_peer_port} -ne 0                       ] && initialize_tsm_cmd+=("-e" ${zk_peer_port})
   [ ${zk_leader_port} -ne 0                     ] && initialize_tsm_cmd+=("-m" ${zk_leader_port})
+  [ ${license_vd_port} -ne 0                    ] && initialize_tsm_cmd+=("-t" ${license_vd_port})
   [ ${agent_ft_port} -ne 0                      ] && initialize_tsm_cmd+=("-n" ${agent_ft_port})
   [ ${controller_port} -ne 0                    ] && initialize_tsm_cmd+=("-o" ${controller_port})
   [ ${port_range_min} -ne 0                     ] && initialize_tsm_cmd+=("-l" ${port_range_min})
@@ -429,7 +432,7 @@ run_tsm() {
   # See "Substring Replacement" in http://tldp.org/LDP/abs/html/string-manipulation.html#FTN.AEN6164
   local escaped_tsm_admin_pass="${tsm_admin_pass//\"/\\\"}"
   # Run tsm via su so log and session file goes in running user's homedir and not root's
-  su -c "${install_dir}/packages/customer-bin.${version_string}/tsm ${tabadminArgs} -u \"${tsm_admin_user}\" -s https://$(hostname):${controller_port}" ${running_username}  <<<"${escaped_tsm_admin_pass}"
+  su -c "set -a && source <(cat ${confwild}) &&  ${install_dir}/packages/customer-bin.${version_string}/tsm ${tabadminArgs} -u \"${tsm_admin_user}\" -s https://$(hostname):${controller_port}" ${running_username}  <<<"${escaped_tsm_admin_pass}"
 }
 
 setup() {
@@ -446,10 +449,11 @@ setup() {
   run_tsm register --file "${registration_file}"
 
   print "Setting initial configuration..."
-  run_tsm settings import --config-only -f "${config_file}"
+  # TODO: TFSID 771800 - remove the --force-keys argument along with proper fix
+  run_tsm settings import --config-only -f "${config_file}" --force-keys
 
   print "Applying pending changes..."
-  run_tsm pending-changes apply --restart
+  run_tsm pending-changes apply --ignore-prompt
 
   print "Initializing server..."
   run_tsm initialize --start-server --request-timeout 2300
@@ -472,7 +476,7 @@ setup() {
 
   print 'Creating initial admin user...'
   # Run tabcmd via su so log and session file goes in running user's homedir and not root's
-  su -c "${install_dir}/packages/customer-bin.${version_string}/tabcmd initialuser --server \"localhost:${gateway_port}\" --username \"${tableau_server_admin_user}\" --password \"${tableau_server_admin_pass}\"" ${running_username}
+  su -c "set -a && source <(cat ${confwild}) && ${install_dir}/packages/customer-bin.${version_string}/tabcmd initialuser --server \"localhost:${gateway_port}\" --username \"${tableau_server_admin_user}\" --password \"${tableau_server_admin_pass}\"" ${running_username}
 }
 
 finish() {
@@ -509,6 +513,7 @@ main() {
   local zk_client_port=0
   local zk_peer_port=0
   local zk_leader_port=0
+  local license_vd_port=0
   local agent_ft_port=0
   local controller_port=0
   local port_range_min=0
@@ -528,6 +533,8 @@ main() {
 
   if [ "$bootstrap_file" == "" ]; then
     source /etc/opt/tableau/tableau_server/environment.bash
+    local unprivileged_home=$(getent passwd "${TABLEAU_SERVER_UNPRIVILEGED_USERNAME}" | cut -d: -f6)
+    confwild="${unprivileged_home}/.config/systemd/tableau_server.conf.d/*.conf"
     resolve_controller_port_from_config
     setup
   fi
