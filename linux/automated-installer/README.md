@@ -74,6 +74,8 @@ Many command line options mirror the options provided by `initialize-tsm` becaus
 
 
     -m coordinationservice-leader-port      Leader port for the coordination service
+	
+	-t licenseservice-vendordaemon-port     Vendor daemon port for the licensing service
 
     -n agent-filetransfer-port              Filetransfer port for the agent service
 
