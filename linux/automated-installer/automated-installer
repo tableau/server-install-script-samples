@@ -48,7 +48,7 @@ show_help() {
 
     --accepteula                            Indicate that you have accepted the End User License Agreement.
 
-    package-file                            The rpm or deb file to install (e.g., tableau-server-10.0.0-1.x86_64.rpm
+    package-file                            The rpm or deb file to install (e.g., tableau-server-10.0.0-1.x86_64.rpm)
 
   OPTIONAL
     -d data-directory                       Set a custom location for the data directory if it's not already set.
