@@ -29,8 +29,8 @@ show_help() {
   Installs the package and sets up directories and permissions to properly run Tableau Server, then
   begins Tableau Services Manager setup. After successful completion, Tableau Server should be fully operational.
 
-  If you wish this system to be added as an additional node in an existing cluster, provide the -b bootstrap flag
-  and the bootstrap file from the initial server.
+  If you wish this system to be added as an additional node in an existing cluster, provide the -b bootstrap argument
+  with the bootstrap-file from the initial server.
 
   REQUIRED
     -s secrets-file                         The name of the secrets file, which provides the usernames for
