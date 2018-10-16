@@ -78,9 +78,7 @@ show_help() {
 
     -i coordinationservice-client-port      Client port for the coordination service
 
-
     -e coordinationservice-peer-port        Peer port for the coordination service
-
 
     -m coordinationservice-leader-port      Leader port for the coordination service
 
