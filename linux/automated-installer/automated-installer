@@ -58,7 +58,7 @@ show_help() {
                                             When not set, the initialize-tsm script uses its default value.
 
     -k license-key                          Specify product key used to activate Tableau Server.
-                                            When not set, trial license will be activated.
+                                            When not set, a trial license will be activated.
 
     -g                                      Do NOT add the current user to the "tsmadmin" administrative
                                             group, used for default access to Tableau Services Manager, or
