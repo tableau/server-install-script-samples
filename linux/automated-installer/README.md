@@ -105,4 +105,4 @@ Many command line options mirror the options provided by `initialize-tsm` becaus
 ### Known Issues/Troubleshooting
 
 * If automated-installer is not working properly in your environment, you can use the `--debug` option to echo every command run to stdout, which can be helpful in tracking down the issue.
-* For additional troubleshotting tips for Tableau Server on Linux , See [Troubleshooting](https://onlinehelp.tableau.com/current/server-linux/en-us/trouble.htm)
+* For additional troubleshooting tips for Tableau Server on Linux , See [Troubleshooting](https://onlinehelp.tableau.com/current/server-linux/en-us/trouble.htm)
