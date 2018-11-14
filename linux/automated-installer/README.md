@@ -29,13 +29,13 @@ Many command line options mirror the options provided by `initialize-tsm` becaus
                                             their passwords. If passwords are not found in the secrets file,
                                             this script will prompt for them (not suitable for unattended
                                             installs).
-                                            Tableau provides "secrets" as a template.
+                                            Tableau provides "${TEMPLATE_SECRETS_FILE}" as a template.
 
     -f config-file                          The name of the configuration and topology JSON file.
-                                            Tableau provides "config.json" as a template.
+                                            Tableau provides "${TEMPLATE_CONFIG_FILE}" as a template.
 
     -r registration-file                    The name of the registration file.
-                                            Tableau provides "reg_templ.json" as a template.
+                                            Tableau provides "${TEMPLATE_REGISTRATION_FILE}" as a template.
 
     --accepteula                            Indicate that you have accepted the End User License Agreement.
 
@@ -74,12 +74,12 @@ Many command line options mirror the options provided by `initialize-tsm` becaus
 
 
     -m coordinationservice-leader-port      Leader port for the coordination service
-	
-	-t licenseservice-vendordaemon-port     Vendor daemon port for the licensing service
+
+    -t licenseservice-vendordaemon-port     Vendor daemon port for the licensing service
 
     -n agent-filetransfer-port              Filetransfer port for the agent service
 
-    -o controller-port                      Https port for the controller service
+    -o controller-port                      HTTPS port for the controller service
 
     -l port-range-min                       Lower port bound for automatic selection
 
@@ -100,6 +100,15 @@ Many command line options mirror the options provided by `initialize-tsm` becaus
 
     --debug                                 Print each command as it is run for debugging purposes. Produces extensive
                                             output.
+
+    --http_proxy=<value>                    HTTP forward proxy for Tableau Server. Its value should be http://<proxy_address>:<proxy_port>/
+                                            For example, --http_proxy=http://1.2.3.4:3128/ or --http_proxy=http://example.com:3128/
+
+    --https_proxy=<value>                   HTTPS forward proxy for Tableau Server. Its value should be https://<proxy_address>:<proxy_port>/
+                                            For example, --https_proxy=https://1.2.3.4:3128/ or --https_proxy=https://example.com:3128/
+
+    --use-repo=<value>                      Install package from a configured repository instead of package file. Value should be the name of the package.
+                                            For example, --use-repo=tableau-server-2018-1-3.x86_64.rpm
 ```
 
 ### Known Issues/Troubleshooting
