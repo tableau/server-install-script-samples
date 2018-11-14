@@ -29,13 +29,13 @@ Many command line options mirror the options provided by `initialize-tsm` becaus
                                             their passwords. If passwords are not found in the secrets file,
                                             this script will prompt for them (not suitable for unattended
                                             installs).
-                                            Tableau provides "${TEMPLATE_SECRETS_FILE}" as a template.
+                                            Tableau provides "secrets" as a template.
 
     -f config-file                          The name of the configuration and topology JSON file.
-                                            Tableau provides "${TEMPLATE_CONFIG_FILE}" as a template.
+                                            Tableau provides "config.json" as a template.
 
     -r registration-file                    The name of the registration file.
-                                            Tableau provides "${TEMPLATE_REGISTRATION_FILE}" as a template.
+                                            Tableau provides "reg_templ.json" as a template.
 
     --accepteula                            Indicate that you have accepted the End User License Agreement.
 
