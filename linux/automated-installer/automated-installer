@@ -113,8 +113,13 @@ show_help() {
     --http_proxy=<value>                    HTTP forward proxy for Tableau Server. Its value should be http://<proxy_address>:<proxy_port>/
                                             For example, --http_proxy=http://1.2.3.4:3128/ or --http_proxy=http://example.com:3128/
 
-    --https_proxy=<value>                   HTTPS forward proxy for Tableau Server. Its value should be https://<proxy_address>:<proxy_port>/
-                                            For example, --https_proxy=https://1.2.3.4:3128/ or --https_proxy=https://example.com:3128/
+    --https_proxy=<value>                   HTTPS forward proxy for Tableau Server. Its value should be http://<proxy_address>:<proxy_port>/
+                                            For example, --https_proxy=http://1.2.3.4:3128/ or --https_proxy=http://example.com:3128/
+                                            Take care to use http when you specify the URL for the https_proxy environmental variable.
+                                            Do not specify the https protocol for the value of the https_proxy environmental variable.
+
+    --no_proxy=<value>                      Environment variable that directs certain URLs to bypass the forward proxy. For example,
+                                            --no_proxy=localhost,127.0.0.1,localaddress,.localdomain.com
 
     --use-repo=<value>                      Install package from a configured repository instead of package file. Value should be the name of the package.
                                             For example, --use-repo=tableau-server-2018-1-3.x86_64.rpm
@@ -338,6 +343,13 @@ check_arguments() {
             fi
             https_proxy="${args[1]}"
             ;;
+          no_proxy)
+            if [ ${#args[@]} -ne 2 ]; then
+              error_with_no_value_specified "${args[0]}"
+              exit 2
+            fi
+            no_proxy="${args[1]}"
+            ;;
           disable-account-creation)
             # account creation is enabled by default, so only set this flag
             # if we're explicitly told to do so by the server admin.
@@ -538,6 +550,7 @@ run_initialize_tsm() {
   [ -n "${tsm_authorized_groupname}"            ] && initialize_tsm_cmd+=("--tsm-authorized-group=${tsm_authorized_groupname}")
   [ -n "${http_proxy}"                          ] && initialize_tsm_cmd+=("--http_proxy=${http_proxy}")
   [ -n "${https_proxy}"                         ] && initialize_tsm_cmd+=("--https_proxy=${https_proxy}")
+  [ -n "${no_proxy}"                            ] && initialize_tsm_cmd+=("--no_proxy=${no_proxy}")
   [ ${disable_group_and_account_creation} -eq 1 ] && initialize_tsm_cmd+=("--disable-account-creation")
   [ ${enable_debug} -eq 1                       ] && initialize_tsm_cmd+=("--debug")
 
@@ -562,7 +575,7 @@ run_tsm() {
   # See "Substring Replacement" in http://tldp.org/LDP/abs/html/string-manipulation.html#FTN.AEN6164
   local escaped_tsm_admin_pass="${tsm_admin_pass//\"/\\\"}"
   # Run tsm via su so log and session file goes in running user's homedir and not root's
-  su -c "set -a && source <(cat ${confwild}) &&  ${install_dir}/packages/customer-bin.${version_string}/tsm ${tabadminArgs} -u \"${tsm_admin_user}\" -s https://$(hostname):${controller_port}" "${running_username}"  <<<"${escaped_tsm_admin_pass}"
+  su -s /bin/bash -c "set -a && source <(cat ${confwild}) &&  ${install_dir}/packages/customer-bin.${version_string}/tsm ${tabadminArgs} -u \"${tsm_admin_user}\" -s https://$(hostname):${controller_port}" "${running_username}"  <<<"${escaped_tsm_admin_pass}"
 }
 
 setup() {
@@ -611,7 +624,7 @@ setup() {
   builtin echo "${tableau_server_admin_pass}" > "${temporary_password_file}"
 
   # Run tabcmd via su so log and session file goes in running user's homedir and not root's
-  su -c "set -a && source <(cat ${confwild}) && ${install_dir}/packages/customer-bin.${version_string}/tabcmd initialuser --server \"localhost:${gateway_port}\" --username \"${tableau_server_admin_user}\" --password-file \"${temporary_password_file}\"" "${running_username}"
+  su -s /bin/bash -c "set -a && source <(cat ${confwild}) && ${install_dir}/packages/customer-bin.${version_string}/tabcmd initialuser --server \"localhost:${gateway_port}\" --username \"${tableau_server_admin_user}\" --password-file \"${temporary_password_file}\"" "${running_username}"
 
   # Delete temp file
   rm -f "${temporary_password_file}"
@@ -663,6 +676,7 @@ main() {
   local enable_debug=0
   local http_proxy=''
   local https_proxy=''
+  local no_proxy=''
   local temporary_password_file=''
   local use_repo=''
   local distro=''
