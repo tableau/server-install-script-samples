@@ -237,44 +237,43 @@ def run_inno_installer(options):
     inno_log_file.close()
 
     # the installer will write its version to this file so that we know the full path to the installed binaries
-    version_file = tempfile.NamedTemporaryFile(prefix='TableauServerInstallerVersion_', suffix='.txt', delete=False);
-    version_file_full_path = version_file.name
-    version_file.close()
+    #Commenting out below lines since no version file reference mentioned for WIX installer
+    #version_file = tempfile.NamedTemporaryFile(prefix='TableauServerInstallerVersion_', suffix='.txt', delete=False);
+    #version_file_full_path = version_file.name
+    #version_file.close()
 
     inno_installer_args = [
-        '/VERYSILENT',          # No progress GUI, message boxes still possible
-        '/SUPPRESSMSGBOXES',    # No message boxes. Only has an effect when combined with '/SILENT' or '/VERYSILENT'.
-        '/ACCEPTEULA',
+        '/quiet',          # No progress GUI, message boxes still possible
+        'ACCEPTEULA=1',
         '/LOG=' + inno_log_file_full_path,
-        '/DIR=' + options.installDir,
-        '/DATADIR=' + options.dataDir,
-        '/CONTROLLERPORT=' + options.controllerPort,
-        '/VERSIONFILE=' + version_file_full_path
+        'INSTALLDIR=' + options.installDir,
+        'DATADIR=' + options.dataDir,
+        'CONTROLLERPORT=' + options.controllerPort
     ]
 
     if options.coordinationserviceClientPort is not None:
-        inno_installer_args.append('/COORDINATIONSERVICECLIENTPORT=' + options.coordinationserviceClientPort)
+        inno_installer_args.append('COORDINATIONSERVICECLIENTPORT=' + options.coordinationserviceClientPort)
 
     if options.coordinationservicePeerPort is not None:
-        inno_installer_args.append('/COORDINATIONSERVICEPEERPORT=' + options.coordinationservicePeerPort)
+        inno_installer_args.append('COORDINATIONSERVICEPEERPORT=' + options.coordinationservicePeerPort)
 
     if options.coordinationserviceLeaderPort is not None:
-        inno_installer_args.append('/COORDINATIONSERVICELEADERPORT=' + options.coordinationserviceLeaderPort)
+        inno_installer_args.append('COORDINATIONSERVICELEADERPORT=' + options.coordinationserviceLeaderPort)
 
     if options.licenseserviceVendorDaemonPort is not None:
-        inno_installer_args.append('/LICENSESERVICEVENDORDAEMONPORT=' + options.licenseserviceVendorDaemonPort)
+        inno_installer_args.append('LICENSESERVICEVENDORDAEMONPORT=' + options.licenseserviceVendorDaemonPort)
 
     if options.agentFileTransferPort is not None:
-        inno_installer_args.append('/AGENTFILETRANSFERPORT=' + options.agentFileTransferPort)
+        inno_installer_args.append('AGENTFILETRANSFERPORT=' + options.agentFileTransferPort)
 
     if options.portRangeMin is not None:
-        inno_installer_args.append('/PORTRANGEMIN=' + options.portRangeMin)
+        inno_installer_args.append('PORTRANGEMIN=' + options.portRangeMin)
 
     if options.portRangeMax is not None:
-        inno_installer_args.append('/PORTRANGEMAX=' + options.portRangeMax)
+        inno_installer_args.append('PORTRANGEMAX=' + options.portRangeMax)
 
     if options.portRemappingEnabled is not None:
-        inno_installer_args.append('/PORTREMAPPINGENABLED=' + options.portRemappingEnabled)
+        inno_installer_args.append('PORTREMAPPINGENABLED=' + options.portRemappingEnabled)
 
     try:
         run_command(options.installer, inno_installer_args, show_args=True)
@@ -284,10 +283,13 @@ def run_inno_installer(options):
         # Here we update the current shell with those environment variables.
         os.environ["TABLEAU_SERVER_DATA_DIR"] = options.dataDir if isinstance(options.dataDir, str) else options.dataDir.encode('utf-8')
         os.environ["TABLEAU_SERVER_INSTALL_DIR"] = options.installDir if isinstance(options.installDir, str) else options.installDir.encode('utf-8')
+		# Passing version file name with TSM package version(e.g. for 2019.4 the full version is 20194.19.1105.1444) passed into the file as content. You can get full version number from the properties of installer EXE file.
+		# Keep that version file in central location and download it into instances during bootstrap. Sourced into "C:\tabsetup\tableauversion.txt".
+        version_file = 'tableauversion.txt'
 
-        with open(version_file_full_path) as version_file:
+        with open(r"C:\tabsetup\tableauversion.txt") as versionfile:
             # read the version of the installer we just run
-            return version_file.read().strip()
+            return versionfile.read().strip()
 
     except ExitCodeError as ex:
         if(ex.exit_code >= 1 and ex.exit_code <= 8):
@@ -312,13 +314,12 @@ def run_worker_installer(options, secrets):
     worker_log_file.close()
 
     worker_installer_args = [
-        '/VERYSILENT',          # No progress GUI, message boxes still possible
-        '/SUPPRESSMSGBOXES',    # No message boxes. Only has an effect when combined with '/SILENT' or '/VERYSILENT'.
-        '/ACCEPTEULA',
+        '/quiet',          # No progress GUI, message boxes still possible
+        'ACCEPTEULA=1',
         '/LOG=' + worker_log_file_full_path,
-        '/DIR=' + options.installDir,
-        '/DATADIR=' + options.dataDir,
-        '/BOOTSTRAPFILE=' + options.nodeConfigurationFile
+        'INSTALLDIR=' + options.installDir,
+        'DATADIR=' + options.dataDir,
+        'BOOTSTRAPFILE=' + options.nodeConfigurationFile
     ]
 
     my_env = os.environ.copy()
