@@ -156,6 +156,20 @@
                             }
                         ]
                     },
+                    "activemqserver": {
+                        "instances":[
+                            {
+                            "instanceId":"0"
+                            }
+                        ]
+                    },
+                    "elasticserver": {
+                        "instances":[
+                            {
+                            "instanceId":"0"
+                            }
+                        ]
+                    },
                     "gateway": {
                         "instances":[
                             {

@@ -8,6 +8,10 @@ import json
 import socket
 import unicodedata
 
+try:
+    import winreg
+except ImportError:
+    import _winreg as winreg
 
 class Options(object):
     ''' Contains the user-configurable options for the installation,
@@ -218,66 +222,70 @@ def run_command(binary_path, arguments, environment={}, show_args=False, return_
         raise ExitCodeError(binary_path, exit_code)
     return result
 
+def run_installer(binary_path, arguments, environment={}, show_args=False, return_result=False):
+    ''' Run an external command in a subprocess and wait for it to finish '''
 
-def run_inno_installer(options):
+    result = None
+    if not os.path.isfile(binary_path):
+        raise OptionsError('The executable file %s does not exist' %binary_path)
+
+    print("Running: " + str(binary_path) + str(arguments if show_args else ''))
+    if return_result:
+        if environment:
+            proc = subprocess.Popen(binary_path + arguments, env=environment, universal_newlines=True, stdout=subprocess.PIPE)
+        else:
+            proc = subprocess.Popen(binary_path + arguments, universal_newlines=True, stdout=subprocess.PIPE)
+    else:
+        if environment:
+            proc = subprocess.Popen(binary_path + arguments, env=environment)
+        else:
+            proc = subprocess.Popen(binary_path + arguments)
+    result = proc.communicate()[0]
+    exit_code = proc.returncode
+    if exit_code != 0:
+        raise ExitCodeError(binary_path, exit_code)
+    return result
+
+
+def run_wix_installer(options):
     ''' Runs the installer.exe, and checks for the exit code. Return the installer version. '''
 
-    inno_setup_exit_codes = {
-        1: 'Inno Setup: Setup failed to initialize.',
-        2: 'Inno Setup: The user clicked Cancel in the wizard before the actual installation started, or chose "No" on the opening "This will install..." message box.',
-        3: 'Inno Setup: A fatal error occurred while preparing to move to the next installation phase (for example, from displaying the pre-installation wizard pages to the actual installation process). This should never happen except under the most unusual of circumstances, such as running out of memory or Windows resources.',
-        4: 'Inno Setup: A fatal error occurred during the actual installation process.',
-        5: 'Inno Setup: The user clicked Cancel during the actual installation process, or chose Abort at an Abort-Retry-Ignore box.',
-        6: 'Inno Setup: The Setup process was forcefully terminated by the debugger',
-        7: 'Inno Setup: The Preparing to Install stage determined that Setup cannot proceed with installation.',
-        8: 'Inno Setup: The Preparing to Install stage determined that Setup cannot proceed with installation, and that the system needs to be restarted in order to correct the problem.'
-    }
-    inno_log_file = tempfile.NamedTemporaryFile(prefix='TableauServerInstaller_', suffix='.log', delete=False);
-    inno_log_file_full_path = inno_log_file.name
-    inno_log_file.close()
+    wix_log_file = tempfile.NamedTemporaryFile(prefix='TableauServerInstaller_', suffix='.log', delete=True);
+    wix_log_file_full_path = wix_log_file.name
+    wix_log_file.close()
 
-    # the installer will write its version to this file so that we know the full path to the installed binaries
-    version_file = tempfile.NamedTemporaryFile(prefix='TableauServerInstallerVersion_', suffix='.txt', delete=False);
-    version_file_full_path = version_file.name
-    version_file.close()
-
-    inno_installer_args = [
-        '/VERYSILENT',          # No progress GUI, message boxes still possible
-        '/SUPPRESSMSGBOXES',    # No message boxes. Only has an effect when combined with '/SILENT' or '/VERYSILENT'.
-        '/ACCEPTEULA',
-        '/LOG=' + inno_log_file_full_path,
-        '/DIR=' + options.installDir,
-        '/DATADIR=' + options.dataDir,
-        '/CONTROLLERPORT=' + options.controllerPort,
-        '/VERSIONFILE=' + version_file_full_path
-    ]
+    wix_installer_args = ' /INSTALL /SILENT ACCEPTEULA=1'
+    wix_installer_args += ' /LOG "' + wix_log_file_full_path + '"'
+    wix_installer_args += ' INSTALLDIR="' + options.installDir + '"'
+    wix_installer_args += ' DATADIR="' + options.dataDir + '"'
+    wix_installer_args += ' CONTROLLERPORT=' + options.controllerPort
 
     if options.coordinationserviceClientPort is not None:
-        inno_installer_args.append('/COORDINATIONSERVICECLIENTPORT=' + options.coordinationserviceClientPort)
+        wix_installer_args += ' COORDINATIONSERVICECLIENTPORT=' + options.coordinationserviceClientPort
 
     if options.coordinationservicePeerPort is not None:
-        inno_installer_args.append('/COORDINATIONSERVICEPEERPORT=' + options.coordinationservicePeerPort)
+        wix_installer_args += ' COORDINATIONSERVICEPEERPORT=' + options.coordinationservicePeerPort
 
     if options.coordinationserviceLeaderPort is not None:
-        inno_installer_args.append('/COORDINATIONSERVICELEADERPORT=' + options.coordinationserviceLeaderPort)
+        wix_installer_args += ' COORDINATIONSERVICELEADERPORT=' + options.coordinationserviceLeaderPort
 
     if options.licenseserviceVendorDaemonPort is not None:
-        inno_installer_args.append('/LICENSESERVICEVENDORDAEMONPORT=' + options.licenseserviceVendorDaemonPort)
+        wix_installer_args += ' LICENSESERVICEVENDORDAEMONPORT=' + options.licenseserviceVendorDaemonPort
 
     if options.agentFileTransferPort is not None:
-        inno_installer_args.append('/AGENTFILETRANSFERPORT=' + options.agentFileTransferPort)
+        wix_installer_args += ' AGENTFILETRANSFERPORT=' + options.licenseserviceVendorDaemonPort
 
     if options.portRangeMin is not None:
-        inno_installer_args.append('/PORTRANGEMIN=' + options.portRangeMin)
-
+        wix_installer_args += ' PORTRANGEMIN=' + options.portRangeMin
+ 
     if options.portRangeMax is not None:
-        inno_installer_args.append('/PORTRANGEMAX=' + options.portRangeMax)
+        wix_installer_args += ' PORTRANGEMAX=' + options.portRangeMax
 
     if options.portRemappingEnabled is not None:
-        inno_installer_args.append('/PORTREMAPPINGENABLED=' + options.portRemappingEnabled)
+        wix_installer_args += ' PORTREMAPPINGENABLED=' + options.portRemappingEnabled
 
     try:
-        run_command(options.installer, inno_installer_args, show_args=True)
+        run_installer(options.installer, wix_installer_args, show_args=True)
 
         # The installer will setup two environment variables: TABLEAU_SERVER_DATA_DIR and TABLEAU_SERVER_INSTALL_DIR.
         # However, this shell session will not be able to pick them up unless the shell is restarted.
@@ -285,65 +293,56 @@ def run_inno_installer(options):
         os.environ["TABLEAU_SERVER_DATA_DIR"] = options.dataDir if isinstance(options.dataDir, str) else options.dataDir.encode('utf-8')
         os.environ["TABLEAU_SERVER_INSTALL_DIR"] = options.installDir if isinstance(options.installDir, str) else options.installDir.encode('utf-8')
 
-        with open(version_file_full_path) as version_file:
-            # read the version of the installer we just run
-            return version_file.read().strip()
+        # read the version of the installer we just run
+        hKey = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "SYSTEM\CurrentControlSet\Control\Session Manager\Environment")                  
+        result = winreg.QueryValueEx(hKey, "TABLEAU_SERVER_DATA_DIR_VERSION")
+        winreg.CloseKey(hKey)
+        # Return the read result
+        return result[0]
 
     except ExitCodeError as ex:
-        if(ex.exit_code >= 1 and ex.exit_code <= 8):
-            print_error(inno_setup_exit_codes[ex.exit_code])
-        else:
-            print_error('Unknown exit code from the Inno Setup installer: %d' % ex.exit_code)
+        print_error('Error exit code from the Setup installer: %d' % ex.exit_code)
 
-        # print the last 5 lines from the Inno Setup log
-        print_error_lines(inno_log_file_full_path)
+        # print the last 100 lines from the Setup log
+        print_error_lines(wix_log_file_full_path)
 
+    except OSError:
+	    # the registry read most likely failed, so return none
+        return str('none')
 
 def run_worker_installer(options, secrets):
     ''' Runs the worker installer.exe, and checks for the exit code. Return the installer version. '''
 
-    worker_setup_exit_codes = {
-        1: 'Worker Setup: Setup failed to initialize.',
-        30: 'Worker Setup: Node configuration file provided was invalid',
-        40: 'Worker Setup: Admin username or password provided were invalid',
-        }
-    worker_log_file = tempfile.NamedTemporaryFile(prefix='TableauWorkerInstaller_', suffix='.log', delete=False);
+    worker_log_file = tempfile.NamedTemporaryFile(prefix='TableauWorkerInstaller_', suffix='.log', delete=True);
     worker_log_file_full_path = worker_log_file.name
     worker_log_file.close()
 
-    worker_installer_args = [
-        '/VERYSILENT',          # No progress GUI, message boxes still possible
-        '/SUPPRESSMSGBOXES',    # No message boxes. Only has an effect when combined with '/SILENT' or '/VERYSILENT'.
-        '/ACCEPTEULA',
-        '/LOG=' + worker_log_file_full_path,
-        '/DIR=' + options.installDir,
-        '/DATADIR=' + options.dataDir,
-        '/BOOTSTRAPFILE=' + options.nodeConfigurationFile
-    ]
+    worker_installer_args = ' /INSTALL /SILENT ACCEPTEULA=1'
+    worker_installer_args += ' /LOG "' + worker_log_file_full_path + '"'
+    worker_installer_args += ' INSTALLDIR="' + options.installDir + '"'
+    worker_installer_args += ' DATADIR="' + options.dataDir + '"'
+    worker_installer_args += ' BOOTSTRAPFILE="' + options.nodeConfigurationFile + '"'
 
     my_env = os.environ.copy()
     my_env['TableauAdminUser'] = secrets['local_admin_user'] if isinstance(secrets['local_admin_user'], str) else secrets['local_admin_user'].encode('utf-8')
     my_env['TableauAdminPassword'] = secrets['local_admin_pass'] if isinstance(secrets['local_admin_pass'], str) else secrets['local_admin_pass'].encode('utf-8')
 
     try:
-        run_command(options.installer, worker_installer_args, environment=my_env, show_args=True)
+        run_installer(options.installer, worker_installer_args, environment=my_env, show_args=True)
 
     except ExitCodeError as ex:
-        if(ex.exit_code == 1 or ex.exit_code == 30 or ex.exit_code == 40):
-            print_error(worker_setup_exit_codes[ex.exit_code])
-        else:
-            print_error('Unknown exit code from the Worker Setup installer: %d' % ex.exit_code)
+        print_error('Error exit code from the Worker Setup installer: %d' % ex.exit_code)
 
-        # print the last 5 lines from the worker Setup log
+        # print the last 100 lines from the worker Setup log
         print_error_lines(worker_log_file_full_path)
 
 
 def print_error_lines(log_file_full_path):
-    # print the last 5 lines from the log file
+    # print the last 100 lines from the log file
     print_error('For more details see log file %s' % log_file_full_path)
     with open(log_file_full_path) as log_file:
         content = log_file.readlines()
-        for line in content[-5:]:
+        for line in content[-100:]:
             print_error(line)
     raise
 
@@ -391,8 +390,8 @@ def getGatewayPort(configFile):
 def run_setup(options, secrets, package_version):
     ''' Runs a sequence of tsm commands to perform setup '''
 
-    tsm_path = os.path.join(options.installDir, 'packages', 'bin.' + package_version, 'tsm.cmd')
-    tabcmd_path = os.path.join(options.installDir, 'packages', 'bin.' + package_version, 'tabcmd.exe')
+    tsm_path = os.path.join(options.installDir, 'packages', 'bin.' + str(package_version), 'tsm.cmd')
+    tabcmd_path = os.path.join(options.installDir, 'packages', 'bin.' + str(package_version), 'tabcmd.exe')
 
     port = options.controllerPort
 
@@ -522,8 +521,10 @@ def main():
                 run_worker_installer(options, secrets)
             else:
                 # install and set up first node
-                package_version = run_inno_installer(options)
-                run_setup(options, secrets, package_version)
+                package_version = run_wix_installer(options)
+                # only configure if we can determine the version that was installed.
+                if package_version != 'none':
+                    run_setup(options, secrets, package_version)
         return 0
 
     # by default exceptions exit with 1
