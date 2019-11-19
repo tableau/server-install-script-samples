@@ -1,0 +1,46 @@
+---
+- name: Copy config file
+  copy: 
+    src: config.json
+    dest: /tmp/
+    mode: '0777'
+
+- name: Copy registration file
+  copy:
+    src: reg_templ.json
+    dest: /tmp/
+    mode: '0777' 
+
+- name: Logging in
+  command: 'tsm login -u tableauadmin -p tableauadmin'
+  become_user: tableauadmin
+  become: no
+- name: Activating the tableau license/trial
+  command: 'tsm licenses activate --trial'
+  become_user: tableauadmin
+  become: no
+
+- name: Registering 
+  command: 'tsm register --file /tmp/reg_templ.json'
+  become_user: tableauadmin
+  become: no
+
+- name: Importing Setting and Identity store
+  command: 'tsm settings import -f /tmp/config.json'
+  become_user: tableauadmin
+  become: no
+
+- name: Applying pending changed
+  command: 'tsm pending-changes apply'
+  become_user: tableauadmin
+  become: no
+
+- name: Initializing
+  command: 'tsm initialize --start-server'
+  become_user: tableauadmin
+  become: no
+
+- name: Create Initial user
+  command: 'tabcmd initialuser --username ''admin'' --password ''password'' --server http://localhost:8000'
+  become_user: tableauadmin
+  become: no

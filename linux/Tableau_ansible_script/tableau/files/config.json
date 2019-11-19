@@ -1,0 +1,16 @@
+{
+  "configEntities": {
+    "identityStore": {
+      "_type": "identityStoreType",
+      "type": "local"
+    },
+    "gatewaySettings": {
+         "_type": "gatewaySettingsType",
+         "port": 8000,
+         "firewallOpeningEnabled": true,
+         "sslRedirectEnabled": true,
+         "publicHost": "localhost",
+         "publicPort": 8000
+      }
+  }
+}
