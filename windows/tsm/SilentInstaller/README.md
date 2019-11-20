@@ -131,7 +131,7 @@ The _product_keys_ is the key used to activate Tableau Services Manager. If mult
    },
     "topologyVersion":{
         "nodes":{
-            "****insert nodeId (lowercase) here****": {
+            "node1": {
                 "services": {
                     "filestore": {
                         "instances":[
@@ -264,6 +264,20 @@ The _product_keys_ is the key used to activate Tableau Services Manager. If mult
                             }
                         ]
                     },
+                    "activemqserver": {
+                        "instances":[
+                            {
+                            "instanceId":"0"
+                            }
+                        ]
+                    },
+                    "elasticserver": {
+                        "instances":[
+                            {
+                            "instanceId":"0"
+                            }
+                        ]
+                    },
                     "gateway": {
                         "instances":[
                             {
@@ -291,7 +305,8 @@ The _product_keys_ is the key used to activate Tableau Services Manager. If mult
     "city" : "Kirkland",
     "state" : "WA",
     "zip" : "98034",
-    "country" : "United States"
+    "country" : "United States",
+    "eula" : "yes"
 }
 ```
 
