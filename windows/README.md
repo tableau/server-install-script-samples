@@ -8,6 +8,6 @@ This subfolder contains scripts and samples that can be used for automating the 
 -------------------
 Contains the sample scripts for installing Tableau Server on Windows for tabadmin-based versions (2018.1.X and older).
 
-[tsm (Beta)](tsm/)
+[tsm](tsm/)
 ------------------------
-Contains the sample scripts for installing Tableau Server on Windows for TSM-based versions (2018.2 and older).
+Contains the sample scripts for installing Tableau Server on Windows for TSM-based versions (2018.2 and newer).
