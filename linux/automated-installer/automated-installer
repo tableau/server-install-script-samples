@@ -480,7 +480,7 @@ create_temporary_password_file(){
   temporary_password_file=$(mktemp)
   chmod 0600 "${temporary_password_file}"
   chown "${running_username}" "${temporary_password_file}"
-  chown "tableau" "${temporary_password_file}"
+  setfacl -m u:tableau:rwx "${temporary_password_file}"
   trap "rm -f ${temporary_password_file}" EXIT
 }
 
