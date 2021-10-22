@@ -478,9 +478,9 @@ find_running_username() {
 # This function creats a temporary password file, on which tsm_admin_password or tableau-server-admin-password is populated and sent along with command
 create_temporary_password_file(){
   temporary_password_file=$(mktemp)
-  chmod 0600 "${temporary_password_file}"
+  chmod 777 "${temporary_password_file}"
   chown "${running_username}" "${temporary_password_file}"
-  setfacl -m u:tableau:rwx "${temporary_password_file}"
+  setfacl -m "u:${running_username}:rwx" "${temporary_password_file}"
   trap "rm -f ${temporary_password_file}" EXIT
 }
 
