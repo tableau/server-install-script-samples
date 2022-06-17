@@ -1,0 +1,16 @@
+---
+- name: copying the tableau rpm file
+  copy:
+    src: tableau-server-2019-2-3.x86_64.rpm
+    dest: /home/tableauadmin/
+
+
+- name: Installing the tableau server RPM
+  yum:
+    name: /home/tableauadmin/tableau-server-2019-2-3.x86_64.rpm
+    state: present
+
+
+- name: Initializing the tsm
+  command: sudo /opt/tableau/tableau_server/packages/scripts.20192.19.0818.2120/initialize-tsm --accepteula
+  become_user: tableauadmin

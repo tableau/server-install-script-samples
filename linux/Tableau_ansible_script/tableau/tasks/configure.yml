@@ -1,0 +1,36 @@
+---
+- name: Remove line from pam.d/su
+  pamd:
+    name: su
+    type: auth
+    control: required
+    module_path: pam_wheel.so
+    module_arguments: 'use_uid'
+    state: args_absent
+
+- name: create a new user
+  user: 
+    name: tableauadmin
+    state: present
+    groups: wheel
+    append: yes
+    createhome: yes
+    password: $6$rounds=656000$mysecretsalt$sUzUbR602E1zjO7t0mzqg6EOuzpOfqS9Bqctbr0FRmTWyAm7ZvphrCV/WcPBqvOlU47u212RYRLgjGTztesBn.
+
+- name: Make sure we have a 'wheel' group
+  group:
+    name: wheel
+    state: present
+
+- name: Allow 'wheel' group to have passwordless sudo
+  lineinfile:
+    dest: /etc/sudoers
+    state: present
+    regexp: '^%wheel'
+    line: '%wheel ALL=(ALL) NOPASSWD: ALL'
+    validate: 'visudo -cf %s'
+
+#- name: Set up keys for the tableauadmin user
+#  command: sshpass -p tableauadmin ssh-copy-id tableauadmin@{{ ansible_eth0.ipv4.address }}
+#  host: 127.0.0.1
+#  connection: local
