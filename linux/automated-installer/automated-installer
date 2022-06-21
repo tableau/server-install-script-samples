@@ -582,8 +582,8 @@ setup() {
   print "Activating..."
   if [ "$license_keys" == "" ]; then
     run_tsm licenses activate --trial
-  else for license_key in $license_keys
-    do
+  else
+    for license_key in $license_keys; do
       run_tsm licenses activate --license-key "${license_key}"
     done
   fi
