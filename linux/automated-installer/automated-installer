@@ -57,7 +57,7 @@ show_help() {
     -c config-name                          Set the service configuration name.
                                             When not set, the initialize-tsm script uses its default value.
 
-    -k license-key                          Specify product key used to activate Tableau Server.
+    -k license-key                          Specify product key(s) used to activate Tableau Server.
                                             When not set, a trial license will be activated.
 
     -g                                      Do NOT add the current user to the "tsmadmin" administrative
