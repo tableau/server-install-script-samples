@@ -29,8 +29,8 @@ show_help() {
   Installs the package and sets up directories and permissions to properly run Tableau Server, then
   begins Tableau Services Manager setup. After successful completion, Tableau Server should be fully operational.
 
-  If you wish this system to be added as an additional node in an existing cluster, provide the -b bootstrap flag
-  and the bootstrap file from the initial server.
+  If you wish this system to be added as an additional node in an existing cluster, provide the -b bootstrap argument
+  with the bootstrap-file from the initial server.
 
   REQUIRED
     -s secrets-file                         The name of the secrets file, which provides the usernames for
@@ -48,7 +48,7 @@ show_help() {
 
     --accepteula                            Indicate that you have accepted the End User License Agreement.
 
-    package-file                            The rpm or deb file to install (e.g., tableau-server-10.0.0-1.x86_64.rpm
+    package-file                            The rpm or deb file to install (e.g., tableau-server-10.0.0-1.x86_64.rpm)
 
   OPTIONAL
     -d data-directory                       Set a custom location for the data directory if it's not already set.
@@ -58,7 +58,7 @@ show_help() {
                                             When not set, the initialize-tsm script uses its default value.
 
     -k license-key                          Specify product key used to activate Tableau Server.
-                                            When not set, trial license will be activated.
+                                            When not set, a trial license will be activated.
 
     -g                                      Do NOT add the current user to the "tsmadmin" administrative
                                             group, used for default access to Tableau Services Manager, or
@@ -78,9 +78,7 @@ show_help() {
 
     -i coordinationservice-client-port      Client port for the coordination service
 
-
     -e coordinationservice-peer-port        Peer port for the coordination service
-
 
     -m coordinationservice-leader-port      Leader port for the coordination service
 
