@@ -11,5 +11,7 @@
   "city" : "[value]",
   "state" : "[value]",
   "zip" : "[value]",
-  "country" : "[value]"
+  "country" : "[value]",
+  "company_employees" : "[value]",
+  "opt_in" : "[value]"
 }
