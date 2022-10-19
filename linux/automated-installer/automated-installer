@@ -307,6 +307,9 @@ check_arguments() {
           accepteula)
             accept_eula_arg='--accepteula'
             ;;
+          activation-service)
+            activation_service=1
+            ;;
           force)
             force_arg='-f'
             ;;
@@ -529,6 +532,7 @@ run_initialize_tsm() {
   initialize_tsm_cmd=("${install_dir}/packages/scripts.${version_string}/initialize-tsm")
 
   [ -n "${accept_eula_arg}"                     ] && initialize_tsm_cmd+=("--accepteula")
+  [ ${activation_service} -eq 1                 ] && initialize_tsm_cmd+=("--activation-service")
   [ -n "${force_arg}"                           ] && initialize_tsm_cmd+=("-f")
   [ ${verbose} -eq 0                            ] && initialize_tsm_cmd+=("-q") # "not verbose" becomes "quiet"
   [ ${add_user_to_groups} -eq 0                 ] && initialize_tsm_cmd+=("-g")
@@ -654,6 +658,7 @@ main() {
   local gateway_port=80
   local registration_file=''
   local accept_eula_arg=''
+  local activation_service=0
   local force_arg=''
   local license_key=''
   local group_username=''
