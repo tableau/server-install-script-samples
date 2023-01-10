@@ -11,5 +11,7 @@
     "state":"[value]",
     "department":"[value]",
     "first_name":"[value]",
-    "email":"[value]"
+    "email":"[value]",
+    "company_employees": "[value]",
+    "opt_in": "[value]"
 }
