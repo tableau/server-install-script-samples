@@ -1,281 +1,274 @@
 {
-    "topologyVersion" : {
-      "nodes" : {
-        "***YOUR NODE [e.g. node1]" : {
-          "services" : {
-            "collections" : {
-              "instances" : [ {
-                "instanceId" : "0"
-              } ]
-            },
-            "metrics" : {
-              "instances" : [ {
-                "instanceId" : "0"
-              } ]
-            },
-            "minerva" : {
-              "instances" : [ {
-                "instanceId" : "0"
-              } ]
-            },
-            "apigateway" : {
-              "instances" : [ {
-                "instanceId" : "0"
-              } ]
-            },
-            "backgrounder" : {
-              "instances" : [ {
-                "instanceId" : "0"
-              }, {
-                "instanceId" : "1"
-              } ]
-            },
-            "clustercontroller" : {
-              "instances" : [ {
-                "instanceId" : "0"
-              } ]
-            },
-            "activationservice" : {
-              "instances" : [ {
-                "instanceId" : "0"
-              } ]
-            },
-            "allegro" : {
-              "instances" : [ {
-                "instanceId" : "0"
-              } ]
-            },
-            "licenseservice" : {
-              "instances" : [ {
-                "instanceId" : "0"
-              } ]
-            },
-            "siteimportexport" : {
-              "instances" : [ {
-                "instanceId" : "0"
-              } ]
-            },
-            "querypolicy" : {
-              "instances" : [ {
-                "instanceId" : "0"
-              } ]
-            },
-            "tabadmincontroller" : {
-              "instances" : [ {
-                "instanceId" : "0"
-              } ]
-            },
-            "analyticsextensions" : {
-              "instances" : [ {
-                "instanceId" : "0"
-              } ]
-            },
-            "clientfileservice" : {
-              "instances" : [ {
-                "instanceId" : "0"
-              } ]
-            },
-            "backuprestore" : {
-              "instances" : [ {
-                "instanceId" : "0"
-              } ]
-            },
-            "gateway" : {
-              "instances" : [ {
-                "instanceId" : "0"
-              } ]
-            },
-            "dataserver" : {
-              "instances" : [ {
-                "instanceId" : "0"
-              }, {
-                "instanceId" : "1"
-              } ]
-            },
-            "nrs" : {
-              "instances" : [ {
-                "instanceId" : "0"
-              } ]
-            },
-            "activemqserver" : {
-              "instances" : [ {
-                "instanceId" : "0"
-              } ]
-            },
-            "statsservice" : {
-              "instances" : [ {
-                "instanceId" : "0"
-              } ]
-            },
-            "flowminerva" : {
-              "instances" : [ {
-                "instanceId" : "0"
-              } ]
-            },
-            "floweditor" : {
-              "instances" : [ {
-                "instanceId" : "0"
-              } ]
-            },
-            "extractservice" : {
-              "instances" : [ {
-                "instanceId" : "0"
-              } ]
-            },
-            "tdsservice" : {
-              "instances" : [ {
-                "instanceId" : "0"
-              } ]
-            },
-            "indexandsearchserver" : {
-              "instances" : [ {
-                "instanceId" : "0"
-              } ]
-            },
-            "appzookeeper" : {
-              "instances" : [ {
-                "instanceId" : "0"
-              } ]
-            },
-            "nlp" : {
-              "instances" : [ {
-                "instanceId" : "0"
-              } ]
-            },
-            "authnservice" : {
-              "instances" : [ {
-                "instanceId" : "0"
-              } ]
-            },
-            "datastories" : {
-              "instances" : [ {
-                "instanceId" : "0"
-              } ]
-            },
-            "dataprofiling" : {
-              "instances" : [ {
-                "instanceId" : "0"
-              } ]
-            },
-            "querygateway" : {
-              "instances" : [ {
-                "instanceId" : "0"
-              } ]
-            },
-            "cacheserver" : {
-              "instances" : [ {
-                "instanceId" : "1"
-              }, {
-                "instanceId" : "0"
-              } ]
-            },
-            "noninteractive" : {
-              "instances" : [ {
-                "instanceId" : "0"
-              } ]
-            },
-            "contentexploration" : {
-              "instances" : [ {
-                "instanceId" : "0"
-              } ]
-            },
-            "hyper" : {
-              "instances" : [ {
-                "instanceId" : "0"
-              } ]
-            },
-            "vizportal" : {
-              "instances" : [ {
-                "instanceId" : "0"
-              } ]
-            },
-            "publishedconnections" : {
-              "instances" : [ {
-                "instanceId" : "0"
-              } ]
-            },
-            "flowprocessor" : {
-              "instances" : [ {
-                "instanceId" : "0"
-              } ]
-            },
-            "interactive" : {
-              "instances" : [ {
-                "instanceId" : "0"
-              } ]
-            },
-            "vizqlserver" : {
-              "instances" : [ {
-                "instanceId" : "1"
-              }, {
-                "instanceId" : "0"
-              } ]
-            },
-            "searchserver" : {
-              "instances" : [ {
-                "instanceId" : "0"
-              } ]
-            },
-            "tabsvc" : {
-              "instances" : [ {
-                "instanceId" : "0"
-              } ]
-            },
-            "databasemaintenance" : {
-              "instances" : [ {
-                "instanceId" : "0"
-              } ]
-            },
-            "webhooks" : {
-              "instances" : [ {
-                "instanceId" : "0"
-              } ]
-            },
-            "pgsql" : {
-              "instances" : [ {
-                "instanceId" : "0"
-              } ]
-            },
-            "tabadminagent" : {
-              "instances" : [ {
-                "instanceId" : "0"
-              } ]
-            },
-            "tdsnativeservice" : {
-              "instances" : [ {
-                "instanceId" : "0"
-              } ]
-            },
-            "filestore" : {
-              "instances" : [ {
-                "instanceId" : "0"
-              } ]
-            }
-          }
-        }
-      }
-    },
-    "configKeys" : {
-      "config.version" : 25,
-      "tabadmincontroller.port" : "8850",
-      "k8s.under.tsm" : "false",
-      "features.TabadminService" : true,
-      "tableau_projects.language" : "en",
-      "shareproductusagedata.enabled" : false,
-      "wgserver.domain.ldap.bind" : "simple",
-      "wgserver.domain.port" : 0,
-      "wgserver.domain.nickname" : "WORKGROUP",
-      "wgserver.domain.allow_insecure_connection" : false,
-      "wgserver.domain.directoryservice.type" : "activedirectory",
-      "wgserver.domain.ldap.starttls.enabled" : true,
-      "wgserver.domain.ssl_port" : 0,
-      "gateway.trusted_hosts" : "***YOUR HOST***",
-      "gateway.trusted" : "***YOUR HOST***",
-      "install.firewall.gatewayhole" : true,
-      "service.windows.local_service_user" : "NT AUTHORITY\\LocalService",
-      "service.windows.network_service_user" : "NT AUTHORITY\\NetworkService",
-      "service.windows.privileged_user" : ".\\LocalSystem",
-      "install.component.samples" : false,
-      "wgserver.authentication.legacy_identity_mode.enabled" : false
-    }
-  }
+  "configEntities":{
+     "gatewaySettings":{
+        "_type":"gatewaySettingsType",
+        "port":80,
+        "firewallOpeningEnabled":true,
+        "sslRedirectEnabled":true,
+        "publicHost":"***YOUR HOST HERE***",
+        "publicPort":80,
+        "sslEnabled":false,
+        "sslPort":443
+     },
+     "identityStore":{
+        "_type":"identityStoreType",
+        "type":"local"
+     }
+  },
+   "topologyVersion" : {
+     "nodes" : {
+       "*** YOUR NODE HERE [e.g.: node1]" : {
+         "services" : {
+           "collections" : {
+             "instances" : [ {
+               "instanceId" : "0"
+             } ]
+           },
+           "metrics" : {
+             "instances" : [ {
+               "instanceId" : "0"
+             } ]
+           },
+           "minerva" : {
+             "instances" : [ {
+               "instanceId" : "0"
+             } ]
+           },
+           "apigateway" : {
+             "instances" : [ {
+               "instanceId" : "0"
+             } ]
+           },
+           "backgrounder" : {
+             "instances" : [ {
+               "instanceId" : "0"
+             }, {
+               "instanceId" : "1"
+             } ]
+           },
+           "clustercontroller" : {
+             "instances" : [ {
+               "instanceId" : "0"
+             } ]
+           },
+           "activationservice" : {
+             "instances" : [ {
+               "instanceId" : "0"
+             } ]
+           },
+           "allegro" : {
+             "instances" : [ {
+               "instanceId" : "0"
+             } ]
+           },
+           "licenseservice" : {
+             "instances" : [ {
+               "instanceId" : "0"
+             } ]
+           },
+           "siteimportexport" : {
+             "instances" : [ {
+               "instanceId" : "0"
+             } ]
+           },
+           "querypolicy" : {
+             "instances" : [ {
+               "instanceId" : "0"
+             } ]
+           },
+           "tabadmincontroller" : {
+             "instances" : [ {
+               "instanceId" : "0"
+             } ]
+           },
+           "analyticsextensions" : {
+             "instances" : [ {
+               "instanceId" : "0"
+             } ]
+           },
+           "clientfileservice" : {
+             "instances" : [ {
+               "instanceId" : "0"
+             } ]
+           },
+           "backuprestore" : {
+             "instances" : [ {
+               "instanceId" : "0"
+             } ]
+           },
+           "gateway" : {
+             "instances" : [ {
+               "instanceId" : "0"
+             } ]
+           },
+           "dataserver" : {
+             "instances" : [ {
+               "instanceId" : "0"
+             }, {
+               "instanceId" : "1"
+             } ]
+           },
+           "nrs" : {
+             "instances" : [ {
+               "instanceId" : "0"
+             } ]
+           },
+           "activemqserver" : {
+             "instances" : [ {
+               "instanceId" : "0"
+             } ]
+           },
+           "statsservice" : {
+             "instances" : [ {
+               "instanceId" : "0"
+             } ]
+           },
+           "flowminerva" : {
+             "instances" : [ {
+               "instanceId" : "0"
+             } ]
+           },
+           "floweditor" : {
+             "instances" : [ {
+               "instanceId" : "0"
+             } ]
+           },
+           "extractservice" : {
+             "instances" : [ {
+               "instanceId" : "0"
+             } ]
+           },
+           "tdsservice" : {
+             "instances" : [ {
+               "instanceId" : "0"
+             } ]
+           },
+           "indexandsearchserver" : {
+             "instances" : [ {
+               "instanceId" : "0"
+             } ]
+           },
+           "appzookeeper" : {
+             "instances" : [ {
+               "instanceId" : "0"
+             } ]
+           },
+           "nlp" : {
+             "instances" : [ {
+               "instanceId" : "0"
+             } ]
+           },
+           "authnservice" : {
+             "instances" : [ {
+               "instanceId" : "0"
+             } ]
+           },
+           "datastories" : {
+             "instances" : [ {
+               "instanceId" : "0"
+             } ]
+           },
+           "dataprofiling" : {
+             "instances" : [ {
+               "instanceId" : "0"
+             } ]
+           },
+           "querygateway" : {
+             "instances" : [ {
+               "instanceId" : "0"
+             } ]
+           },
+           "cacheserver" : {
+             "instances" : [ {
+               "instanceId" : "1"
+             }, {
+               "instanceId" : "0"
+             } ]
+           },
+           "noninteractive" : {
+             "instances" : [ {
+               "instanceId" : "0"
+             } ]
+           },
+           "contentexploration" : {
+             "instances" : [ {
+               "instanceId" : "0"
+             } ]
+           },
+           "hyper" : {
+             "instances" : [ {
+               "instanceId" : "0"
+             } ]
+           },
+           "vizportal" : {
+             "instances" : [ {
+               "instanceId" : "0"
+             } ]
+           },
+           "publishedconnections" : {
+             "instances" : [ {
+               "instanceId" : "0"
+             } ]
+           },
+           "flowprocessor" : {
+             "instances" : [ {
+               "instanceId" : "0"
+             } ]
+           },
+           "interactive" : {
+             "instances" : [ {
+               "instanceId" : "0"
+             } ]
+           },
+           "vizqlserver" : {
+             "instances" : [ {
+               "instanceId" : "1"
+             }, {
+               "instanceId" : "0"
+             } ]
+           },
+           "searchserver" : {
+             "instances" : [ {
+               "instanceId" : "0"
+             } ]
+           },
+           "tabsvc" : {
+             "instances" : [ {
+               "instanceId" : "0"
+             } ]
+           },
+           "databasemaintenance" : {
+             "instances" : [ {
+               "instanceId" : "0"
+             } ]
+           },
+           "webhooks" : {
+             "instances" : [ {
+               "instanceId" : "0"
+             } ]
+           },
+           "pgsql" : {
+             "instances" : [ {
+               "instanceId" : "0"
+             } ]
+           },
+           "tabadminagent" : {
+             "instances" : [ {
+               "instanceId" : "0"
+             } ]
+           },
+           "tdsnativeservice" : {
+             "instances" : [ {
+               "instanceId" : "0"
+             } ]
+           },
+           "filestore" : {
+             "instances" : [ {
+               "instanceId" : "0"
+             } ]
+           }
+         }
+       }
+     }
+   }
+ }
