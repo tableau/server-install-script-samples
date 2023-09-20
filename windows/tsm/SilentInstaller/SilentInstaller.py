@@ -317,7 +317,7 @@ def run_worker_installer(options, secrets):
     worker_log_file_full_path = worker_log_file.name
     worker_log_file.close()
 
-    worker_installer_args = ' /INSTALL /SILENT ACCEPTEULA=1'
+    worker_installer_args = ' /INSTALL /PASSIVE ACCEPTEULA=1'
     worker_installer_args += ' /LOG "' + worker_log_file_full_path + '"'
     worker_installer_args += ' INSTALLDIR="' + options.installDir + '"'
     worker_installer_args += ' DATADIR="' + options.dataDir + '"'
