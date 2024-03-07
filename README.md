@@ -1,6 +1,8 @@
 # server-install-script-samples
-[![Community Supported](https://img.shields.io/badge/Support%20Level-Community%20Supported-457387.svg)](https://www.tableau.com/support-levels-it-and-developer-tools)
+[![As-Is](https://img.shields.io/badge/Support%20Level-As--Is-e8762c.svg)](https://www.tableau.com/support-levels-it-and-developer-tools)
 ----
+
+**Important:** This project is not actively maintained by either Tableau or the community. It will remain online in an archived state for historical reference.
 
 The Tableau Server installer is intended for interactive installation and configuration of Tableau server. This approach works well for many users and administrators, but limits the ability to perform automated deployments using tools like Chef or Puppet.
 
