@@ -57,7 +57,7 @@ show_help() {
     -c config-name                          Set the service configuration name.
                                             When not set, the initialize-tsm script uses its default value.
 
-    -k license-key                          Specify product key used to activate Tableau Server.
+    -k license-key                          Specify product key(s) used to activate Tableau Server.
                                             When not set, a trial license will be activated.
 
     -g                                      Do NOT add the current user to the "tsmadmin" administrative
@@ -248,7 +248,7 @@ check_arguments() {
         data_dir="${OPTARG}"
         ;;
       k)
-        license_key="${OPTARG}"
+        license_keys=$(echo ${license_keys} ${OPTARG}) # append and trim
         ;;
       s)
         secrets_file="${OPTARG}"
@@ -580,10 +580,12 @@ setup() {
   print "Setting up initial configuration..."
 
   print "Activating..."
-  if [ "$license_key" == "" ]; then
+  if [ "$license_keys" == "" ]; then
     run_tsm licenses activate --trial
   else
-    run_tsm licenses activate --license-key "${license_key}"
+    for license_key in $license_keys; do
+      run_tsm licenses activate --license-key "${license_key}"
+    done
   fi
 
   print "Registering product..."
@@ -655,7 +657,7 @@ main() {
   local registration_file=''
   local accept_eula_arg=''
   local force_arg=''
-  local license_key=''
+  local license_keys=''
   local group_username=''
   local running_username=''
   local bootstrap_file=''
